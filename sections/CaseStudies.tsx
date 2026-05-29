@@ -5,10 +5,13 @@ import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Reveal } from '../components/animations/Reveal';
 import { caseStudies } from '../data/content';
 import { trackCustom } from '../utils/meta-tracking';
+import { CaseStudyModal, type CaseStudyData } from '../components/CaseStudyModal';
 
 export const CaseStudies: React.FC = () => {
   const trackRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [openSlug, setOpenSlug] = useState<string | null>(null);
+
   const getCardWidth = () => {
     const margin = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--site-margin')) || 48;
     return (window.innerWidth - margin - 24 * 3) / 3 + 24;
@@ -22,6 +25,15 @@ export const CaseStudies: React.FC = () => {
     }
   };
 
+  const activeCase = openSlug
+    ? (caseStudies.find((c) => c.slug === openSlug) as CaseStudyData | undefined) || null
+    : null;
+
+  const openCase = (slug: string, title: string) => {
+    setOpenSlug(slug);
+    trackCustom('CaseStudyOpen', { customData: { source: 'Main LP CaseStudies', case_study: title } });
+  };
+
   return (
     <section className="cs-section" id="work">
       {/* Heading + "View all" link */}
@@ -29,6 +41,9 @@ export const CaseStudies: React.FC = () => {
         <Reveal>
           <div className="cs-header">
             <h2 className="cs-heading">Real businesses.<br />Real results.</h2>
+            {/* "View all work" still goes to the dedicated /work page for
+                anyone who wants to browse the full archive. Card clicks
+                open the modal in place. */}
             <Link to="/work" className="cs-view-all">
               View all work <ArrowRight size={16} />
             </Link>
@@ -47,7 +62,20 @@ export const CaseStudies: React.FC = () => {
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98], delay: i * 0.06 }}
             >
-              <Link to={`/work/${study.slug}`} className="cs-card">
+              {/* Link still points to /work/{slug} so middle/cmd-click opens
+                  the full archive page in a new tab; primary click is
+                  intercepted to show the modal in place. */}
+              <Link
+                to={`/work/${study.slug}`}
+                className="cs-card"
+                onClick={(e) => {
+                  // Don't intercept new-tab modifier clicks
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                  e.preventDefault();
+                  openCase(study.slug, study.title);
+                }}
+                aria-label={`Open ${study.title} case study`}
+              >
                 <div className="cs-card__img-wrap">
                   <img
                     src={study.coverImage}
@@ -110,6 +138,12 @@ export const CaseStudies: React.FC = () => {
           </p>
         </Reveal>
       </div>
+
+      <CaseStudyModal
+        caseStudy={activeCase}
+        onClose={() => setOpenSlug(null)}
+        source="Main LP CaseStudies"
+      />
     </section>
   );
 };

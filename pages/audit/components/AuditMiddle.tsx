@@ -7,8 +7,10 @@
  * AUDIT FIX: Process step 1 reworded from "30-min call + 48h audit" to
  * "Free Brand Audit · 48 hours" to match the unified deliverable everywhere.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Eyebrow, Icon } from './AuditPrimitives';
+import { CaseStudyModal, type CaseStudyData } from '../../../components/CaseStudyModal';
+import { caseStudies as fullCaseStudies } from '../../../data/content';
 
 // ── PROCESS ──────────────────────────────────────────────────────
 interface ProcessStep { num: string; title: string; desc: string; dur: string }
@@ -89,58 +91,98 @@ const Step: React.FC<StepProps> = ({ num, title, desc, dur, last }) => {
 // hero photos. Replaces the previous AbstractArt SVG gradients (which
 // looked like generic placeholders) with real client work — much stronger
 // proof for paid traffic.
-interface CaseStudy { slug: string; brand: string; tags: string[]; stat: string; label: string; accent: string; coverImage: string }
+// Each card declares the curated metric we want on the audit LP plus the
+// `contentSlug` pointing at the full case-study record in data/content.ts.
+// Click → CaseStudyModal renders the full record (description, scope,
+// results, gallery, testimonial) without a full-page navigation.
+interface CaseStudy {
+  slug: string;
+  contentSlug: string;
+  brand: string;
+  tags: string[];
+  stat: string;
+  label: string;
+  accent: string;
+  coverImage: string;
+}
 
 const CASES: CaseStudy[] = [
-  { slug: 'flexibuy', brand: 'Flexibuy Vans',       tags: ['Web', 'Performance'], stat: '£3.27',  label: 'Cost per lead (60% below industry)', accent: '#FFDC04', coverImage: '/photos/case studies/flexibuy/R6SmStBRWkdMyr0M37aqdGCtXE4.png' },
-  { slug: 'police',   brand: 'Police Mortgages',    tags: ['Brand', 'Web'],       stat: '300%',   label: 'Organic traffic increase',           accent: '#63CC79', coverImage: '/photos/case studies/police mortgages/0wJP1agTSjS5C320be836kZIJs.png' },
-  { slug: 'ao',       brand: 'Restaurant AO',       tags: ['Identity', 'Web'],    stat: '564%',   label: 'Page views, first 30 days',          accent: '#EF8869', coverImage: '/photos/case studies/restaurant ao/H1LRHrlVpO97096mUHjZSE4FtQ.png' },
-  { slug: 'hmo',      brand: 'HMO Checker',         tags: ['SaaS', 'Funnel'],     stat: '1,500+', label: 'Early sign-ups, V1 launch',          accent: '#7D5DFF', coverImage: '/photos/case studies/hmo checker/vH7DvEmgOwmG0bLogLYVhsDns.png' },
-  { slug: 'ptf',      brand: 'Playing The Field',   tags: ['Events', 'Web'],      stat: '+50%',   label: 'Ticket leads vs. prior page',        accent: '#EA6DF8', coverImage: '/photos/case studies/playing the field/X5fKwSMk9XDzKn4EWMXlgpmH2uU.png' },
-  { slug: 'blue',     brand: 'Bluestone Mortgages', tags: ['Brand', 'Print'],     stat: '+20%',   label: 'Engagement lift',                    accent: '#FFDC04', coverImage: '/photos/case studies/bluestone mortgages/BnvDGMJ8q8bQ3qvekK0FEy0sUs.png' },
+  { slug: 'flexibuy', contentSlug: 'flexibuy-vans',       brand: 'Flexibuy Vans',       tags: ['Web', 'Performance'], stat: '£3.27',  label: 'Cost per lead (60% below industry)', accent: '#FFDC04', coverImage: '/photos/case studies/flexibuy/R6SmStBRWkdMyr0M37aqdGCtXE4.png' },
+  { slug: 'police',   contentSlug: 'police-mortgages',    brand: 'Police Mortgages',    tags: ['Brand', 'Web'],       stat: '300%',   label: 'Organic traffic increase',           accent: '#63CC79', coverImage: '/photos/case studies/police mortgages/0wJP1agTSjS5C320be836kZIJs.png' },
+  { slug: 'ao',       contentSlug: 'ao-restaurant',       brand: 'Restaurant AO',       tags: ['Identity', 'Web'],    stat: '564%',   label: 'Page views, first 30 days',          accent: '#EF8869', coverImage: '/photos/case studies/restaurant ao/H1LRHrlVpO97096mUHjZSE4FtQ.png' },
+  { slug: 'hmo',      contentSlug: 'hmo-checker',         brand: 'HMO Checker',         tags: ['SaaS', 'Funnel'],     stat: '1,500+', label: 'Early sign-ups, V1 launch',          accent: '#7D5DFF', coverImage: '/photos/case studies/hmo checker/vH7DvEmgOwmG0bLogLYVhsDns.png' },
+  { slug: 'ptf',      contentSlug: 'playing-the-field',   brand: 'Playing The Field',   tags: ['Events', 'Web'],      stat: '+50%',   label: 'Ticket leads vs. prior page',        accent: '#EA6DF8', coverImage: '/photos/case studies/playing the field/X5fKwSMk9XDzKn4EWMXlgpmH2uU.png' },
+  { slug: 'blue',     contentSlug: 'bluestone-mortgages', brand: 'Bluestone Mortgages', tags: ['Brand', 'Print'],     stat: '+20%',   label: 'Engagement lift',                    accent: '#FFDC04', coverImage: '/photos/case studies/bluestone mortgages/BnvDGMJ8q8bQ3qvekK0FEy0sUs.png' },
 ];
 
-export const Work: React.FC = () => (
-  <section id="work" className="section" style={{ background: '#050505' }}>
-    <div className="container-wide">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 32, flexWrap: 'wrap', marginBottom: 48, padding: '0 clamp(0px, 1vw, 16px)' }}>
-        <div style={{ maxWidth: 720 }}>
-          <Eyebrow num="04 / Selected work">Recent wins</Eyebrow>
-          <h2 style={{ fontSize: 'clamp(32px, 4.4vw, 64px)', fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: '#fff', marginTop: 18 }}>
-            We measure by<br />
-            <span className="fg-3">enquiries, not </span><span style={{ fontStyle: 'italic', fontFamily: 'AuditGelasio, serif', fontWeight: 500 }}>applause.</span>
-          </h2>
-        </div>
-        <a href="#start" className="link-u" style={{ fontSize: 14 }}>
-          Get my free audit {Icon.arrow(14)}
-        </a>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }} className="work-grid">
-        {CASES.map((c, i) => <CaseCard key={i} {...c} />)}
-      </div>
-    </div>
-    <style>{`
-      @media (max-width: 980px) { .audit-lp .work-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-      @media (max-width: 600px) { .audit-lp .work-grid { grid-template-columns: 1fr !important; } }
-    `}</style>
-  </section>
-);
+export const Work: React.FC = () => {
+  const [openSlug, setOpenSlug] = useState<string | null>(null);
+  // Build a quick lookup so click handlers don't re-scan the array.
+  const fullBySlug = useMemo(() => {
+    const m = new Map<string, CaseStudyData>();
+    fullCaseStudies.forEach((c) => m.set(c.slug, c as unknown as CaseStudyData));
+    return m;
+  }, []);
+  const activeCase = openSlug ? fullBySlug.get(openSlug) || null : null;
 
-const CaseCard: React.FC<CaseStudy> = ({ brand, tags, stat, label, accent, coverImage }) => {
+  return (
+    <section id="work" className="section" style={{ background: '#050505' }}>
+      <div className="container-wide">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 32, flexWrap: 'wrap', marginBottom: 48, padding: '0 clamp(0px, 1vw, 16px)' }}>
+          <div style={{ maxWidth: 720 }}>
+            <Eyebrow num="04 / Selected work">Recent wins</Eyebrow>
+            <h2 style={{ fontSize: 'clamp(32px, 4.4vw, 64px)', fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: '#fff', marginTop: 18 }}>
+              We measure by<br />
+              <span className="fg-3">enquiries, not </span><span style={{ fontStyle: 'italic', fontFamily: 'AuditGelasio, serif', fontWeight: 500 }}>applause.</span>
+            </h2>
+          </div>
+          <a href="#start" className="link-u" style={{ fontSize: 14 }}>
+            Get my free audit {Icon.arrow(14)}
+          </a>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }} className="work-grid">
+          {CASES.map((c, i) => (
+            <CaseCard key={i} {...c} onClick={() => setOpenSlug(c.contentSlug)} />
+          ))}
+        </div>
+      </div>
+      <style>{`
+        @media (max-width: 980px) { .audit-lp .work-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 600px) { .audit-lp .work-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
+
+      <CaseStudyModal
+        caseStudy={activeCase}
+        onClose={() => setOpenSlug(null)}
+        source="Audit LP Recent Wins"
+      />
+    </section>
+  );
+};
+
+const CaseCard: React.FC<CaseStudy & { onClick: () => void }> = ({ brand, tags, stat, label, accent, coverImage, onClick }) => {
   const [hover, setHover] = useState(false);
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      aria-label={`Open ${brand} case study`}
       style={{
         position: 'relative', borderRadius: 24, overflow: 'hidden',
         background: '#0A0A0A',
-        border: '1px solid rgba(255,255,255,0.08)',
-        transition: 'border-color 0.3s, transform 0.3s',
+        border: `1px solid ${hover ? 'rgba(255,220,4,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        transition: 'border-color 0.3s, transform 0.3s, box-shadow 0.3s',
         transform: hover ? 'translateY(-6px)' : 'translateY(0)',
+        boxShadow: hover ? '0 24px 60px rgba(0,0,0,0.5)' : 'none',
         aspectRatio: '4 / 5',
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         padding: 24,
+        cursor: 'pointer',
+        outline: 'none',
       }}>
       {/* Real client cover image (replaces AbstractArt) */}
       <img

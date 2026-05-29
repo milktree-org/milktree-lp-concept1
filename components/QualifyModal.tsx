@@ -237,13 +237,14 @@ const SCREENS: Screen[] = [
     subhead: 'Pick all that apply.',
     options: NEED_OPTIONS,
   },
-  // 6. Budget — primary disqualifier
+  // 6. Budget — primary disqualifier (cols 3 = balanced 3+2 layout for
+  //    5 options; was 5-across previously which made cards too narrow)
   {
     type: 'cards',
     key: 'budget',
     question: "What's your project budget, {name}?",
     subhead: 'Honesty here saves both our time — no wrong answer.',
-    cols: 5,
+    cols: 3,
     options: BUDGET_OPTIONS,
   },
   // 7. Timeline — secondary disqualifier
