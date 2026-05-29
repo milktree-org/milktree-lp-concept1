@@ -105,10 +105,14 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
       customData: { source, case_study: caseStudy?.title || '' },
     });
     if (onPrimaryCta) {
+      // Open the qualify modal FIRST while the case-study modal is
+      // still mid-exit — they overlap briefly which feels like a clean
+      // hand-off rather than a flash of bare page between two modals.
+      onPrimaryCta();
       onClose();
-      // Defer modal open to next tick so this one finishes closing first
-      setTimeout(() => onPrimaryCta(), 50);
     } else {
+      // Legacy fallback (no parent CTA handler wired) — scroll to the
+      // capture point so they at least land on a form.
       onClose();
       setTimeout(() => {
         document.getElementById('audit')?.scrollIntoView({ behavior: 'smooth' });

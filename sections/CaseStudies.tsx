@@ -6,11 +6,15 @@ import { Reveal } from '../components/animations/Reveal';
 import { caseStudies } from '../data/content';
 import { trackCustom } from '../utils/meta-tracking';
 import { CaseStudyModal, type CaseStudyData } from '../components/CaseStudyModal';
+import { QualifyModal, useQualifyModal } from '../components/QualifyModal';
 
 export const CaseStudies: React.FC = () => {
   const trackRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [openSlug, setOpenSlug] = useState<string | null>(null);
+  // Own a QualifyModal so the CTA inside CaseStudyModal opens it directly
+  // rather than scrolling to the FinalCTA section.
+  const qualifyModal = useQualifyModal();
 
   const getCardWidth = () => {
     const margin = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--site-margin')) || 48;
@@ -142,7 +146,14 @@ export const CaseStudies: React.FC = () => {
       <CaseStudyModal
         caseStudy={activeCase}
         onClose={() => setOpenSlug(null)}
+        onPrimaryCta={qualifyModal.open}
         source="Main LP CaseStudies"
+      />
+
+      <QualifyModal
+        isOpen={qualifyModal.isOpen}
+        onClose={qualifyModal.close}
+        source="Main LP CaseStudies → Case Study CTA"
       />
     </section>
   );

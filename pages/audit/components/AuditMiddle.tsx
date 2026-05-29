@@ -10,6 +10,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Eyebrow, Icon } from './AuditPrimitives';
 import { CaseStudyModal, type CaseStudyData } from '../../../components/CaseStudyModal';
+import { QualifyModal, useQualifyModal } from '../../../components/QualifyModal';
 import { caseStudies as fullCaseStudies } from '../../../data/content';
 
 // ── PROCESS ──────────────────────────────────────────────────────
@@ -124,6 +125,10 @@ const CASES: CaseStudy[] = [
 
 export const Work: React.FC = () => {
   const [openSlug, setOpenSlug] = useState<string | null>(null);
+  // Own a QualifyModal in this section so the "Get my free brand audit"
+  // CTA inside the CaseStudyModal can hand straight into qualification
+  // instead of scrolling back to the hero.
+  const qualifyModal = useQualifyModal();
   // Build a quick lookup so click handlers don't re-scan the array.
   const fullBySlug = useMemo(() => {
     const m = new Map<string, CaseStudyData>();
@@ -161,7 +166,14 @@ export const Work: React.FC = () => {
       <CaseStudyModal
         caseStudy={activeCase}
         onClose={() => setOpenSlug(null)}
+        onPrimaryCta={qualifyModal.open}
         source="Audit LP Recent Wins"
+      />
+
+      <QualifyModal
+        isOpen={qualifyModal.isOpen}
+        onClose={qualifyModal.close}
+        source="Audit LP Recent Wins → Case Study CTA"
       />
     </section>
   );
