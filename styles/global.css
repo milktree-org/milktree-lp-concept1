@@ -6545,6 +6545,31 @@ html {
   max-width: 720px;
 }
 
+/* "Visit website" pill — sits under the headline in the hero overlay */
+.csm-visit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(255, 220, 4, 0.92);
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-primary);
+  text-decoration: none;
+  letter-spacing: -0.005em;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 22px rgba(255, 220, 4, 0.25);
+}
+.csm-visit:hover {
+  background: #FFDC04;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(255, 220, 4, 0.35);
+}
+.csm-visit svg { flex-shrink: 0; }
+
 /* Body content */
 .csm-body {
   padding: clamp(24px, 4vw, 44px);

@@ -106,13 +106,20 @@ interface CaseStudy {
   coverImage: string;
 }
 
+// May 29 changes:
+//   - All 6 cards now carry the "Web" tag (we built the websites for all
+//     of them; HMO and Bluestone were the only two missing it).
+//   - Restaurant AO cover swapped to a more visually compelling shot
+//     (the prior one was too dark and busy as a thumbnail).
+//   - Brand name is now the headline on the card, stat moved to the
+//     bottom row — see CaseCard JSX below.
 const CASES: CaseStudy[] = [
   { slug: 'flexibuy', contentSlug: 'flexibuy-vans',       brand: 'Flexibuy Vans',       tags: ['Web', 'Performance'], stat: '£3.27',  label: 'Cost per lead (60% below industry)', accent: '#FFDC04', coverImage: '/photos/case studies/flexibuy/R6SmStBRWkdMyr0M37aqdGCtXE4.png' },
   { slug: 'police',   contentSlug: 'police-mortgages',    brand: 'Police Mortgages',    tags: ['Brand', 'Web'],       stat: '300%',   label: 'Organic traffic increase',           accent: '#63CC79', coverImage: '/photos/case studies/police mortgages/0wJP1agTSjS5C320be836kZIJs.png' },
-  { slug: 'ao',       contentSlug: 'ao-restaurant',       brand: 'Restaurant AO',       tags: ['Identity', 'Web'],    stat: '564%',   label: 'Page views, first 30 days',          accent: '#EF8869', coverImage: '/photos/case studies/restaurant ao/H1LRHrlVpO97096mUHjZSE4FtQ.png' },
-  { slug: 'hmo',      contentSlug: 'hmo-checker',         brand: 'HMO Checker',         tags: ['SaaS', 'Funnel'],     stat: '1,500+', label: 'Early sign-ups, V1 launch',          accent: '#7D5DFF', coverImage: '/photos/case studies/hmo checker/vH7DvEmgOwmG0bLogLYVhsDns.png' },
-  { slug: 'ptf',      contentSlug: 'playing-the-field',   brand: 'Playing The Field',   tags: ['Events', 'Web'],      stat: '+50%',   label: 'Ticket leads vs. prior page',        accent: '#EA6DF8', coverImage: '/photos/case studies/playing the field/X5fKwSMk9XDzKn4EWMXlgpmH2uU.png' },
-  { slug: 'blue',     contentSlug: 'bluestone-mortgages', brand: 'Bluestone Mortgages', tags: ['Brand', 'Print'],     stat: '+20%',   label: 'Engagement lift',                    accent: '#FFDC04', coverImage: '/photos/case studies/bluestone mortgages/BnvDGMJ8q8bQ3qvekK0FEy0sUs.png' },
+  { slug: 'ao',       contentSlug: 'ao-restaurant',       brand: 'Restaurant AO',       tags: ['Identity', 'Web'],    stat: '564%',   label: 'Page views, first 30 days',          accent: '#EF8869', coverImage: '/photos/case studies/restaurant ao/lan63TUY0iqn9HgVmhwpt1AoM.png' },
+  { slug: 'hmo',      contentSlug: 'hmo-checker',         brand: 'HMO Checker',         tags: ['Web', 'SaaS', 'Funnel'], stat: '1,500+', label: 'Early sign-ups, V1 launch',       accent: '#7D5DFF', coverImage: '/photos/case studies/hmo checker/vH7DvEmgOwmG0bLogLYVhsDns.png' },
+  { slug: 'ptf',      contentSlug: 'playing-the-field',   brand: 'Playing The Field',   tags: ['Web', 'Events'],      stat: '+50%',   label: 'Ticket leads vs. prior page',        accent: '#EA6DF8', coverImage: '/photos/case studies/playing the field/X5fKwSMk9XDzKn4EWMXlgpmH2uU.png' },
+  { slug: 'blue',     contentSlug: 'bluestone-mortgages', brand: 'Bluestone Mortgages', tags: ['Web', 'Brand', 'Print'], stat: '+20%', label: 'Engagement lift',                    accent: '#FFDC04', coverImage: '/photos/case studies/bluestone mortgages/BnvDGMJ8q8bQ3qvekK0FEy0sUs.png' },
 ];
 
 export const Work: React.FC = () => {
@@ -207,13 +214,25 @@ const CaseCard: React.FC<CaseStudy & { onClick: () => void }> = ({ brand, tags, 
         ))}
       </div>
 
+      {/* Brand name is now the headline (was the stat in the previous
+          layout). Reads more personal and tells you the industry at a
+          glance. Stat moved into the bottom row beside the arrow. */}
       <div style={{ position: 'relative' }}>
-        <div style={{ fontSize: 'clamp(34px, 3.6vw, 56px)', fontWeight: 700, letterSpacing: '-0.035em', color: accent, lineHeight: 1, fontFamily: 'AuditSatoshi', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
-          {stat}
+        <div style={{
+          fontSize: 'clamp(28px, 3.2vw, 44px)',
+          fontWeight: 700,
+          letterSpacing: '-0.03em',
+          color: accent,
+          lineHeight: 1.02,
+          fontFamily: 'AuditSatoshi',
+          textShadow: '0 2px 12px rgba(0,0,0,0.6)',
+          textWrap: 'balance',
+        }}>
+          {brand}
         </div>
-        <div className="fg-2" style={{ fontSize: 13.5, lineHeight: 1.5, marginTop: 8, maxWidth: 280, color: 'rgba(255,255,255,0.78)' }}>{label}</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.18)' }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{brand}</span>
+        <div className="fg-2" style={{ fontSize: 13.5, lineHeight: 1.5, marginTop: 10, maxWidth: 280, color: 'rgba(255,255,255,0.82)' }}>{label}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.18)' }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>{stat}</span>
           <span style={{ color: hover ? accent : 'rgba(255,255,255,0.6)', transition: 'color 0.3s, transform 0.3s', transform: hover ? 'translateX(3px)' : 'translateX(0)' }}>
             {Icon.arrow(16)}
           </span>

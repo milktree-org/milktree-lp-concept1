@@ -85,6 +85,7 @@ export const processSteps = {
 export const caseStudies = [
   {
     slug: "police-mortgages",
+    websiteUrl: "https://policemortgages.co.uk",
     title: "Police Mortgages",
     headline: "A total brand and digital transformation, without losing a single ranking.",
     services: "Brand Identity Refresh, WordPress Website Rebuild, SEO Migration & Optimisation",
@@ -119,6 +120,7 @@ export const caseStudies = [
   },
   {
     slug: "hmo-checker",
+    websiteUrl: "https://hmochecker.co.uk",
     title: "HMO Checker",
     headline: "From idea to full growth system.",
     services: "WordPress Website, Custom Waitlist Funnel, Performance Marketing, CRM Setup",
@@ -178,6 +180,7 @@ export const caseStudies = [
   },
   {
     slug: "flexibuy-vans",
+    websiteUrl: "https://flexibuy.co.uk",
     title: "Flexibuy Vans",
     headline: "A lead machine for serious van buyers.",
     services: "WordPress Website, Custom Van Archive, Conversion Funnel, Performance Marketing",
@@ -247,6 +250,7 @@ export const caseStudies = [
   },
   {
     slug: "ao-restaurant",
+    websiteUrl: "https://restaurant-ao.com",
     title: "AO Restaurant",
     headline: "A refined digital presence for a refined dining experience.",
     services: "Brand Identity, Website Design, Creative Direction",
@@ -300,6 +304,7 @@ export const caseStudies = [
   },
   {
     slug: "playing-the-field",
+    websiteUrl: "https://playingthefield.co.uk",
     title: "Playing The Field",
     headline: "A festival website built to sell out.",
     services: "Website Design & Development, Booking Integration, Mobile-First Experience",
@@ -357,6 +362,7 @@ export const caseStudies = [
   },
   {
     slug: "bluestone-mortgages",
+    websiteUrl: "https://bluestonemortgages.co.uk",
     title: "Bluestone Mortgages",
     headline: "A brand refresh that boosted engagement by over 20%.",
     services: "Digital Design, Print Materials, Trade Show Signage, Social Media Infographics",

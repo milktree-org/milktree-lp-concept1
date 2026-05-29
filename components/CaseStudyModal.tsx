@@ -19,11 +19,14 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowRight, CheckCircle, Quote } from 'lucide-react';
+import { X, ArrowRight, CheckCircle, Quote, ExternalLink } from 'lucide-react';
 import { trackCustom } from '../utils/meta-tracking';
 
 export interface CaseStudyData {
   slug: string;
+  /** External URL to the live client website. Renders a "Visit website"
+   *  button at the top of the modal when present. */
+  websiteUrl?: string;
   title: string;
   headline?: string;
   services?: string;
@@ -154,6 +157,28 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
                 )}
                 <h2 className="csm-title">{caseStudy.title}</h2>
                 {caseStudy.headline && <p className="csm-headline">{caseStudy.headline}</p>}
+                {caseStudy.websiteUrl && (
+                  <a
+                    href={caseStudy.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="csm-visit"
+                    onClick={() => {
+                      if (typeof window.gtag === 'function') {
+                        window.gtag('event', 'visit_client_site', {
+                          event_category: 'Case Study',
+                          event_label: caseStudy.title,
+                          send_to: 'G-9GHX9JVN9S',
+                        });
+                      }
+                      trackCustom('VisitClientSite', {
+                        customData: { case_study: caseStudy.title, slug: caseStudy.slug, url: caseStudy.websiteUrl || '' },
+                      });
+                    }}
+                  >
+                    Visit website <ExternalLink size={14} />
+                  </a>
+                )}
               </div>
             </div>
 
