@@ -14,16 +14,41 @@
  *   - milktreeagency.com/audit/thank-you  (when ad lands on /audit on root)
  *   - audit.milktreeagency.com/thank-you   (when ad lands on subdomain root)
  */
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { trackLead, trackSchedule, trackCustom } from '../utils/meta-tracking';
+import { useLocation } from 'react-router-dom';
+import { trackLead, trackSchedule } from '../utils/meta-tracking';
+import { getCalcomTrackingMetadata } from '../utils/lead-tracking';
 import './audit/styles/audit-lp.css';
-import { Logo, Button, Icon } from './audit/components/AuditPrimitives';
+import { Logo, Icon } from './audit/components/AuditPrimitives';
 
-// Same Cal.com slot the main thank-you page uses — battle-tested
-const CAL_LINK = 'https://cal.com/milktree-agency/free-brand-digital-presence-audit-30-minutes';
+declare global {
+  interface Window {
+    Cal?: any;
+  }
+}
+
+// Cal.com slot — same event the rest of the funnel uses.
+const CAL_LINK = 'milktree-agency/free-brand-digital-presence-audit-30-minutes';
+const CAL_NAMESPACE = 'audit-ty';
+
+interface PrefillState {
+  name?: string;
+  email?: string;
+  company?: string;
+  website?: string;
+  service?: string;
+}
 
 export const AuditThankYouPage: React.FC = () => {
+  const location = useLocation();
+  const prefill = (location.state || {}) as PrefillState;
+  const isBooked = new URLSearchParams(location.search).get('booked') === '1';
+
+  const calContainerRef = useRef<HTMLDivElement | null>(null);
+  const calInitialised = useRef(false);
+  const bookedRef = useRef(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
 
@@ -33,39 +58,154 @@ export const AuditThankYouPage: React.FC = () => {
     document.documentElement.style.backgroundColor = '#000';
     document.body.style.backgroundColor = '#000';
 
-    // GA4 — thank-you page view (use as conversion goal in Google Ads)
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'conversion', {
-        event_category: 'Lead',
-        event_label: 'Audit LP Thank You',
-        value: 1,
-        currency: 'GBP',
-        send_to: 'G-9GHX9JVN9S',
-      });
+    // Skip duplicate conversion firing when arriving with ?booked=1 — the
+    // QualifyModal already fired Lead + Schedule + GA4 conversion when the
+    // user confirmed their slot. Double-firing here would inflate counts.
+    if (!isBooked) {
+      // GA4 — thank-you page view = the LEAD conversion (form was submitted).
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'conversion', {
+          event_category: 'Lead',
+          event_label: 'Audit LP Thank You',
+          value: 1,
+          currency: 'GBP',
+          send_to: 'G-9GHX9JVN9S',
+        });
+      }
+
+      // Meta Lead event (Pixel + CAPI) — primary conversion (form submitted).
+      // NOTE: Schedule now fires on confirmed booking below, not here, so the
+      // Schedule count reflects ACTUAL calls booked rather than page views.
+      trackLead({ eventSource: 'Audit LP Thank You' });
     }
-
-    // Meta Lead event (Pixel + CAPI) — primary conversion
-    trackLead({ eventSource: 'Audit LP Thank You' });
-
-    // Meta Schedule event (Pixel + CAPI) — high-intent signal
-    trackSchedule({ eventSource: 'Audit LP Thank You' });
 
     return () => {
       document.documentElement.style.backgroundColor = prevHtmlBg;
       document.body.style.backgroundColor = prevBodyBg;
     };
-  }, []);
+  }, [isBooked]);
 
-  const handleBookCall = () => {
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'book_call_click', {
-        event_category: 'Audit LP Thank You',
-        event_label: 'Book My Free Call',
-        send_to: 'G-9GHX9JVN9S',
+  // ── Inline Cal.com embed — replaces the old "Book my free call" button ──
+  // Defer-loaded per CLAUDE.md Rule 3 (embed.js ~400KB). Since the embed is
+  // the primary content here, the in-view check fires init immediately.
+  useEffect(() => {
+    const section = calContainerRef.current;
+    if (!section) return;
+
+    const init = () => {
+      if (calInitialised.current) return;
+      calInitialised.current = true;
+
+      // Cal.com embed bootstrap — same battle-tested IIFE as AuditClosing.tsx.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (function (C: any, A: string, L: string) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const p = (a: any, ar: any) => a.q.push(ar);
+        const d = C.document;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        C.Cal = C.Cal || function (...args: any[]) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const cal: any = C.Cal;
+          if (!cal.loaded) {
+            cal.ns = {};
+            cal.q = cal.q || [];
+            d.head.appendChild(d.createElement('script')).src = A;
+            cal.loaded = true;
+          }
+          if (args[0] === L) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const api: any = function (...inner: any[]) { p(api, inner); };
+            const namespace = args[1];
+            api.q = api.q || [];
+            if (typeof namespace === 'string') {
+              cal.ns[namespace] = cal.ns[namespace] || api;
+              p(cal.ns[namespace], args);
+              p(cal, ['initNamespace', namespace]);
+            } else {
+              p(cal, args);
+            }
+            return;
+          }
+          p(cal, args);
+        };
+      })(window, 'https://app.cal.com/embed/embed.js', 'init');
+
+      const trackingMetadata = getCalcomTrackingMetadata();
+      const notesParts = [
+        prefill.company ? `Company: ${prefill.company}` : '',
+        prefill.website ? `Website: ${prefill.website}` : '',
+        prefill.service ? `Service: ${prefill.service}` : '',
+      ].filter(Boolean);
+
+      // Prefill via query params on the calLink — the version-stable method
+      // that reliably carries name/email/notes into the Cal booking form.
+      const prefillParams = new URLSearchParams();
+      if (prefill.name) prefillParams.set('name', prefill.name);
+      if (prefill.email) prefillParams.set('email', prefill.email);
+      if (notesParts.length) prefillParams.set('notes', notesParts.join(' · '));
+      const calLinkWithPrefill = prefillParams.toString()
+        ? `${CAL_LINK}?${prefillParams.toString()}`
+        : CAL_LINK;
+
+      const Cal = window.Cal;
+      Cal('init', CAL_NAMESPACE, { origin: 'https://cal.com' });
+      Cal.ns[CAL_NAMESPACE]('inline', {
+        elementOrSelector: '#cal-audit-ty-inline',
+        config: {
+          layout: 'month_view',
+          theme: 'dark',
+          metadata: { source: 'Audit LP Thank You Inline', ...trackingMetadata },
+        },
+        calLink: calLinkWithPrefill,
       });
+      Cal.ns[CAL_NAMESPACE]('ui', {
+        hideEventTypeDetails: false,
+        layout: 'month_view',
+        cssVarsPerTheme: { dark: { 'cal-brand': '#FFDC04' } },
+      });
+
+      // The real high-intent signal: a CONFIRMED booking.
+      Cal.ns[CAL_NAMESPACE]('on', {
+        action: 'bookingSuccessful',
+        callback: () => {
+          if (bookedRef.current) return;
+          bookedRef.current = true;
+
+          const nameParts = (prefill.name || '').trim().split(/\s+/);
+          const userData = prefill.email
+            ? {
+                email: prefill.email,
+                firstName: nameParts[0] || undefined,
+                lastName: nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined,
+              }
+            : undefined;
+
+          trackSchedule({ eventSource: 'Audit LP Thank You Inline', userData });
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'conversion', {
+              event_category: 'Schedule',
+              event_label: 'Audit LP Cal.com Booking',
+              value: 1,
+              currency: 'GBP',
+              send_to: 'G-9GHX9JVN9S',
+            });
+          }
+        },
+      });
+    };
+
+    if (section.getBoundingClientRect().top < window.innerHeight + 300) {
+      init();
+      return;
     }
-    trackCustom('BookCallClick', { customData: { source: 'Audit LP Thank You' } });
-  };
+    const io = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      io.disconnect();
+      init();
+    }, { rootMargin: '200px' });
+    io.observe(section);
+    return () => io.disconnect();
+  }, [prefill.name, prefill.email, prefill.company, prefill.website, prefill.service]);
 
   return (
     <div className="audit-lp">
@@ -106,57 +246,53 @@ export const AuditThankYouPage: React.FC = () => {
             {Icon.check(40)}
           </div>
 
-          {/* Heading */}
+          {/* Heading — branches on whether the user already booked via the QualifyModal. */}
           <h1 style={{ fontSize: 'clamp(36px, 5.4vw, 64px)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.05, color: '#fff', margin: 0, textWrap: 'balance' }}>
-            You're in. Here's what <span style={{ color: '#FFDC04' }}>happens next.</span>
+            {isBooked ? (
+              <>You're <span style={{ color: '#FFDC04' }}>booked.</span> Audit incoming.</>
+            ) : (
+              <>You're in. Here's what <span style={{ color: '#FFDC04' }}>happens next.</span></>
+            )}
           </h1>
 
-          <p className="fg-2" style={{ fontSize: 'clamp(16px, 1.4vw, 19px)', lineHeight: 1.55, marginTop: 20, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}>
-            Thanks for requesting your free brand audit. We just need one more thing: a quick 30-minute call to understand your brand before we put the audit together.
+          <p className="fg-2" style={{ fontSize: 'clamp(16px, 1.4vw, 19px)', lineHeight: 1.55, marginTop: 20, maxWidth: 540, marginLeft: 'auto', marginRight: 'auto' }}>
+            {isBooked ? (
+              <>Check your inbox for the confirmation and calendar invite. Add it to your calendar so you don't miss it — we'll meet you at the time you chose.</>
+            ) : (
+              <>Last step: <span style={{ color: '#fff', fontWeight: 600 }}>pick a 30-minute slot below</span>. Your audit doesn't start until we've had the call — so grab a time now while it's in front of you.</>
+            )}
           </p>
 
-          {/* 3-step "what happens next" */}
-          <div style={{
-            marginTop: 48,
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 24,
-            padding: 'clamp(24px, 3vw, 36px)',
-            textAlign: 'left',
-          }}>
-            {[
-              { n: '01', title: 'Book your audit call', desc: 'Pick a 30-minute slot below at a time that suits you. Same week if possible.' },
-              { n: '02', title: 'We take your brief on the call', desc: 'On the call we\'ll dig into your brand, goals, and where you\'re stuck. The audit is tailored to you.' },
-              { n: '03', title: 'Receive your audit in 48 hours', desc: 'Within 48 hours of the call you get a personalised brand audit with clear, actionable next steps.' },
-            ].map((step, i) => (
-              <div key={step.n} style={{ display: 'flex', gap: 18, padding: i > 0 ? '20px 0 0' : '0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none', marginTop: i > 0 ? 20 : 0 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: 'rgba(255,220,4,0.12)',
-                  border: '1px solid rgba(255,220,4,0.35)',
-                  color: '#FFDC04',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 12, fontWeight: 800, flexShrink: 0,
-                }}>{step.n}</div>
-                <div>
-                  <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.2 }}>{step.title}</h3>
-                  <p className="fg-2" style={{ fontSize: 14.5, lineHeight: 1.55, marginTop: 6 }}>{step.desc}</p>
-                </div>
+          {/* Inline Cal.com embed — only when arriving WITHOUT a confirmed booking
+              (legacy fallback path). When ?booked=1, the user already chose a time
+              inside the QualifyModal, so showing another calendar is confusing. */}
+          {!isBooked && (
+            <>
+              <div style={{ marginTop: 36, maxWidth: 880, marginLeft: 'auto', marginRight: 'auto' }}>
+                <div
+                  ref={calContainerRef}
+                  id="cal-audit-ty-inline"
+                  style={{
+                    width: '100%',
+                    minHeight: 720,
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                  }}
+                />
               </div>
-            ))}
-          </div>
 
-          {/* Primary CTA — Cal.com */}
-          <div style={{ marginTop: 40 }}>
-            <Button href={CAL_LINK} size="lg" onClick={handleBookCall}>
-              Book my free call
-            </Button>
-          </div>
-
-          {/* Fallback note */}
-          <p className="fg-3" style={{ fontSize: 13, marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            Can't book now? Check your inbox. We've sent the booking link there too.
-          </p>
+              {/* Fallback note */}
+              <p className="fg-3" style={{ fontSize: 13, marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                Calendar not loading?{' '}
+                <a href={`https://cal.com/${CAL_LINK}`} target="_blank" rel="noopener noreferrer" style={{ color: '#FFDC04', textDecoration: 'underline' }}>
+                  Open it in a new tab
+                </a>
+                {' '}— or check your inbox, the booking link is there too.
+              </p>
+            </>
+          )}
         </div>
       </main>
 

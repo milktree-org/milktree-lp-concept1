@@ -5957,3 +5957,415 @@ html {
     gap: var(--space-4);
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   QualifyModal — multi-step lead qualification + Cal.com booking
+   Dark, brand-yellow accented. Designed to feel like the /audit LP
+   so the modal fits seamlessly whether opened from the main site
+   or the paid traffic LP.
+   ════════════════════════════════════════════════════════════════ */
+
+.qualify-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 48px);
+  overflow-y: auto;
+  font-family: var(--font-primary);
+}
+
+.qualify-modal__container {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  background: #0A0A0A;
+  border: 1px solid rgba(255, 220, 4, 0.22);
+  border-radius: 24px;
+  padding: 32px clamp(20px, 4vw, 40px) 24px;
+  margin: auto 0;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: min(640px, calc(100vh - 96px));
+}
+
+.qualify-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.qualify-modal__progress {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.qualify-modal__progress-bar {
+  height: 100%;
+  background: #FFDC04;
+  border-radius: 999px;
+  transition: width 0.4s cubic-bezier(0.21, 0.47, 0.32, 0.98);
+}
+
+.qualify-modal__close {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.7);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.qualify-modal__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.qualify-modal__step-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 220, 4, 0.85);
+  margin-top: 18px;
+}
+
+.qualify-modal__body {
+  flex: 1;
+  margin-top: 14px;
+  position: relative;
+}
+
+.qualify-modal__step {
+  display: block;
+}
+
+.qualify-modal__heading {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: #fff;
+  margin: 0 0 10px;
+}
+
+.qualify-modal__sub {
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 0 24px;
+}
+
+.qualify-modal__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.qualify-modal__label-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qualify-modal__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: -0.005em;
+}
+
+.qualify-modal__input,
+.qualify-modal__textarea {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  font-size: 15px;
+  font-family: var(--font-primary);
+  font-weight: 400;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.qualify-modal__input::placeholder,
+.qualify-modal__textarea::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+.qualify-modal__input:focus,
+.qualify-modal__textarea:focus {
+  border-color: rgba(255, 220, 4, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.qualify-modal__textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.5;
+}
+
+.qualify-modal__hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: -0.005em;
+}
+
+/* Radio "tile" buttons */
+.qualify-modal__radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qualify-modal__radio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-primary);
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.qualify-modal__radio:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.05);
+}
+.qualify-modal__radio.is-selected {
+  border-color: #FFDC04;
+  background: rgba(255, 220, 4, 0.10);
+  color: #fff;
+}
+
+.qualify-modal__radio-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  position: relative;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+.qualify-modal__radio.is-selected .qualify-modal__radio-dot {
+  border-color: #FFDC04;
+  background: #FFDC04;
+}
+.qualify-modal__radio.is-selected .qualify-modal__radio-dot::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 999px;
+  background: #000;
+}
+
+/* Multi-select chips */
+.qualify-modal__chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.qualify-modal__chip {
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-primary);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.qualify-modal__chip:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+}
+.qualify-modal__chip.is-selected {
+  background: #FFDC04;
+  color: #000;
+  border-color: #FFDC04;
+  font-weight: 700;
+}
+
+/* Footer */
+.qualify-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.qualify-modal__back {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.qualify-modal__back:hover {
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.qualify-modal__primary {
+  padding: 14px 22px;
+  border-radius: 999px;
+  border: none;
+  background: #FFDC04;
+  color: #000;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.qualify-modal__primary:hover:not(:disabled) {
+  background: #FFE63A;
+  transform: translateY(-1px);
+}
+.qualify-modal__primary:disabled {
+  background: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.40);
+  cursor: not-allowed;
+}
+
+/* Cal.com embed inside the booking step */
+.qualify-modal__cal {
+  width: 100%;
+  min-height: 640px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+/* Disqualified screen */
+.qualify-modal__disqualified {
+  text-align: center;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qualify-modal__disqualified .qualify-modal__heading {
+  text-align: center;
+}
+
+.qualify-modal__dq-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.qualify-modal__dq-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.qualify-modal__dq-link:hover {
+  background: rgba(255, 220, 4, 0.10);
+  border-color: rgba(255, 220, 4, 0.35);
+  color: #fff;
+}
+
+.qualify-modal__error {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(239, 136, 105, 0.08);
+  border: 1px solid rgba(239, 136, 105, 0.25);
+  color: #EF8869;
+  font-size: 13px;
+}
+
+/* Mobile tweaks */
+@media (max-width: 640px) {
+  .qualify-modal__overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+  .qualify-modal__container {
+    border-radius: 0;
+    min-height: 100vh;
+    border: none;
+    padding-top: 24px;
+  }
+  .qualify-modal__cal {
+    min-height: 580px;
+  }
+}
+
+/* Trust micro-row beneath the FinalCTA primary button */
+.finalcta__trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 18px;
+  margin-top: 16px;
+}
+.finalcta__trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-primary);
+}
+.finalcta__trust-item svg {
+  color: rgba(255, 220, 4, 0.7);
+}

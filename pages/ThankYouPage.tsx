@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, CalendarCheck, Phone, FileText, Mail, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { trackLead, trackSchedule, trackCustom } from '../utils/meta-tracking';
 import { Navbar } from '../components/ui/Navbar';
 import { Footer } from '../sections/Footer';
@@ -13,13 +13,43 @@ declare global {
   }
 }
 
-const statusItems = [
+// Two flows arrive here:
+//  (A) form-only fallback  → user submitted form but didn't book inline
+//      (legacy path; CTA below sends them to Cal.com)
+//  (B) ?booked=1           → user completed inline Cal.com booking on the
+//      LP. Show booking-confirmation copy, hide the Book CTA.
+
+const statusItemsBooked = [
+  { icon: <CheckCircle size={16} />, label: 'Brief received' },
+  { icon: <CalendarCheck size={16} />, label: 'Call booked' },
+  { icon: <Mail size={16} />, label: 'Calendar invite sent' },
+];
+
+const statusItemsFallback = [
   { icon: <CheckCircle size={16} />, label: 'Brief received' },
   { icon: <Mail size={16} />, label: 'Confirmation email sent' },
   { icon: <CalendarCheck size={16} />, label: 'Book your free call below' },
 ];
 
-const steps = [
+const stepsBooked = [
+  {
+    icon: <CalendarCheck size={24} />,
+    title: 'Your call is on the calendar',
+    desc: 'Check your inbox for the confirmation and calendar invite. Add it to your calendar so you don\'t miss it.',
+  },
+  {
+    icon: <Phone size={24} />,
+    title: 'We take your brief on the call',
+    desc: 'On the call, we\'ll dig into your brand, goals, and where you\'re stuck so the audit is tailored to you.',
+  },
+  {
+    icon: <FileText size={24} />,
+    title: 'Receive your audit in 48 hours',
+    desc: 'Within 48 hours of the call, you\'ll get a personalised brand audit with clear, actionable next steps.',
+  },
+];
+
+const stepsFallback = [
   {
     icon: <CalendarCheck size={24} />,
     title: 'Book your audit call',
@@ -39,6 +69,10 @@ const steps = [
 
 export const ThankYouPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isBooked = new URLSearchParams(location.search).get('booked') === '1';
+  const statusItems = isBooked ? statusItemsBooked : statusItemsFallback;
+  const steps = isBooked ? stepsBooked : stepsFallback;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -88,7 +122,7 @@ export const ThankYouPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          You're in. Here's what happens next.
+          {isBooked ? "You're booked. Audit incoming." : "You're in. Here's what happens next."}
         </motion.h1>
 
         <motion.p
@@ -97,7 +131,9 @@ export const ThankYouPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          Thanks for requesting your free brand audit. We just need one more thing: a quick call to understand your brand before we get to work.
+          {isBooked
+            ? "Your call is booked. Check your inbox for the confirmation and calendar invite. We'll meet you at the scheduled time."
+            : "Thanks for requesting your free brand audit. We just need one more thing: a quick call to understand your brand before we get to work."}
         </motion.p>
 
         {/* Status bar — moved below subtitle */}
@@ -136,42 +172,46 @@ export const ThankYouPage: React.FC = () => {
           ))}
         </motion.div>
 
-        {/* Book call CTA */}
-        <motion.a
-          className="thankyou__book-btn"
-          href="https://cal.com/milktree-agency/free-brand-digital-presence-audit-30-minutes"
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => {
-            if (typeof window.gtag === 'function') {
-              window.gtag('event', 'book_call_click', {
-                event_category: 'Thank You',
-                event_label: 'Book My Free Call',
-                send_to: 'G-9GHX9JVN9S',
-              });
-            }
-            trackCustom('BookCallClick', { customData: { source: 'Thank You Page' } });
-          }}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <CalendarCheck size={20} />
-          <span>Book My Free Call</span>
-          <ArrowRight size={18} />
-        </motion.a>
+        {/* Book call CTA — hidden if user already booked inline on the LP */}
+        {!isBooked && (
+          <>
+            <motion.a
+              className="thankyou__book-btn"
+              href="https://cal.com/milktree-agency/free-brand-digital-presence-audit-30-minutes"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                if (typeof window.gtag === 'function') {
+                  window.gtag('event', 'book_call_click', {
+                    event_category: 'Thank You',
+                    event_label: 'Book My Free Call',
+                    send_to: 'G-9GHX9JVN9S',
+                  });
+                }
+                trackCustom('BookCallClick', { customData: { source: 'Thank You Page' } });
+              }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <CalendarCheck size={20} />
+              <span>Book My Free Call</span>
+              <ArrowRight size={18} />
+            </motion.a>
 
-        <motion.p
-          className="thankyou__fallback"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-        >
-          <Clock size={14} />
-          <span>Can't book now? Check your email for the booking link.</span>
-        </motion.p>
+            <motion.p
+              className="thankyou__fallback"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+            >
+              <Clock size={14} />
+              <span>Can't book now? Check your email for the booking link.</span>
+            </motion.p>
+          </>
+        )}
 
         {/* Back to home */}
         <motion.button

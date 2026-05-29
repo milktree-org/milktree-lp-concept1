@@ -1,55 +1,19 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * FinalCTA — main LP closing section.
+ *
+ * Replaced with a single primary CTA that opens the <QualifyModal>. The
+ * inline 2-step form was a half-step toward qualification; the modal
+ * now owns the full qualification + mandatory Cal.com booking flow.
+ * One source of truth for lead capture across the site.
+ */
+import React from 'react';
 import { motion } from 'framer-motion';
-import { useForm, ValidationError } from '@formspree/react';
-import { useNavigate } from 'react-router-dom';
 import { Reveal } from '../components/animations/Reveal';
-import { Zap } from 'lucide-react';
-import { trackContact } from '../utils/meta-tracking';
+import { Zap, ShieldCheck, Clock, Users } from 'lucide-react';
+import { QualifyModal, useQualifyModal } from '../components/QualifyModal';
 
 export const FinalCTA: React.FC = () => {
-  const [state, handleSubmit] = useForm('auditForm');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [website, setWebsite] = useState('');
-  const navigate = useNavigate();
-
-  const canSubmit = name.trim() !== '' && email.trim() !== '' && email.includes('@');
-
-  // Redirect to thank you page on successful submission
-  useEffect(() => {
-    if (state.succeeded) {
-      navigate('/thank-you');
-    }
-  }, [state.succeeded, navigate]);
-
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-
-    // GA4 — form submission
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'generate_lead', {
-        event_category: 'Audit Form',
-        event_label: 'Single Step Submit',
-        value: 1,
-        currency: 'GBP',
-        send_to: 'G-9GHX9JVN9S',
-      });
-    }
-
-    // Meta Contact (Pixel + CAPI) with email + name for match rate
-    const nameParts = name.trim().split(/\s+/);
-    trackContact({
-      eventSource: 'Audit Form Submit',
-      userData: {
-        email,
-        firstName: nameParts[0] || undefined,
-        lastName: nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined,
-      },
-    });
-
-    handleSubmit(e);
-  };
+  const modal = useQualifyModal();
 
   return (
     <section className="finalcta-section" id="audit">
@@ -63,82 +27,38 @@ export const FinalCTA: React.FC = () => {
 
         <Reveal delay={0.08}>
           <p className="finalcta__subtext">
-            Request your free brand audit. We'll book a call to understand your brand, then deliver a personalised audit within 48 hours.
+            Request your free brand audit. We'll qualify the fit in 90 seconds, then book a call and deliver your audit within 48 hours of it.
           </p>
         </Reveal>
 
         <Reveal delay={0.16}>
-          <p className="finalcta__time-hint">Takes 15 seconds. No commitment.</p>
           <div className="finalcta__form-wrap">
 
-            <motion.form
-              className="finalcta__form"
-              onSubmit={onSubmit}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
+            {/* Single primary CTA — opens the QualifyModal */}
+            <motion.button
+              type="button"
+              className="finalcta__btn finalcta__btn--submit"
+              onClick={modal.open}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.2 }}
             >
-              {/* Formspree requires 'service' — default for the simplified single-step form */}
-              <input type="hidden" name="service" value="Brand Audit Request" />
+              <Zap size={20} fill="rgb(0,0,0)" stroke="none" />
+              <span>Get My Free Audit</span>
+            </motion.button>
 
-              <div className="finalcta__field">
-                <label className="finalcta__label" htmlFor="audit-name">Name *</label>
-                <input
-                  id="audit-name"
-                  name="name"
-                  type="text"
-                  className="finalcta__input"
-                  placeholder="Your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  autoComplete="name"
-                />
+            {/* Trust micro-row under the button */}
+            <div className="finalcta__trust-row">
+              <div className="finalcta__trust-item">
+                <Clock size={14} /> 90-second qualifier
               </div>
-
-              <div className="finalcta__field">
-                <label className="finalcta__label" htmlFor="audit-email">Email *</label>
-                <input
-                  id="audit-email"
-                  name="email"
-                  type="email"
-                  className="finalcta__input"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-                <ValidationError prefix="Email" field="email" errors={state.errors} className="finalcta__error" />
-                <span className="finalcta__hint">We'll only use this to send your audit results.</span>
+              <div className="finalcta__trust-item">
+                <ShieldCheck size={14} /> No pitch on the call
               </div>
-
-              <div className="finalcta__field">
-                <label className="finalcta__label" htmlFor="audit-website">Website (optional)</label>
-                <input
-                  id="audit-website"
-                  name="website"
-                  type="text"
-                  className="finalcta__input"
-                  placeholder="yourcompany.com"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  autoComplete="url"
-                />
+              <div className="finalcta__trust-item">
+                <Users size={14} /> 4 spots / month
               </div>
-
-              <motion.button
-                type="submit"
-                className="finalcta__btn finalcta__btn--submit"
-                disabled={!canSubmit || state.submitting}
-                whileHover={canSubmit ? { scale: 1.02 } : {}}
-                whileTap={canSubmit ? { scale: 0.98 } : {}}
-                transition={{ duration: 0.2 }}
-              >
-                <Zap size={20} fill="rgb(0,0,0)" stroke="none" />
-                <span>{state.submitting ? 'Sending...' : 'Get My Free Audit'}</span>
-              </motion.button>
-            </motion.form>
+            </div>
 
             <p className="finalcta__note">Spots are limited. We take on 4 new brand builds per month.</p>
 
@@ -152,6 +72,12 @@ export const FinalCTA: React.FC = () => {
         </Reveal>
 
       </div>
+
+      <QualifyModal
+        isOpen={modal.isOpen}
+        onClose={modal.close}
+        source="Main LP FinalCTA"
+      />
     </section>
   );
 };

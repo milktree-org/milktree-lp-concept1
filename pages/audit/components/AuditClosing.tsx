@@ -17,199 +17,74 @@
  *   - Footer (May 2 v2): wordmark made visible (was outline-only),
  *     body text bumped to fg-2 + size 16, logo size 18 → 22.
  */
-import React, { useEffect, useRef, useState } from 'react';
-import { Eyebrow, Icon, Logo } from './AuditPrimitives';
-import { trackSchedule } from '../../../utils/meta-tracking';
-import { getCalcomTrackingMetadata } from '../../../utils/lead-tracking';
+import React, { useEffect, useState } from 'react';
+import { Eyebrow, Icon, Logo, Button } from './AuditPrimitives';
+import { QualifyModal, useQualifyModal } from '../../../components/QualifyModal';
 
-declare global {
-  interface Window {
-    Cal?: any;
-  }
-}
+// (CalcomInline component + its CAL_LINK/CAL_NAMESPACE constants were
+//  removed when this LP's FinalCTA moved to the QualifyModal-driven flow.
+//  Cal.com embedding now lives inside <QualifyModal>.)
 
-// ── CAL.COM INLINE EMBED ─────────────────────────────────────────
-// Defer-loaded per CLAUDE.md Rule 3. embed.js (~400KB) only fetches
-// when the user is within 200px of this section. The IIFE bootstrap
-// is the official Cal pattern (https://cal.com/docs/core-features/embed).
-const CAL_LINK = 'milktree-agency/free-brand-digital-presence-audit-30-minutes';
-const CAL_NAMESPACE = 'audit-lp';
-
-const CalcomInline: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const initialisedRef = useRef(false);
-
-  useEffect(() => {
-    const section = containerRef.current;
-    if (!section) return;
-
-    const init = () => {
-      if (initialisedRef.current) return;
-      initialisedRef.current = true;
-
-      // Cal.com embed bootstrap — namespaced so multiple embeds don't collide.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (function (C: any, A: string, L: string) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const p = (a: any, ar: any) => a.q.push(ar);
-        const d = C.document;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        C.Cal = C.Cal || function (...args: any[]) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const cal: any = C.Cal;
-          if (!cal.loaded) {
-            cal.ns = {};
-            cal.q = cal.q || [];
-            d.head.appendChild(d.createElement('script')).src = A;
-            cal.loaded = true;
-          }
-          if (args[0] === L) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const api: any = function (...inner: any[]) { p(api, inner); };
-            const namespace = args[1];
-            api.q = api.q || [];
-            if (typeof namespace === 'string') {
-              cal.ns[namespace] = cal.ns[namespace] || api;
-              p(cal.ns[namespace], args);
-              p(cal, ['initNamespace', namespace]);
-            } else {
-              p(cal, args);
-            }
-            return;
-          }
-          p(cal, args);
-        };
-      })(window, 'https://app.cal.com/embed/embed.js', 'init');
-
-      // Snapshot attribution at the moment we hand off to Cal.com so
-      // bookings are tagged with first/last-touch UTMs + click IDs. Cal.com
-      // surfaces config.metadata in the booking webhook payload + booking
-      // record, so Levi can see exactly which ad drove a booking.
-      const trackingMetadata = getCalcomTrackingMetadata();
-
-      const Cal = window.Cal;
-      Cal('init', CAL_NAMESPACE, { origin: 'https://cal.com' });
-      Cal.ns[CAL_NAMESPACE]('inline', {
-        elementOrSelector: '#cal-audit-inline',
-        config: {
-          layout: 'month_view',
-          theme: 'dark',
-          // Tag every booking made through this embed with our tracking
-          // context. Source field also identifies which LP card drove it.
-          metadata: { source: 'Audit LP - Cal.com Inline', ...trackingMetadata },
-        },
-        calLink: CAL_LINK,
-      });
-      Cal.ns[CAL_NAMESPACE]('ui', {
-        hideEventTypeDetails: false,
-        layout: 'month_view',
-        cssVarsPerTheme: {
-          dark: { 'cal-brand': '#FFDC04' },
-        },
-      });
-      // Fire pixel + analytics on confirmed booking.
-      Cal.ns[CAL_NAMESPACE]('on', {
-        action: 'bookingSuccessful',
-        callback: () => {
-          trackSchedule({ eventSource: 'Audit LP Cal.com Inline' });
-          if (typeof window.gtag === 'function') {
-            window.gtag('event', 'conversion', {
-              event_category: 'Schedule',
-              event_label: 'Audit LP Cal.com Booking',
-              value: 1,
-              currency: 'GBP',
-              send_to: 'G-9GHX9JVN9S',
-            });
-          }
-        },
-      });
-    };
-
-    // If the section is already in/near viewport (user scrolled past
-    // while the lazy chunk loaded), initialise immediately.
-    if (section.getBoundingClientRect().top < window.innerHeight + 300) {
-      init();
-      return;
-    }
-
-    // Otherwise defer until the user scrolls within 200px of it.
-    const io = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      io.disconnect();
-      init();
-    }, { rootMargin: '200px' });
-    io.observe(section);
-    return () => io.disconnect();
-  }, []);
-
+// ── FINAL CTA (QualifyModal trigger — replaces the old inline Cal embed) ─
+// May 29: consolidated to a single primary CTA that opens the QualifyModal.
+// Reason: the campaign objective is moving from "form filled" to "call
+// booked," and we don't want two competing booking paths on the same LP.
+// Hero + closing CTA both fire the same modal, ensuring uniform
+// qualification and tracking.
+export const FinalCTA: React.FC = () => {
+  const modal = useQualifyModal();
   return (
-    <div
-      ref={containerRef}
-      id="cal-audit-inline"
-      style={{
-        width: '100%',
-        minHeight: 720,
-        background: 'rgba(0,0,0,0.4)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 24,
+    <section id="cta" className="section" style={{ padding: '0 clamp(20px, 4vw, 48px) clamp(72px, 9vw, 128px)' }}>
+      <div style={{
+        position: 'relative',
+        maxWidth: 1400, margin: '0 auto',
+        borderRadius: 48,
+        padding: 'clamp(48px, 6vw, 96px) clamp(24px, 4vw, 80px)',
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #050505 100%)',
+        border: '1px solid rgba(255,220,4,0.22)',
         overflow: 'hidden',
-      }}
-    />
+      }}>
+        <div aria-hidden style={{ position: 'absolute', top: -200, right: -200, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,220,4,0.12), transparent 65%)', pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', bottom: -150, left: -100, width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(125,93,255,0.08), transparent 65%)', pointerEvents: 'none' }} />
+
+        {/* Centered content stack */}
+        <div style={{ position: 'relative', maxWidth: 720, margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Eyebrow num="06 / Ready when you are">Book the call</Eyebrow>
+          <h2 style={{ fontSize: 'clamp(36px, 5.4vw, 72px)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1, color: '#fff', marginTop: 20, textWrap: 'balance' }}>
+            90 seconds to qualify. <span style={{ color: '#FFDC04' }}>Then pick a slot.</span>
+          </h2>
+          <p className="fg-2" style={{ fontSize: 'clamp(16px, 1.4vw, 19px)', lineHeight: 1.55, marginTop: 20, maxWidth: 600 }}>
+            Five short questions so the call isn't a discovery call. We come back within 48 hours of it with a short, honest audit. And whether we're the right studio for you.
+          </p>
+
+          <ul style={{ listStyle: 'none', padding: 0, margin: '28px 0 0', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px 20px', maxWidth: 720 }}>
+            {[
+              '30-min discovery call',
+              '48-hour written audit',
+              'Positioning review',
+              'Identity assessment',
+              'Prioritised action plan',
+            ].map((b, i) => (
+              <li key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'rgba(255,255,255,0.85)' }}>
+                <span style={{ width: 18, height: 18, borderRadius: '50%', background: '#FFDC04', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{Icon.check(10)}</span>
+                {b}
+              </li>
+            ))}
+          </ul>
+
+          <div style={{ marginTop: 40 }}>
+            <Button onClick={modal.open} size="lg">Get my free audit</Button>
+          </div>
+          <p className="fg-3" style={{ fontSize: 13, marginTop: 14, letterSpacing: '0.01em' }}>
+            Free · No pitch decks · 4 spots / month
+          </p>
+        </div>
+      </div>
+
+      <QualifyModal isOpen={modal.isOpen} onClose={modal.close} source="Audit LP Closing" />
+    </section>
   );
 };
-
-// ── FINAL CTA (Cal.com inline calendar — replaces the previous form) ─
-// May 2 v3: single-column layout. Content + bullets sit centred above
-// the calendar; calendar is centred at max 880px (Cal.com's UI doesn't
-// gain anything past ~900px wide and was getting squeezed in the old
-// 1.4fr column at narrow viewport widths).
-export const FinalCTA: React.FC = () => (
-  <section id="cta" className="section" style={{ padding: '0 clamp(20px, 4vw, 48px) clamp(72px, 9vw, 128px)' }}>
-    <div style={{
-      position: 'relative',
-      maxWidth: 1400, margin: '0 auto',
-      borderRadius: 48,
-      padding: 'clamp(48px, 6vw, 96px) clamp(24px, 4vw, 80px)',
-      background: 'linear-gradient(135deg, #0a0a0a 0%, #050505 100%)',
-      border: '1px solid rgba(255,220,4,0.22)',
-      overflow: 'hidden',
-    }}>
-      <div aria-hidden style={{ position: 'absolute', top: -200, right: -200, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,220,4,0.12), transparent 65%)', pointerEvents: 'none' }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: -150, left: -100, width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(125,93,255,0.08), transparent 65%)', pointerEvents: 'none' }} />
-
-      {/* Centered content stack */}
-      <div style={{ position: 'relative', maxWidth: 720, margin: '0 auto', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Eyebrow num="06 / Or book directly">Skip the form</Eyebrow>
-        <h2 style={{ fontSize: 'clamp(36px, 5.4vw, 72px)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1, color: '#fff', marginTop: 20, textWrap: 'balance' }}>
-          Pick a slot. <span style={{ color: '#FFDC04' }}>Book the call.</span>
-        </h2>
-        <p className="fg-2" style={{ fontSize: 'clamp(16px, 1.4vw, 19px)', lineHeight: 1.55, marginTop: 20, maxWidth: 600 }}>
-          Rather book direct than fill a form? Pick a 30-minute slot below. We'll come back within 48 hours of the call with a short, honest audit. And whether we're the right studio for you.
-        </p>
-
-        <ul style={{ listStyle: 'none', padding: 0, margin: '28px 0 0', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px 20px', maxWidth: 720 }}>
-          {[
-            '30-min discovery call',
-            '48-hour written audit',
-            'Positioning review',
-            'Identity assessment',
-            'Prioritised action plan',
-          ].map((b, i) => (
-            <li key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'rgba(255,255,255,0.85)' }}>
-              <span style={{ width: 18, height: 18, borderRadius: '50%', background: '#FFDC04', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{Icon.check(10)}</span>
-              {b}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Cal.com embed — centered, max width 880px */}
-      <div style={{ position: 'relative', maxWidth: 880, margin: '48px auto 0' }}>
-        <CalcomInline />
-      </div>
-    </div>
-  </section>
-);
 
 // ── FAQ ──────────────────────────────────────────────────────────
 const FAQ_ITEMS = [
