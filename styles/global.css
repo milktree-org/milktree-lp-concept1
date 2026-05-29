@@ -6124,6 +6124,7 @@ html {
   width: 100%;
   max-width: 880px;
 }
+.qm-cards[data-cols="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .qm-cards[data-cols="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .qm-cards[data-cols="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .qm-cards[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -6404,6 +6405,7 @@ html {
 
 /* Responsive */
 @media (max-width: 900px) {
+  .qm-cards[data-cols="5"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .qm-cards[data-cols="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .qm-cards[data-cols="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .qm-card { min-height: 116px; padding: 18px 14px; }
@@ -6413,6 +6415,7 @@ html {
   .qm-counter { top: 18px; }
   .qm-q { font-size: 24px; }
   .qm-sub { font-size: 14px; margin-bottom: 26px; }
+  .qm-cards[data-cols="5"],
   .qm-cards[data-cols="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .qm-card__emoji { font-size: 28px; }
   .qm-card__label { font-size: 13px; }
