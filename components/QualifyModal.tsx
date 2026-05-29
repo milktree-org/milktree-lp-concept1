@@ -49,6 +49,11 @@ declare global {
 const CAL_LINK = 'milktree-agency/free-brand-digital-presence-audit-30-minutes';
 const CAL_NAMESPACE = 'qualify-modal';
 
+// ⚠️ REPLACE WITH THE REAL MILKTREE BRAND PLAYBOOK GOOGLE DOC URL.
+// Shown on the disqualified screen so leads that aren't call-ready
+// still walk away with something useful (and a soft Milktree touch).
+const BRAND_PLAYBOOK_URL = 'https://docs.google.com/document/d/REPLACE-WITH-REAL-MILKTREE-PLAYBOOK-LINK';
+
 // ── Answers (original schema — no turnover) ───────────────────────
 interface Answers {
   name: string;
@@ -70,8 +75,9 @@ const EMPTY: Answers = {
   budget: '', timeline: '', pain: '',
 };
 
-// ── Disqualification rules (original) ─────────────────────────────
-const DQ_BUDGETS = new Set(['Under £3k']);
+// ── Disqualification rules ────────────────────────────────────────
+// Updated May 29 to match real Milktree price points (was Under £3k).
+const DQ_BUDGETS = new Set(['Under £1,000']);
 const DQ_TIMELINES = new Set(['Just exploring, no plans yet']);
 
 function isDisqualified(a: Answers): boolean {
@@ -148,12 +154,12 @@ const NEED_OPTIONS: CardOption[] = [
   { value: 'Not sure yet',               emoji: '🤷', label: 'Not sure yet' },
 ];
 
+// May 29: new tiers reflecting real project price points.
 const BUDGET_OPTIONS: CardOption[] = [
-  { value: 'Under £3k',    emoji: '🪙', label: 'Under £3k' },
-  { value: '£3–6k',        emoji: '💷', label: '£3–6k' },
-  { value: '£6–15k',       emoji: '💵', label: '£6–15k' },
-  { value: '£15k+',        emoji: '💎', label: '£15k+' },
-  { value: 'Not sure yet', emoji: '🤔', label: 'Not sure yet' },
+  { value: 'Under £1,000',                emoji: '🪙', label: 'Under £1,000' },
+  { value: 'Between £1,000 to £2,000',    emoji: '💷', label: 'Between £1,000 to £2,000' },
+  { value: '£2,000 to £5,000',            emoji: '💵', label: '£2,000 to £5,000' },
+  { value: '£5,000 to £10,000',           emoji: '💎', label: '£5,000 to £10,000' },
 ];
 
 const TIMELINE_OPTIONS: CardOption[] = [
@@ -237,14 +243,15 @@ const SCREENS: Screen[] = [
     subhead: 'Pick all that apply.',
     options: NEED_OPTIONS,
   },
-  // 6. Budget — primary disqualifier (cols 3 = balanced 3+2 layout for
-  //    5 options; was 5-across previously which made cards too narrow)
+  // 6. Budget — primary disqualifier. 2×2 grid: 4 tiers, labels are
+  //    longer than the previous "Under £3k" / "£3–6k" style so they
+  //    need the wider tiles a 2-col layout gives them.
   {
     type: 'cards',
     key: 'budget',
     question: "What's your project budget, {name}?",
     subhead: 'Honesty here saves both our time — no wrong answer.',
-    cols: 3,
+    cols: 2,
     options: BUDGET_OPTIONS,
   },
   // 7. Timeline — secondary disqualifier
@@ -603,6 +610,44 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, screenIdx, answers, terminal]);
 
+  // ── Power-user shortcut: pressing 1-9 picks card N on cards/multi
+  //    screens. Ignored on text screens (the input handles digits).
+  useEffect(() => {
+    if (!isOpen || terminal || !currentScreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+      if (!/^[1-9]$/.test(e.key)) return;
+      const idx = parseInt(e.key, 10) - 1;
+      if (currentScreen.type === 'cards' && currentScreen.options[idx]) {
+        e.preventDefault();
+        update(currentScreen.key, currentScreen.options[idx].value as Answers[typeof currentScreen.key]);
+      } else if (currentScreen.type === 'multi' && currentScreen.options[idx]) {
+        e.preventDefault();
+        const opt = currentScreen.options[idx].value;
+        update('needs', (prev) =>
+          prev.includes(opt) ? prev.filter((v) => v !== opt) : [...prev, opt]
+        );
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, terminal, screenIdx]);
+
+  // ── Auto-advance on single-select cards (CRO win + LeadTap divergence).
+  //    Fires ~320ms after the user picks an option; cancelled by screen
+  //    change. Doesn't run on multi-select (`needs`), text or textarea
+  //    screens — those still wait for explicit Continue/Enter.
+  useEffect(() => {
+    if (!isOpen || terminal || !currentScreen) return;
+    if (currentScreen.type !== 'cards') return;
+    if (!isScreenComplete(currentScreen, answers)) return;
+    const t = window.setTimeout(() => { advance(); }, 320);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, terminal, screenIdx, answers]);
+
   // ── Render ────────────────────────────────────────────────────
   if (typeof document === 'undefined') return null;
 
@@ -668,9 +713,14 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
                 onClick={advance}
                 disabled={!isScreenComplete(currentScreen, answers)}
               >
-                OK <ArrowRight size={16} />
+                Continue <ArrowRight size={16} />
               </button>
-              <span className="qm-enter-hint">press <kbd>Enter ↵</kbd></span>
+              <span className="qm-enter-hint">
+                press <kbd>Enter ↵</kbd>
+                {currentScreen.type === 'cards' || currentScreen.type === 'multi'
+                  ? <> · <kbd>1–9</kbd> picks</>
+                  : null}
+              </span>
             </div>
           )}
 
@@ -703,7 +753,7 @@ const ScreenView: React.FC<{
 
       {screen.type === 'cards' && (
         <div className="qm-cards" data-cols={screen.cols ?? 4}>
-          {screen.options.map((opt) => {
+          {screen.options.map((opt, idx) => {
             const selected = (answers[screen.key] as string) === opt.value;
             return (
               <button
@@ -713,6 +763,10 @@ const ScreenView: React.FC<{
                 onClick={() => update(screen.key, opt.value as Answers[typeof screen.key])}
                 aria-pressed={selected}
               >
+                {/* Small index badge — doubles as a keyboard-shortcut hint
+                    (press 1-9 to pick option N). Distinguishes the card
+                    visually from the reference's plain tile. */}
+                <span className="qm-card__num" aria-hidden>{String(idx + 1).padStart(2, '0')}</span>
                 <span className="qm-card__emoji" aria-hidden>{opt.emoji}</span>
                 <span className="qm-card__label">{opt.label}</span>
               </button>
@@ -723,7 +777,7 @@ const ScreenView: React.FC<{
 
       {screen.type === 'multi' && (
         <div className="qm-cards" data-cols={4}>
-          {screen.options.map((opt) => {
+          {screen.options.map((opt, idx) => {
             const selected = answers.needs.includes(opt.value);
             return (
               <button
@@ -737,6 +791,7 @@ const ScreenView: React.FC<{
                 }
                 aria-pressed={selected}
               >
+                <span className="qm-card__num" aria-hidden>{String(idx + 1).padStart(2, '0')}</span>
                 <span className="qm-card__emoji" aria-hidden>{opt.emoji}</span>
                 <span className="qm-card__label">{opt.label}</span>
               </button>
@@ -837,16 +892,32 @@ const DisqualifiedTerminal: React.FC<{ answers: Answers; onClose: () => void }> 
           {both ? (
             <>Based on your answers, the work you're after is a bigger investment than the budget you have, and you're not ready to start yet. Better to be honest than to waste your time on a call.</>
           ) : reasons[0] === 'budget' ? (
-            <>Most of our brand engagements start at £3.5k+. The work you're after may be better served by a smaller studio or freelance route at this budget.</>
+            <>Most of our brand engagements start above this budget. The work you're after may be better served by a smaller studio or a freelance route at this stage.</>
           ) : (
-            <>It sounds like you're exploring. We focus on brands ready to move within ~90 days. When you're closer to starting, come back and book the call.</>
+            <>It sounds like you're exploring. We focus on brands ready to move within the next 90 days. Come back and book the call when you're closer to starting.</>
           )}
         </p>
 
+        {/* Brand playbook — a useful parting gift so leads that aren't
+            call-ready still walk away with something concrete. */}
+        <a
+          href={BRAND_PLAYBOOK_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="qm-dq-playbook"
+        >
+          <span className="qm-dq-playbook__icon" aria-hidden>📘</span>
+          <span className="qm-dq-playbook__body">
+            <span className="qm-dq-playbook__eyebrow">Free guide</span>
+            <span className="qm-dq-playbook__title">The Milktree Brand Playbook</span>
+            <span className="qm-dq-playbook__sub">
+              What separates a brand that gets remembered from one that doesn't. Yours to keep.
+            </span>
+          </span>
+          <ArrowRight size={18} className="qm-dq-playbook__arrow" />
+        </a>
+
         <div className="qm-dq-actions">
-          <a href="https://milktreeagency.com/insights" target="_blank" rel="noopener noreferrer" className="qm-dq-link">
-            <Mail size={16} /> Read our brand resources
-          </a>
           <a
             href={`mailto:hello@milktreeagency.com?subject=Brand%20audit%20question&body=${encodeURIComponent('Hi Milktree,\n\nI saw your site and wanted to get in touch.\n\n— ' + (answers.name || '') + (answers.email ? ' (' + answers.email + ')' : ''))}`}
             className="qm-dq-link"
