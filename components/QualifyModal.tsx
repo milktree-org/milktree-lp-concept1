@@ -1,32 +1,34 @@
 /**
- * QualifyModal — full-page Typeform-style lead qualification flow.
+ * QualifyModal — full-page Typeform-style flow, original question set.
  *
- * UX:
- *   - One question per screen, big centred headline
- *   - Emoji answer tiles (single-select or multi-select)
- *   - Pill "OK" button to advance; Enter key advances too
- *   - Personalised — headlines use the captured first name once it's known
- *   - Subtle progress bar at the top, close (×) top-right
+ * UX shell (kept from the previous iteration):
+ *   - Full-viewport dark navy overlay, brand-yellow accents
+ *   - One screen per question, big centred heading, pill OK + Enter key
+ *   - Progress bar + step counter at top, close × top-right
+ *   - Personalised: headings interpolate {name} once captured
  *
- * Order:
- *   1. Turnover   — primary eligibility gate (`< £10k/mo` disqualifies)
- *   2. Name
- *   3. Email
- *   4. Role
- *   5. Company
- *   6. Website (optional, has Skip)
- *   7. Needs (multi-select)
- *   8. Timeline — secondary gate (`Just exploring` disqualifies)
- *   9. #1 thing to fix (textarea)
- *  10a. Disqualified → "not the right fit" + email path + insights link
- *  10b. Qualified → mandatory inline Cal.com embed; bookingSuccessful is
- *       the only forward path (Meta Lead + Schedule, GA4 Schedule, Formspree
- *       POST with the full qualification payload, redirect to thank-you).
+ * Question set (restored to the original — no turnover):
+ *   1. Name + Email      (grouped text — both required)
+ *   2. Role              (cards)
+ *   3. Company + Website (grouped text — company required, website optional)
+ *   4. Stage             (cards)
+ *   5. Needs             (multi-select cards)
+ *   6. Budget            (cards)             — primary disqualifier
+ *   7. Timeline          (cards)             — secondary disqualifier
+ *   8. Pain              (textarea, min 8)
  *
- * Why turnover instead of budget: turnover correlates with actual willingness
- * to pay (people lie about budget; revenue is verifiable later). It's also
- * the first thing the Typeform reference asks, which fits paid-traffic
- * eligibility-first UX best practice — disqualify before burning info collection.
+ * Disqualification (hard gate):
+ *   - Budget = "Under £3k"                       → disqualified
+ *   - Timeline = "Just exploring, no plans yet"  → disqualified
+ *   Disqualified path shows a polite "not the right fit" screen with
+ *   a resource link + email mailto. Posts to Formspree with qualified=no
+ *   so disqualified leads are still recoverable.
+ *
+ * Qualified path:
+ *   Cal.com inline embed (mandatory) with name/email/notes prefilled.
+ *   bookingSuccessful → Meta Lead+Schedule (Pixel+CAPI), GA4 Schedule,
+ *   Formspree POST with qualified=yes + booked_call=yes, redirect to
+ *   the path-aware thank-you page.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -47,43 +49,55 @@ declare global {
 const CAL_LINK = 'milktree-agency/free-brand-digital-presence-audit-30-minutes';
 const CAL_NAMESPACE = 'qualify-modal';
 
-// ── Answers ────────────────────────────────────────────────────────
+// ── Answers (original schema — no turnover) ───────────────────────
 interface Answers {
-  turnover: string;
   name: string;
   email: string;
   role: string;
   company: string;
   website: string;
+  stage: string;
   needs: string[];
+  budget: string;
   timeline: string;
   pain: string;
 }
 
 const EMPTY: Answers = {
-  turnover: '', name: '', email: '', role: '',
+  name: '', email: '', role: '',
   company: '', website: '',
-  needs: [], timeline: '', pain: '',
+  stage: '', needs: [],
+  budget: '', timeline: '', pain: '',
 };
 
-// ── Disqualification rules ────────────────────────────────────────
-const DQ_TURNOVERS = new Set(['Less than £10k']);
+// ── Disqualification rules (original) ─────────────────────────────
+const DQ_BUDGETS = new Set(['Under £3k']);
 const DQ_TIMELINES = new Set(['Just exploring, no plans yet']);
 
 function isDisqualified(a: Answers): boolean {
-  return DQ_TURNOVERS.has(a.turnover) || DQ_TIMELINES.has(a.timeline);
+  return DQ_BUDGETS.has(a.budget) || DQ_TIMELINES.has(a.timeline);
 }
 
-// ── Screen definitions (data-driven) ──────────────────────────────
+// ── Field/screen types ────────────────────────────────────────────
 type CardOption = { value: string; emoji: string; label: string };
+
+type TextField = {
+  key: 'name' | 'email' | 'company' | 'website';
+  label: string;
+  placeholder: string;
+  inputType?: 'text' | 'email';
+  autoComplete?: string;
+  optional?: boolean;
+  validate?: (v: string) => boolean;
+};
 
 type Screen =
   | {
       type: 'cards';
-      key: keyof Pick<Answers, 'turnover' | 'role' | 'timeline'>;
+      key: keyof Pick<Answers, 'role' | 'stage' | 'budget' | 'timeline'>;
       question: string;        // supports {name} interpolation
       subhead?: string;
-      cols?: number;           // grid columns at desktop
+      cols?: number;
       options: CardOption[];
     }
   | {
@@ -94,14 +108,10 @@ type Screen =
       options: CardOption[];
     }
   | {
-      type: 'text';
-      key: keyof Pick<Answers, 'name' | 'email' | 'company' | 'website'>;
+      type: 'text-group';
       question: string;
       subhead?: string;
-      placeholder: string;
-      inputType?: 'text' | 'email';
-      optional?: boolean;
-      validate?: (v: string) => boolean;
+      fields: TextField[];
     }
   | {
       type: 'textarea';
@@ -112,111 +122,144 @@ type Screen =
       minLength: number;
     };
 
+// ── Original option sets ──────────────────────────────────────────
+const ROLE_OPTIONS: CardOption[] = [
+  { value: 'Founder / CEO',       emoji: '👑', label: 'Founder / CEO' },
+  { value: 'Marketing lead',      emoji: '🎯', label: 'Marketing lead' },
+  { value: 'Brand / design lead', emoji: '🎨', label: 'Brand / design lead' },
+  { value: 'Other',               emoji: '🙂', label: 'Other' },
+];
+
+const STAGE_OPTIONS: CardOption[] = [
+  { value: 'Pre-launch',                emoji: '🌱', label: 'Pre-launch' },
+  { value: 'Launched, under 1 year',    emoji: '🌳', label: 'Under 1 year' },
+  { value: 'Scaling (1–3 years)',       emoji: '🚀', label: 'Scaling (1–3 yrs)' },
+  { value: 'Established (3+ years)',    emoji: '🏛️', label: 'Established (3+ yrs)' },
+];
+
+const NEED_OPTIONS: CardOption[] = [
+  { value: 'Brand identity / strategy', emoji: '🎨', label: 'Brand identity' },
+  { value: 'Website / landing page',    emoji: '💻', label: 'Website' },
+  { value: 'Design system',              emoji: '🔲', label: 'Design system' },
+  { value: 'Content / social design',    emoji: '📱', label: 'Content / social' },
+  { value: 'Generative AI visuals',      emoji: '🤖', label: 'AI visuals' },
+  { value: 'Ongoing retainer',           emoji: '♾️', label: 'Retainer' },
+  { value: 'Audit only',                 emoji: '📋', label: 'Audit only' },
+  { value: 'Not sure yet',               emoji: '🤷', label: 'Not sure yet' },
+];
+
+const BUDGET_OPTIONS: CardOption[] = [
+  { value: 'Under £3k',    emoji: '🪙', label: 'Under £3k' },
+  { value: '£3–6k',        emoji: '💷', label: '£3–6k' },
+  { value: '£6–15k',       emoji: '💵', label: '£6–15k' },
+  { value: '£15k+',        emoji: '💎', label: '£15k+' },
+  { value: 'Not sure yet', emoji: '🤔', label: 'Not sure yet' },
+];
+
+const TIMELINE_OPTIONS: CardOption[] = [
+  { value: 'ASAP / urgent',                emoji: '🔥', label: 'ASAP' },
+  { value: 'Within 1–3 months',            emoji: '📅', label: '1–3 months' },
+  { value: '3–6 months out',               emoji: '🗓️', label: '3–6 months' },
+  { value: 'Just exploring, no plans yet', emoji: '👀', label: 'Just exploring' },
+];
+
+// ── Screens (8 in flow) ───────────────────────────────────────────
 const SCREENS: Screen[] = [
-  // 1. Turnover (eligibility gate, NO personalisation yet)
+  // 1. Identity — name + email grouped (user feedback: bunch text fields)
   {
-    type: 'cards',
-    key: 'turnover',
-    question: "Let's start here — what is your <em>current</em> monthly turnover?",
-    subhead: '⏱ Check eligibility in less than 2 mins',
-    cols: 4,
-    options: [
-      { value: 'Less than £10k', emoji: '💪',  label: 'Less than £10k' },
-      { value: '£10k - £20k',    emoji: '🧱',  label: '£10k - £20k' },
-      { value: '£20k - £40k',    emoji: '🚗',  label: '£20k - £40k' },
-      { value: '£40k - £70k',    emoji: '🚀',  label: '£40k - £70k' },
-      { value: '£70k - £100k',   emoji: '🏗',  label: '£70k - £100k' },
-      { value: '£100k+',         emoji: '🧨',  label: '£100k+' },
+    type: 'text-group',
+    question: "Let's start with you.",
+    subhead: '⏱ Takes under 2 minutes. We use this to prep your audit.',
+    fields: [
+      {
+        key: 'name',
+        label: 'Your name',
+        placeholder: 'First and last name',
+        inputType: 'text',
+        autoComplete: 'name',
+        validate: (v) => v.trim().length >= 2,
+      },
+      {
+        key: 'email',
+        label: 'Work email',
+        placeholder: 'name@company.com',
+        inputType: 'email',
+        autoComplete: 'email',
+        validate: (v) => /\S+@\S+\.\S+/.test(v.trim()),
+      },
     ],
   },
-  // 2. Name
-  {
-    type: 'text',
-    key: 'name',
-    question: 'Great — what should we call you?',
-    subhead: 'First name is fine.',
-    placeholder: 'Your name',
-    inputType: 'text',
-    validate: (v) => v.trim().length >= 2,
-  },
-  // 3. Email (personalised)
-  {
-    type: 'text',
-    key: 'email',
-    question: 'Thanks, {name} — best email for your audit?',
-    subhead: "We'll only use it to send the audit and confirm your call.",
-    placeholder: 'name@company.com',
-    inputType: 'email',
-    validate: (v) => /\S+@\S+\.\S+/.test(v.trim()),
-  },
-  // 4. Role
+  // 2. Role
   {
     type: 'cards',
     key: 'role',
     question: "What's your role, {name}?",
     cols: 4,
-    options: [
-      { value: 'Founder / CEO',          emoji: '👑', label: 'Founder / CEO' },
-      { value: 'Marketing lead',         emoji: '🎯', label: 'Marketing lead' },
-      { value: 'Brand / design lead',    emoji: '🎨', label: 'Brand lead' },
-      { value: 'Other',                  emoji: '🙂', label: 'Other' },
+    options: ROLE_OPTIONS,
+  },
+  // 3. Company + Website grouped (website optional)
+  {
+    type: 'text-group',
+    question: 'About your business.',
+    subhead: "We'll audit what's already out there before the call.",
+    fields: [
+      {
+        key: 'company',
+        label: 'Company name',
+        placeholder: 'Acme Co.',
+        inputType: 'text',
+        autoComplete: 'organization',
+        validate: (v) => v.trim().length >= 1,
+      },
+      {
+        key: 'website',
+        label: 'Website (optional)',
+        placeholder: 'acmeco.com',
+        inputType: 'text',
+        autoComplete: 'url',
+        optional: true,
+      },
     ],
   },
-  // 5. Company
+  // 4. Stage
   {
-    type: 'text',
-    key: 'company',
-    question: "What's your company called?",
-    placeholder: 'Acme Co.',
-    inputType: 'text',
-    validate: (v) => v.trim().length >= 1,
+    type: 'cards',
+    key: 'stage',
+    question: 'Where is your brand today?',
+    cols: 4,
+    options: STAGE_OPTIONS,
   },
-  // 6. Website (optional)
-  {
-    type: 'text',
-    key: 'website',
-    question: 'Got a website we can look at?',
-    subhead: "Optional — but it makes the audit much more useful.",
-    placeholder: 'acmeco.com',
-    inputType: 'text',
-    optional: true,
-  },
-  // 7. Needs (multi)
+  // 5. Needs
   {
     type: 'multi',
     key: 'needs',
     question: 'What do you need help with?',
     subhead: 'Pick all that apply.',
-    options: [
-      { value: 'Brand identity / strategy', emoji: '🎨', label: 'Brand identity' },
-      { value: 'Website / landing page',    emoji: '💻', label: 'Website' },
-      { value: 'Design system',              emoji: '🔲', label: 'Design system' },
-      { value: 'Content / social design',    emoji: '📱', label: 'Content / social' },
-      { value: 'Generative AI visuals',      emoji: '🤖', label: 'AI visuals' },
-      { value: 'Ongoing retainer',           emoji: '♾️', label: 'Retainer' },
-      { value: 'Audit only',                 emoji: '📋', label: 'Audit only' },
-      { value: 'Not sure yet',               emoji: '🤷', label: 'Not sure yet' },
-    ],
+    options: NEED_OPTIONS,
   },
-  // 8. Timeline (secondary gate)
+  // 6. Budget — primary disqualifier
+  {
+    type: 'cards',
+    key: 'budget',
+    question: "What's your project budget, {name}?",
+    subhead: 'Honesty here saves both our time — no wrong answer.',
+    cols: 5,
+    options: BUDGET_OPTIONS,
+  },
+  // 7. Timeline — secondary disqualifier
   {
     type: 'cards',
     key: 'timeline',
     question: 'When would you want to start?',
     cols: 4,
-    options: [
-      { value: 'ASAP / urgent',                emoji: '🔥', label: 'ASAP' },
-      { value: 'Within 1–3 months',            emoji: '📅', label: '1–3 months' },
-      { value: '3–6 months out',               emoji: '🌱', label: '3–6 months' },
-      { value: 'Just exploring, no plans yet', emoji: '👀', label: 'Just exploring' },
-    ],
+    options: TIMELINE_OPTIONS,
   },
-  // 9. Pain
+  // 8. Pain
   {
     type: 'textarea',
     key: 'pain',
     question: "Last one — what's the #1 thing you want fixed?",
-    subhead: 'One sentence is enough. This is what we focus on during the call.',
+    subhead: 'One sentence is fine. This is what we focus on during the call.',
     placeholder: "e.g. Our positioning is fuzzy — prospects don't get what we do in 5 seconds.",
     minLength: 8,
   },
@@ -228,18 +271,16 @@ function interpolate(template: string, a: Answers): string {
   return template.replace(/\{name\}/g, first || 'there');
 }
 
-function valueOf(a: Answers, key: Screen['key']): string | string[] {
-  return a[key as keyof Answers];
-}
-
 function isScreenComplete(s: Screen, a: Answers): boolean {
   if (s.type === 'cards') return (a[s.key] as string) !== '';
-  if (s.type === 'multi') return (a.needs as string[]).length > 0;
-  if (s.type === 'text') {
-    const v = (a[s.key] as string).trim();
-    if (s.optional) return true;
-    if (s.validate) return s.validate(v);
-    return v !== '';
+  if (s.type === 'multi') return a.needs.length > 0;
+  if (s.type === 'text-group') {
+    return s.fields.every(f => {
+      const v = (a[f.key] as string).trim();
+      if (f.optional) return true;
+      if (f.validate) return f.validate(v);
+      return v !== '';
+    });
   }
   if (s.type === 'textarea') return a.pain.trim().length >= s.minLength;
   return true;
@@ -278,9 +319,9 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
   const totalScreens = SCREENS.length;
   const progress = terminal
     ? 100
-    : ((screenIdx) / totalScreens) * 100;
+    : (screenIdx / totalScreens) * 100;
 
-  // ── Body scroll lock + escape ────────────────────────────────
+  // Scroll-lock + Escape
   useEffect(() => {
     if (!isOpen) return;
     const prevOverflow = document.documentElement.style.overflow;
@@ -296,7 +337,7 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, screenIdx, terminal]);
 
-  // ── Reset state after fully closed ───────────────────────────
+  // Reset after fully closed
   useEffect(() => {
     if (!isOpen) {
       const t = setTimeout(() => {
@@ -316,12 +357,11 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
     onClose();
   };
 
-  // ── Advance ──────────────────────────────────────────────────
   const advance = () => {
     if (!currentScreen) return;
     if (!isScreenComplete(currentScreen, answers)) return;
 
-    // After the LAST in-flow question (pain), evaluate qualification.
+    // Last in-flow screen → evaluate qualification
     if (screenIdx === SCREENS.length - 1) {
       const dq = isDisqualified(answers);
       const nameParts = answers.name.trim().split(/\s+/);
@@ -331,14 +371,13 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
         lastName: nameParts.length > 1 ? nameParts.slice(1).join(' ') : undefined,
       };
 
-      // Pre-booking Contact signal (keeps Meta data on bail).
+      // Pre-booking Contact signal so we still have Meta data if they bail
       trackContact({ eventSource: `${source} — Modal last step`, userData });
 
       if (dq) {
         const reasons: string[] = [];
-        if (DQ_TURNOVERS.has(answers.turnover)) reasons.push('turnover');
+        if (DQ_BUDGETS.has(answers.budget)) reasons.push('budget');
         if (DQ_TIMELINES.has(answers.timeline)) reasons.push('timeline');
-
         try {
           handleSubmit({
             service: 'Brand Audit Request',
@@ -354,7 +393,7 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
         trackCustom('LeadDisqualified', {
           eventSource: source,
           userData,
-          customData: { turnover: answers.turnover, timeline: answers.timeline },
+          customData: { budget: answers.budget, timeline: answers.timeline },
         });
         if (typeof window.gtag === 'function') {
           window.gtag('event', 'lead_disqualified', {
@@ -382,9 +421,6 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
     }
     if (screenIdx > 0) setScreenIdx(screenIdx - 1);
   };
-
-  // Skip-button visible only for optional text screens
-  const canSkip = currentScreen?.type === 'text' && currentScreen.optional;
 
   // ── Cal.com embed (book terminal) ─────────────────────────────
   const calContainerRef = useRef<HTMLDivElement | null>(null);
@@ -436,11 +472,12 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
     })(window, 'https://app.cal.com/embed/embed.js', 'init');
 
     const notes = [
-      `Turnover: ${answers.turnover}`,
       `Role: ${answers.role}`,
       answers.company ? `Company: ${answers.company}` : '',
       answers.website ? `Website: ${answers.website}` : '',
+      `Stage: ${answers.stage}`,
       `Needs: ${answers.needs.join(', ')}`,
+      `Budget: ${answers.budget}`,
       `Timeline: ${answers.timeline}`,
       '',
       `#1 thing to fix: ${answers.pain}`,
@@ -462,13 +499,14 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
         theme: 'dark',
         metadata: {
           source: `${source} - Qualify Modal`,
-          q_turnover: answers.turnover,
           q_name: answers.name,
           q_email: answers.email,
           q_role: answers.role,
           q_company: answers.company,
           q_website: answers.website,
+          q_stage: answers.stage,
           q_needs: answers.needs.join(', '),
+          q_budget: answers.budget,
           q_timeline: answers.timeline,
           q_pain: answers.pain.slice(0, 500),
           ...trackingMetadata,
@@ -539,7 +577,7 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [terminal, calSlotReady]);
 
-  // Reset Cal-init flag if user backs out of the booking terminal
+  // Reset Cal init flag if user backs out of booking
   useEffect(() => {
     if (terminal !== 'book') {
       calInitialised.current = false;
@@ -547,12 +585,11 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
     }
   }, [terminal]);
 
-  // Enter advances when the current screen is complete
+  // Enter advances when current screen is complete
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Enter') return;
-      // Don't intercept newlines in textarea
       if ((e.target as HTMLElement | null)?.tagName === 'TEXTAREA') return;
       if (terminal) return;
       if (currentScreen && isScreenComplete(currentScreen, answers)) {
@@ -565,7 +602,7 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, screenIdx, answers, terminal]);
 
-  // ── Render ───────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────
   if (typeof document === 'undefined') return null;
 
   return createPortal(
@@ -581,7 +618,6 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
           aria-modal="true"
           aria-label="Qualify your free brand audit"
         >
-          {/* Top bar: progress + close */}
           <div className="qm-topbar">
             <div className="qm-progress" aria-hidden>
               <div className="qm-progress__bar" style={{ width: `${progress}%` }} />
@@ -591,7 +627,6 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
             </button>
           </div>
 
-          {/* Counter */}
           {!terminal && currentScreen && (
             <div className="qm-counter">
               <span>{String(screenIdx + 1).padStart(2, '0')}</span>
@@ -600,7 +635,6 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
             </div>
           )}
 
-          {/* Main */}
           <div className="qm-main">
             <AnimatePresence mode="wait">
               {terminal === 'book' ? (
@@ -622,16 +656,10 @@ export const QualifyModal: React.FC<QualifyModalProps> = ({ isOpen, onClose, sou
             </AnimatePresence>
           </div>
 
-          {/* Footer actions (hidden on terminal screens — they have their own) */}
           {!terminal && currentScreen && (
             <div className="qm-footer">
               {screenIdx > 0 && (
                 <button type="button" className="qm-back" onClick={goBack}>← Back</button>
-              )}
-              {canSkip && (
-                <button type="button" className="qm-skip" onClick={advance}>
-                  Skip for now
-                </button>
               )}
               <button
                 type="button"
@@ -716,22 +744,23 @@ const ScreenView: React.FC<{
         </div>
       )}
 
-      {screen.type === 'text' && (
-        <input
-          className="qm-input"
-          type={screen.inputType ?? 'text'}
-          placeholder={screen.placeholder}
-          autoFocus
-          autoComplete={
-            screen.key === 'name' ? 'name'
-            : screen.key === 'email' ? 'email'
-            : screen.key === 'company' ? 'organization'
-            : screen.key === 'website' ? 'url'
-            : 'off'
-          }
-          value={answers[screen.key] as string}
-          onChange={(e) => update(screen.key, e.target.value as Answers[typeof screen.key])}
-        />
+      {screen.type === 'text-group' && (
+        <div className="qm-fieldset">
+          {screen.fields.map((f, i) => (
+            <label key={f.key} className="qm-field">
+              <span className="qm-field__label">{f.label}</span>
+              <input
+                className="qm-field__input"
+                type={f.inputType ?? 'text'}
+                placeholder={f.placeholder}
+                value={answers[f.key] as string}
+                autoFocus={i === 0}
+                autoComplete={f.autoComplete}
+                onChange={(e) => update(f.key, e.target.value as Answers[typeof f.key])}
+              />
+            </label>
+          ))}
+        </div>
       )}
 
       {screen.type === 'textarea' && (
@@ -756,7 +785,7 @@ const ScreenView: React.FC<{
   );
 };
 
-// ── Terminal: Book ────────────────────────────────────────────────
+// ── Terminal: Book (mandatory Cal.com embed) ──────────────────────
 const BookTerminal: React.FC<{ setCalNode: (node: HTMLDivElement | null) => void }> = ({ setCalNode }) => (
   <motion.div
     key="book"
@@ -788,7 +817,7 @@ const BookTerminal: React.FC<{ setCalNode: (node: HTMLDivElement | null) => void
 // ── Terminal: Disqualified ────────────────────────────────────────
 const DisqualifiedTerminal: React.FC<{ answers: Answers; onClose: () => void }> = ({ answers, onClose }) => {
   const reasons: string[] = [];
-  if (DQ_TURNOVERS.has(answers.turnover)) reasons.push('turnover');
+  if (DQ_BUDGETS.has(answers.budget)) reasons.push('budget');
   if (DQ_TIMELINES.has(answers.timeline)) reasons.push('timeline');
   const both = reasons.length === 2;
   return (
@@ -805,9 +834,9 @@ const DisqualifiedTerminal: React.FC<{ answers: Answers; onClose: () => void }> 
         <h1 className="qm-q">We may not be the right fit — yet.</h1>
         <p className="qm-sub" style={{ maxWidth: 620 }}>
           {both ? (
-            <>Based on your answers, the work you're after is a bigger investment than most businesses at your stage are ready for, and you're not ready to start yet. Better to be honest than to waste your time on a call.</>
-          ) : reasons[0] === 'turnover' ? (
-            <>Most of our brand engagements start at £3.5k+, which usually fits businesses doing £10k+/month. The work you're after may be better served by a smaller studio or freelance route at your current stage.</>
+            <>Based on your answers, the work you're after is a bigger investment than the budget you have, and you're not ready to start yet. Better to be honest than to waste your time on a call.</>
+          ) : reasons[0] === 'budget' ? (
+            <>Most of our brand engagements start at £3.5k+. The work you're after may be better served by a smaller studio or freelance route at this budget.</>
           ) : (
             <>It sounds like you're exploring. We focus on brands ready to move within ~90 days. When you're closer to starting, come back and book the call.</>
           )}
@@ -830,7 +859,7 @@ const DisqualifiedTerminal: React.FC<{ answers: Answers; onClose: () => void }> 
   );
 };
 
-// ── Hook for callers ─────────────────────────────────────────────
+// ── Hook ──────────────────────────────────────────────────────────
 export function useQualifyModal() {
   const [isOpen, setIsOpen] = useState(false);
   const open = useCallback(() => setIsOpen(true), []);

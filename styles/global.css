@@ -6209,6 +6209,47 @@ html {
   background: rgba(255, 255, 255, 0.03);
 }
 
+/* Grouped text fieldset (name + email, company + website, etc.) */
+.qm-fieldset {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  text-align: left;
+}
+.qm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.qm-field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: -0.005em;
+}
+.qm-field__input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 400;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.qm-field__input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+.qm-field__input:focus {
+  border-color: rgba(255, 220, 4, 0.6);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .qm-hint {
   margin-top: 12px;
   font-size: 12.5px;
