@@ -120,7 +120,7 @@ const CASES: CaseStudy[] = [
   { slug: 'ao',       contentSlug: 'ao-restaurant',       brand: 'Restaurant AO',       tags: ['Identity', 'Web'],    stat: '564%',   label: 'Page views, first 30 days',          accent: '#EF8869', coverImage: '/photos/case studies/restaurant ao/lan63TUY0iqn9HgVmhwpt1AoM.png' },
   { slug: 'hmo',      contentSlug: 'hmo-checker',         brand: 'HMO Checker',         tags: ['Web', 'SaaS', 'Funnel'], stat: '1,500+', label: 'Early sign-ups, V1 launch',       accent: '#7D5DFF', coverImage: '/photos/case studies/hmo checker/vH7DvEmgOwmG0bLogLYVhsDns.png' },
   { slug: 'ptf',      contentSlug: 'playing-the-field',   brand: 'Playing The Field',   tags: ['Web', 'Events'],      stat: '+50%',   label: 'Ticket leads vs. prior page',        accent: '#EA6DF8', coverImage: '/photos/case studies/playing the field/X5fKwSMk9XDzKn4EWMXlgpmH2uU.png' },
-  { slug: 'blue',     contentSlug: 'bluestone-mortgages', brand: 'Bluestone Mortgages', tags: ['Web', 'Brand', 'Print'], stat: '+20%', label: 'Engagement lift',                    accent: '#FFDC04', coverImage: '/photos/case studies/bluestone mortgages/BnvDGMJ8q8bQ3qvekK0FEy0sUs.png' },
+  { slug: 'blue',     contentSlug: 'bluestone-mortgages', brand: 'Bluestone Mortgages', tags: ['Brand', 'Print'], stat: '+20%', label: 'Engagement lift',                    accent: '#FFDC04', coverImage: '/photos/case studies/bluestone mortgages/BnvDGMJ8q8bQ3qvekK0FEy0sUs.png' },
 ];
 
 export const Work: React.FC = () => {

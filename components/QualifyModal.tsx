@@ -49,10 +49,9 @@ declare global {
 const CAL_LINK = 'milktree-agency/free-brand-digital-presence-audit-30-minutes';
 const CAL_NAMESPACE = 'qualify-modal';
 
-// ⚠️ REPLACE WITH THE REAL MILKTREE BRAND PLAYBOOK GOOGLE DOC URL.
-// Shown on the disqualified screen so leads that aren't call-ready
-// still walk away with something useful (and a soft Milktree touch).
-const BRAND_PLAYBOOK_URL = 'https://docs.google.com/document/d/REPLACE-WITH-REAL-MILKTREE-PLAYBOOK-LINK';
+// The Milktree Brand Playbook — shown on the disqualified screen so
+// leads that aren't call-ready still walk away with something useful.
+const BRAND_PLAYBOOK_URL = 'https://docs.google.com/document/d/1coX9VPMGNV_3N7gYlvm7A57M3sENtr1Z2bqfcgI7r04/edit?usp=drivesdk';
 
 // ── Answers (original schema — no turnover) ───────────────────────
 interface Answers {
