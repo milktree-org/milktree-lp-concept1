@@ -14,13 +14,6 @@
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-declare global {
-  interface Window {
-    fbq: (...args: any[]) => void;
-    __MT_INIT_PV_ID?: string;
-  }
-}
-
 interface UserData {
   email?: string;
   phone?: string;

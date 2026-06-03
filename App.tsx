@@ -5,13 +5,6 @@ import { FormspreeProvider } from '@formspree/react';
 import { trackPageView, trackInitialPageViewCAPI } from './utils/meta-tracking';
 import { captureLeadTracking } from './utils/lead-tracking';
 
-declare global {
-  interface Window {
-    gtag: (...args: any[]) => void;
-    dataLayer: any[];
-  }
-}
-
 // ── Analytics tracker (GA4 + Meta Pixel + CAPI) ─────────────────────────────
 // Fires page_view on every route change
 const AnalyticsTracker: React.FC = () => {

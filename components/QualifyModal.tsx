@@ -39,13 +39,6 @@ import { X, ArrowRight, CheckCircle, AlertCircle, Mail } from 'lucide-react';
 import { trackContact, trackLead, trackSchedule, trackCustom } from '../utils/meta-tracking';
 import { getCalcomTrackingMetadata, getLeadTrackingFields } from '../utils/lead-tracking';
 
-declare global {
-  interface Window {
-    Cal?: any;
-    gtag?: (...args: any[]) => void;
-  }
-}
-
 const CAL_LINK = 'milktree-agency/free-brand-digital-presence-audit-30-minutes';
 const CAL_NAMESPACE = 'qualify-modal';
 

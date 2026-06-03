@@ -22,12 +22,6 @@ import { getCalcomTrackingMetadata } from '../utils/lead-tracking';
 import './audit/styles/audit-lp.css';
 import { Logo, Icon } from './audit/components/AuditPrimitives';
 
-declare global {
-  interface Window {
-    Cal?: any;
-  }
-}
-
 // Cal.com slot — same event the rest of the funnel uses.
 const CAL_LINK = 'milktree-agency/free-brand-digital-presence-audit-30-minutes';
 const CAL_NAMESPACE = 'audit-ty';

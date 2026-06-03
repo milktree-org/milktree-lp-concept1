@@ -7,12 +7,6 @@ import { trackLead, trackCustom } from '../utils/meta-tracking';
 import { Navbar } from '../components/ui/Navbar';
 import { Footer } from '../sections/Footer';
 
-declare global {
-  interface Window {
-    gtag: (...args: any[]) => void;
-  }
-}
-
 // Two flows arrive here:
 //  (A) form-only fallback  → user submitted form but didn't book inline
 //      (legacy path; CTA below sends them to Cal.com)
