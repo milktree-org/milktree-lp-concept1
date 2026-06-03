@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, CalendarCheck, Phone, FileText, Mail, Clock } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { trackLead, trackSchedule, trackCustom } from '../utils/meta-tracking';
+import { trackLead, trackCustom } from '../utils/meta-tracking';
 import { Navbar } from '../components/ui/Navbar';
 import { Footer } from '../sections/Footer';
 
@@ -77,23 +77,28 @@ export const ThankYouPage: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
 
-    // GA4 — thank you page view (use as conversion goal in Google Ads)
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'conversion', {
-        event_category: 'Lead',
-        event_label: 'Thank You Page View',
-        value: 1,
-        currency: 'GBP',
-        send_to: 'G-9GHX9JVN9S',
-      });
+    // Skip duplicate conversion firing when arriving with ?booked=1 — the
+    // QualifyModal already fired Lead + Schedule + GA4 when the user confirmed
+    // their slot. Re-firing here would double-count conversions (and the 2nd
+    // fire carries no user data, hurting EMQ). Mirrors AuditThankYouPage.
+    if (!isBooked) {
+      // GA4 — thank-you page view = the LEAD conversion (form submitted).
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'conversion', {
+          event_category: 'Lead',
+          event_label: 'Thank You Page View',
+          value: 1,
+          currency: 'GBP',
+          send_to: 'G-9GHX9JVN9S',
+        });
+      }
+
+      // Meta Lead event (Pixel + CAPI). Schedule is NOT fired here — it only
+      // fires on a confirmed Cal.com booking (in the QualifyModal), so the
+      // Schedule count reflects actual calls booked, not page views.
+      trackLead({ eventSource: 'Thank You Page' });
     }
-
-    // Meta Lead event (Pixel + CAPI) — primary conversion, fires on confirmed form submission
-    trackLead({ eventSource: 'Thank You Page' });
-
-    // Meta Schedule event (Pixel + CAPI) — high-intent signal
-    trackSchedule({ eventSource: 'Thank You Page' });
-  }, []);
+  }, [isBooked]);
 
   return (
     <>
@@ -122,7 +127,7 @@ export const ThankYouPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {isBooked ? "You're booked. Audit incoming." : "You're in. Here's what happens next."}
+          {isBooked ? "You're booked. Your audit starts with the call." : "You're in. Here's what happens next."}
         </motion.h1>
 
         <motion.p
@@ -132,7 +137,7 @@ export const ThankYouPage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.3 }}
         >
           {isBooked
-            ? "Your call is booked. Check your inbox for the confirmation and calendar invite. We'll meet you at the scheduled time."
+            ? "Your call is booked — check your inbox for the calendar invite. We'll dig into your brand on the call, then send your personalised audit within 48 hours of it."
             : "Thanks for requesting your free brand audit. We just need one more thing: a quick call to understand your brand before we get to work."}
         </motion.p>
 

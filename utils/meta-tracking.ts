@@ -136,8 +136,9 @@ async function collectUserData(extra?: Partial<UserData>): Promise<Record<string
     userData.external_id = [await sha256(externalId)];
   }
 
-  // Country code — UK-targeted campaign (EMQ boost)
-  userData.ct = [await sha256('gb')];
+  // Country (ISO-3166 alpha-2) — UK-targeted campaign. Meta's CAPI country
+  // field is `country`; `ct` is CITY, so 'gb' belongs here, not in ct.
+  userData.country = [await sha256('gb')];
 
   // Hash email if provided
   if (extra?.email) {
@@ -293,7 +294,7 @@ export function trackContact(params: BaseEventParams = {}): void {
  * This is the highest-value conversion event.
  */
 export function trackLead(params: BaseEventParams = {}): void {
-  const customData: Record<string, any> = { currency: 'USD', value: 0 };
+  const customData: Record<string, any> = { currency: 'GBP', value: 0 };
   if (params.eventSource) customData.event_source = params.eventSource;
 
   sendMetaEvent('Lead', customData, customData, params.userData);

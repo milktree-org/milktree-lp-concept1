@@ -249,7 +249,7 @@ export const AuditThankYouPage: React.FC = () => {
           {/* Heading — branches on whether the user already booked via the QualifyModal. */}
           <h1 style={{ fontSize: 'clamp(36px, 5.4vw, 64px)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.05, color: '#fff', margin: 0, textWrap: 'balance' }}>
             {isBooked ? (
-              <>You're <span style={{ color: '#FFDC04' }}>booked.</span> Audit incoming.</>
+              <>You're <span style={{ color: '#FFDC04' }}>booked.</span> Your audit starts with the call.</>
             ) : (
               <>You're in. Here's what <span style={{ color: '#FFDC04' }}>happens next.</span></>
             )}
@@ -257,7 +257,7 @@ export const AuditThankYouPage: React.FC = () => {
 
           <p className="fg-2" style={{ fontSize: 'clamp(16px, 1.4vw, 19px)', lineHeight: 1.55, marginTop: 20, maxWidth: 540, marginLeft: 'auto', marginRight: 'auto' }}>
             {isBooked ? (
-              <>Check your inbox for the confirmation and calendar invite. Add it to your calendar so you don't miss it — we'll meet you at the time you chose.</>
+              <>Check your inbox for the calendar invite and add it so you don't miss it. We'll dig into your brand on the call, then send your personalised audit within 48 hours of it.</>
             ) : (
               <>Last step: <span style={{ color: '#fff', fontWeight: 600 }}>pick a 30-minute slot below</span>. Your audit doesn't start until we've had the call — so grab a time now while it's in front of you.</>
             )}

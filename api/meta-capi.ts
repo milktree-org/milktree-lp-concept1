@@ -58,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (ud.ph) event.user_data.ph = ud.ph;              // hashed phone
     if (ud.fn) event.user_data.fn = ud.fn;              // hashed first name
     if (ud.ln) event.user_data.ln = ud.ln;              // hashed last name
-    if (ud.ct) event.user_data.ct = ud.ct;              // hashed country code
+    if (ud.country) event.user_data.country = ud.country; // hashed ISO-2 country
     if (ud.external_id) event.user_data.external_id = ud.external_id; // hashed anonymous ID
 
     // Add server-side IP (from Vercel request headers)
