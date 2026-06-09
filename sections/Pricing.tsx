@@ -55,7 +55,7 @@ export const Pricing: React.FC = () => {
             <div className="pricing__card-top">
               <p className="pricing__card-label">Brand Build</p>
               <h3 className="pricing__card-name">One-off project</h3>
-              <p className="pricing__card-price">From £1,500</p>
+              <p className="pricing__card-price">Custom quote</p>
               <p className="pricing__card-desc">
                 Everything you need to launch with a brand that positions you as the obvious choice.
               </p>
@@ -88,7 +88,7 @@ export const Pricing: React.FC = () => {
             <div className="pricing__card-top">
               <p className="pricing__card-label pricing__card-label--light">Brand Partner</p>
               <h3 className="pricing__card-name pricing__card-name--light">Monthly retainer</h3>
-              <p className="pricing__card-price pricing__card-price--light">From £750/mo</p>
+              <p className="pricing__card-price pricing__card-price--light">Custom quote</p>
               <p className="pricing__card-desc pricing__card-desc--light">
                 Ongoing brand strategy and creative direction for companies scaling past their founding story.
               </p>
