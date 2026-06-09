@@ -13,13 +13,14 @@
  *   3. Company + Website (grouped text — company required, website optional)
  *   4. Stage             (cards)
  *   5. Needs             (multi-select cards)
- *   6. Budget            (cards)             — primary disqualifier
- *   7. Timeline          (cards)             — secondary disqualifier
+ *   6. Budget            (cards)             — hard-gate input (combined w/ timeline)
+ *   7. Timeline          (cards)             — hard-gate input (combined w/ budget)
  *   8. Pain              (textarea, min 8)
  *
- * Disqualification (hard gate):
- *   - Budget = "Under £3k"                       → disqualified
- *   - Timeline = "Just exploring, no plans yet"  → disqualified
+ * Disqualification (hard gate) — requires BOTH to be true:
+ *   - Budget   = "Under £1,000"                  AND
+ *   - Timeline = "Just exploring, no plans yet"
+ *   Either one alone still QUALIFIES.
  *   Disqualified path shows a polite "not the right fit" screen with
  *   a resource link + email mailto. Posts to Formspree with qualified=no
  *   so disqualified leads are still recoverable.
@@ -68,12 +69,13 @@ const EMPTY: Answers = {
 };
 
 // ── Disqualification rules ────────────────────────────────────────
-// Updated May 29 to match real Milktree price points (was Under £3k).
+// Hard gate requires BOTH a sub-£1k budget AND a "just exploring" timeline;
+// either one alone still qualifies. (Budget lowered from £3k on May 29.)
 const DQ_BUDGETS = new Set(['Under £1,000']);
 const DQ_TIMELINES = new Set(['Just exploring, no plans yet']);
 
 function isDisqualified(a: Answers): boolean {
-  return DQ_BUDGETS.has(a.budget) || DQ_TIMELINES.has(a.timeline);
+  return DQ_BUDGETS.has(a.budget) && DQ_TIMELINES.has(a.timeline);
 }
 
 // ── Field/screen types ────────────────────────────────────────────
@@ -864,10 +866,8 @@ const BookTerminal: React.FC<{ setCalNode: (node: HTMLDivElement | null) => void
 
 // ── Terminal: Disqualified ────────────────────────────────────────
 const DisqualifiedTerminal: React.FC<{ answers: Answers; onClose: () => void }> = ({ answers, onClose }) => {
-  const reasons: string[] = [];
-  if (DQ_BUDGETS.has(answers.budget)) reasons.push('budget');
-  if (DQ_TIMELINES.has(answers.timeline)) reasons.push('timeline');
-  const both = reasons.length === 2;
+  // Only reachable when BOTH budget = "Under £1,000" AND timeline = "Just exploring"
+  // are true (see isDisqualified). A single trigger no longer disqualifies.
   return (
     <motion.div
       key="dq"
@@ -881,13 +881,7 @@ const DisqualifiedTerminal: React.FC<{ answers: Answers; onClose: () => void }> 
         <AlertCircle size={40} color="#FFDC04" style={{ marginBottom: 16 }} />
         <h1 className="qm-q">We may not be the right fit — yet.</h1>
         <p className="qm-sub" style={{ maxWidth: 620 }}>
-          {both ? (
-            <>Based on your answers, the work you're after is a bigger investment than the budget you have, and you're not ready to start yet. Better to be honest than to waste your time on a call.</>
-          ) : reasons[0] === 'budget' ? (
-            <>Most of our brand engagements start above this budget. The work you're after may be better served by a smaller studio or a freelance route at this stage.</>
-          ) : (
-            <>It sounds like you're exploring. We focus on brands ready to move within the next 90 days. Come back and book the call when you're closer to starting.</>
-          )}
+          Based on your answers, the work you're after is a bigger investment than the budget you have, and you're not ready to start yet. Better to be honest than to waste your time on a call.
         </p>
 
         {/* Brand playbook — a useful parting gift so leads that aren't
