@@ -100,6 +100,13 @@ function safeWriteJSON(storage: Storage, key: string, value: unknown): void {
   }
 }
 
+/** Read a cookie value by name (used to avoid clobbering a Pixel-set _fbc). */
+function readCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : undefined;
+}
+
 /**
  * Capture attribution from the current URL. Call this on app mount.
  *   - If the URL has any UTM/click-ID params and we don't yet have a
@@ -122,6 +129,21 @@ export function captureLeadTracking(): void {
 
   // Last-touch: always overwrite with the most recent attribution this session
   safeWriteJSON(sessionStorage, LAST_TOUCH_KEY, current);
+
+  // Persist a 90-day first-party _fbc cookie from the fbclid so the click ID
+  // survives ITP cookie-capping on return visits (the Pixel's own _fbc is capped
+  // to ~7 days on Safari/iOS, and meta-tracking reads _fbc first). Skip if a _fbc
+  // already exists for this same fbclid — never clobber a Pixel-set value.
+  if (current.fbclid && current.seen_at && typeof document !== 'undefined') {
+    const existing = readCookie('_fbc');
+    if (!existing || !existing.includes(current.fbclid)) {
+      const idx = window.location.hostname.split('.').length > 2 ? 2 : 1;
+      const epochMs = new Date(current.seen_at).getTime() || Date.now();
+      const value = `fb.${idx}.${epochMs}.${current.fbclid}`;
+      const maxAge = 90 * 24 * 60 * 60; // 90 days
+      document.cookie = `_fbc=${encodeURIComponent(value)};max-age=${maxAge};path=/;SameSite=Lax;Secure`;
+    }
+  }
 }
 
 /**

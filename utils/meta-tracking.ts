@@ -12,6 +12,8 @@
  *   trackViewContent({ contentName: 'Brand Case Study', contentCategory: 'Case Study' });
  */
 
+import { STORAGE_KEYS } from './lead-tracking';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface UserData {
@@ -71,14 +73,71 @@ function getCookie(name: string): string | undefined {
   return match ? decodeURIComponent(match[2]) : undefined;
 }
 
-/** Get the _fbc parameter from URL (click ID from Meta ads) */
-function getFbcFromUrl(): string | undefined {
+// ── fbc (Meta click ID) recovery ─────────────────────────────────────────────
+// `fbclid` only lives in the URL on the landing page; our conversion events
+// (Lead/Contact/Schedule) fire later — after the modal, the Cal.com booking and
+// the thank-you redirect, or in a return session — by which point fbclid is gone
+// from the URL and the Pixel's _fbc cookie may have been ITP-purged (Safari/iOS
+// caps script-set cookies to ~7 days). lead-tracking.ts persists the fbclid plus
+// its click time (`seen_at`), so we recover _fbc from there instead of dropping
+// it. Format: fb.{subdomainIndex}.{clickEpochMs}.{fbclid}.
+
+function readStoredTouch(storage: Storage, key: string): { fbclid?: string; seen_at?: string } | null {
+  try {
+    const raw = storage.getItem(key);
+    return raw ? (JSON.parse(raw) as { fbclid?: string; seen_at?: string }) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** subdomain index for the _fbc format: 1 for an apex domain, 2 when a subdomain is present. */
+function fbcSubdomainIndex(): number {
+  if (typeof window === 'undefined') return 1;
+  return window.location.hostname.split('.').length > 2 ? 2 : 1;
+}
+
+/** Build a spec-compliant _fbc from a raw fbclid + its first-seen ISO timestamp
+ *  (the CLICK time, not event-fire time). Falls back to current time only when
+ *  the stored timestamp is missing/unparseable. */
+function buildFbc(fbclid: string, seenAtIso?: string): string {
+  const epochMs = (seenAtIso ? new Date(seenAtIso).getTime() : NaN) || Date.now();
+  return `fb.${fbcSubdomainIndex()}.${epochMs}.${fbclid}`;
+}
+
+/** Resolve the best available _fbc: cookie → live URL → session last-touch →
+ *  first-touch within Meta's 28-day click window. Returns undefined for purely
+ *  organic/direct visitors (no fbclid ever) — we must never fabricate one. */
+function resolveFbc(): string | undefined {
   if (typeof window === 'undefined') return undefined;
-  const params = new URLSearchParams(window.location.search);
-  const fbclid = params.get('fbclid');
-  if (!fbclid) return undefined;
-  // Build _fbc cookie format: fb.1.{timestamp}.{fbclid}
-  return `fb.1.${Date.now()}.${fbclid}`;
+
+  // 1) Pixel-set or app-set _fbc cookie — already formatted, use verbatim.
+  const cookie = getCookie('_fbc');
+  if (cookie) return cookie;
+
+  const lastTouch = readStoredTouch(sessionStorage, STORAGE_KEYS.LAST_TOUCH);
+
+  // 2) fbclid live in the current URL (landing page). Use the stored click time
+  //    if we captured this same fbclid this session, else fall back to now.
+  const urlFbclid = new URLSearchParams(window.location.search).get('fbclid');
+  if (urlFbclid) {
+    const seenAt = lastTouch?.fbclid === urlFbclid ? lastTouch?.seen_at : undefined;
+    return buildFbc(urlFbclid, seenAt);
+  }
+
+  // 3) Same-session last-touch (URL already navigated away from the landing page).
+  if (lastTouch?.fbclid) return buildFbc(lastTouch.fbclid, lastTouch.seen_at);
+
+  // 4) Cross-session first-touch — only within Meta's 28-day click attribution
+  //    window, so an organic return is never attributed to a stale paid click.
+  const firstTouch = readStoredTouch(localStorage, STORAGE_KEYS.FIRST_TOUCH);
+  if (firstTouch?.fbclid && firstTouch?.seen_at) {
+    const ageMs = Date.now() - new Date(firstTouch.seen_at).getTime();
+    if (ageMs >= 0 && ageMs < 28 * 24 * 60 * 60 * 1000) {
+      return buildFbc(firstTouch.fbclid, firstTouch.seen_at);
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -109,8 +168,10 @@ async function collectUserData(extra?: Partial<UserData>): Promise<Record<string
   const fbp = getCookie('_fbp');
   if (fbp) userData.fbp = fbp;
 
-  // _fbc cookie (click ID) — check cookie first, then URL param
-  const fbc = getCookie('_fbc') || getFbcFromUrl();
+  // _fbc (Meta click ID) — recovered from cookie / live URL / persisted storage
+  // (see resolveFbc) so paid-click attribution survives SPA nav, the thank-you
+  // redirect, ITP cookie purges, and return sessions.
+  const fbc = resolveFbc();
   if (fbc) userData.fbc = fbc;
 
   // Client user agent
