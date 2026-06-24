@@ -1,0 +1,91 @@
+{
+  "landingUrl": "https://www.milktreeagency.com",
+  "ctaLabel": "Book a free brand audit",
+  "ads": [
+    {
+      "id": "flash-cut",
+      "title": "Flash Cut",
+      "description": "Rapid-fire portfolio hits — pure proof, zero fluff.",
+      "duration": 13,
+      "slides": [
+        { "kind": "hook", "headline": "Your creative department.", "accentWord": "creative", "duration": 1.6, "sfx": "hit" },
+        { "kind": "image", "src": "/work/portfolio/hampshire-billboard.webp", "duration": 0.85, "sfx": "whoosh" },
+        { "kind": "image", "src": "/work/portfolio/eazyphone-cards.webp", "duration": 0.85, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/mint-keys.webp", "duration": 0.85, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/flexibuy.webp", "duration": 0.85, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/alltrad-billboard.webp", "duration": 0.85, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/eazyphone-busstop.webp", "duration": 0.85, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/melt-pizza.webp", "duration": 0.85, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/salesprout-billboard.webp", "duration": 0.85, "sfx": "tick" },
+        { "kind": "tagline", "headline": "On demand.", "duration": 1.8, "sfx": "hit" },
+        { "kind": "cta", "headline": "200+ brands built", "sub": "Book a free brand audit", "duration": 2.4, "sfx": "rise" }
+      ]
+    },
+    {
+      "id": "problem-proof",
+      "title": "Problem → Proof",
+      "description": "Pain points first, then the work that answers them.",
+      "duration": 14,
+      "slides": [
+        { "kind": "hook", "headline": "Freelancers flake.", "duration": 2, "sfx": "hit" },
+        { "kind": "hook", "headline": "Hiring takes months.", "duration": 2, "sfx": "hit" },
+        { "kind": "hook", "headline": "Agencies move slow.", "duration": 1.8, "sfx": "hit" },
+        { "kind": "image", "src": "/work/portfolio/mint-broker.webp", "label": "Mint Mortgages", "duration": 1.2, "sfx": "whoosh" },
+        { "kind": "image", "src": "/work/portfolio/powerforce-turbine.webp", "label": "Powerforce", "duration": 1.2, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/ejw-builttolast.webp", "label": "EJW", "duration": 1.2, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/mailmans.webp", "label": "Mailmans", "duration": 1.2, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/alltrad-swatches.webp", "label": "Alltrad Roofing", "duration": 1.2, "sfx": "tick" },
+        { "kind": "tagline", "headline": "There's a better way.", "accentWord": "better", "duration": 1.6, "sfx": "rise" },
+        { "kind": "cta", "headline": "Milktree", "sub": "Your embedded creative team", "duration": 2.8, "sfx": "hit" }
+      ]
+    },
+    {
+      "id": "stats-strike",
+      "title": "Stats Strike",
+      "description": "Numbers backed by real work — credibility in four beats.",
+      "duration": 12,
+      "slides": [
+        { "kind": "stat", "value": "200+", "label": "Brands built", "src": "/work/portfolio/hampshire-lifestyle.webp", "duration": 2.5, "sfx": "hit" },
+        { "kind": "stat", "value": "15+", "label": "Industries", "src": "/work/portfolio/powerforce-card.webp", "duration": 2.5, "sfx": "hit" },
+        { "kind": "stat", "value": "5", "label": "Years", "src": "/work/portfolio/eazyphone-lanyards.webp", "duration": 2.5, "sfx": "hit" },
+        { "kind": "stat", "value": "98%", "label": "Client retention", "src": "/work/portfolio/mint-billboard.webp", "duration": 2.5, "sfx": "hit" },
+        { "kind": "cta", "headline": "Senior design. Flat fee.", "sub": "Book a free brand audit", "duration": 2, "sfx": "rise" }
+      ]
+    },
+    {
+      "id": "ooh-power",
+      "title": "OOH Power",
+      "description": "Billboards, bus stops, signage — brands that own the street.",
+      "duration": 13,
+      "slides": [
+        { "kind": "hook", "headline": "Brands that stop traffic.", "accentWord": "traffic", "duration": 1.8, "sfx": "hit" },
+        { "kind": "image", "src": "/work/portfolio/hampshire-billboard.webp", "label": "Hampshire Food Hub", "duration": 1.6, "sfx": "whoosh" },
+        { "kind": "image", "src": "/work/portfolio/alltrad-billboard.webp", "label": "Alltrad Roofing", "duration": 1.6, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/eazyphone-busstop.webp", "label": "EazyPhone", "duration": 1.6, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/eazyphone-billboard.webp", "label": "EazyPhone", "duration": 1.6, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/mint-billboard.webp", "label": "Mint Mortgages", "duration": 1.6, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/salesprout-billboard.webp", "label": "SaleSprout", "duration": 1.6, "sfx": "tick" },
+        { "kind": "tagline", "headline": "We build them.", "duration": 1.4, "sfx": "rise" },
+        { "kind": "cta", "headline": "Milktree", "sub": "Book a free brand audit", "duration": 2.2, "sfx": "hit" }
+      ]
+    },
+    {
+      "id": "full-stack",
+      "title": "Full Stack",
+      "description": "One partnership, every touchpoint — identity to out-of-home.",
+      "duration": 14,
+      "slides": [
+        { "kind": "hook", "headline": "One team.", "sub": "Every kind of design.", "duration": 2, "sfx": "hit" },
+        { "kind": "image", "src": "/work/portfolio/eazyphone-cards.webp", "label": "Brand Identity", "duration": 1.3, "sfx": "whoosh" },
+        { "kind": "image", "src": "/work/portfolio/alltrad-card.webp", "label": "Print", "duration": 1.3, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/melt-pizza.webp", "label": "Packaging", "duration": 1.3, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/flexibuy.webp", "label": "Campaign", "duration": 1.3, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/eazyphone-lanyards.webp", "label": "Collateral", "duration": 1.3, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/mint-keys.webp", "label": "Campaign", "duration": 1.3, "sfx": "tick" },
+        { "kind": "image", "src": "/work/portfolio/hampshire-billboard.webp", "label": "Out-of-Home", "duration": 1.3, "sfx": "tick" },
+        { "kind": "tagline", "headline": "On demand.", "duration": 1.6, "sfx": "rise" },
+        { "kind": "cta", "headline": "milktree.agency", "sub": "Book a free brand audit", "duration": 2.6, "sfx": "hit" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+import { Reveal } from "@/components/motion/reveal";
+import { BookButton } from "@/components/layout/book-button";
+import { AnchorLink } from "@/components/layout/anchor-link";
+import { buttonVariants } from "@/components/ui/button";
+import { site } from "@/lib/site";
+import { cn } from "@/lib/utils";
+
+/**
+ * Final CTA (§7.13) — full-bleed, mostly black with the single yellow accent
+ * (the primary CTA). The closing conversion moment.
+ */
+export function FinalCTA() {
+  return (
+    <section id="book" className="relative scroll-mt-28 overflow-hidden py-28 md:py-44">
+      {/* subtle atmosphere — diffuse, so the CTA pill stays the crisp accent */}
+      <div
+        aria-hidden
+        className="absolute left-1/2 top-1/2 -z-0 h-[40rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,220,4,0.08),transparent_65%)] blur-2xl"
+      />
+
+      <div className="container-edge relative z-10 flex flex-col items-center text-center">
+        <Reveal>
+          <h2 className="mx-auto max-w-[16ch] text-balance text-[clamp(2.5rem,7vw,6rem)] font-black leading-[0.98] tracking-[-0.03em]">
+            Your business has outgrown its brand.
+          </h2>
+        </Reveal>
+        <Reveal index={1}>
+          <p className="text-body-lg mt-6 max-w-xl">
+            Let&apos;s fix that. Book a free brand audit and we&apos;ll show you
+            exactly where to start.
+          </p>
+        </Reveal>
+        <Reveal index={2} className="mt-10 flex w-full max-w-md flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:items-center sm:justify-center">
+          <BookButton size="pill-lg" magnetic withIcon className="w-full sm:w-auto" />
+          <AnchorLink
+            href="#plans"
+            className={cn(
+              buttonVariants({ variant: "ghostPill", size: "pill-lg" }),
+              "w-full sm:w-auto",
+            )}
+          >
+            See plans
+          </AnchorLink>
+        </Reveal>
+        <Reveal index={3}>
+          <p className="mt-10 max-w-sm px-2 text-sm font-medium text-faint sm:max-w-none">
+            {site.trustLine}
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}

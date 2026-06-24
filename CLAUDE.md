@@ -1,159 +1,310 @@
-# Milktree LP — Critical Rules & Lessons Learned
+# CLAUDE.md — Milktree Website
 
-> This file is loaded automatically by Claude Code at the start of every session.
-> It documents hard-won lessons from production debugging. Follow these rules on this project and all future projects.
+> Build spec for an AI coding agent (Claude Code / Cursor). Read this fully before scaffolding. The goal is a **premium, motion-rich marketing site for Milktree** that is measurably more refined than our reference, [legora.com](https://legora.com). This site IS Milktree's best portfolio piece — treat every detail as if a creative director will judge it pixel by pixel.
 
 ---
 
-## 🔴 RULE 1: Never use JS animation libraries for infinite loops on large DOM elements
+## 1. What we're building
 
-**What broke:** Framer Motion `animate={{ x: ['-9088px', '0px'] }}` with `repeat: Infinity` on the ~9000px-wide hero carousel blocked Chrome's main JS thread. Page became unresponsive within seconds in production.
+**Milktree** is an embedded brand & design partner — "your creative department, on demand." A senior team that plugs into scaling companies and delivers brand and design on a flat monthly subscription. 200+ brands built over 5 years. UK-based.
 
-**Fix:** Use CSS `@keyframes` + `will-change: transform` for ALL infinite/looping animations. CSS runs on the GPU compositor thread — zero JS cost.
+This is the **marketing website**: a homepage plus supporting pages, built to convert cold ad/outreach traffic into booked "free brand audit" calls. The bar is a Framer-class site (Legora) but better — buttery 60fps motion, distinctive type-led design, zero generic-SaaS feel.
+
+> Note: Milktree has a sister brand, **Riftly** (green/mint, separate site). This repo is **Milktree only** — black & yellow. Do not mix the two brands.
+
+---
+
+## 2. Tech stack (use exactly this)
+
+- **Next.js** (App Router) + **TypeScript**
+- **Tailwind CSS** for styling
+- **shadcn/ui** for component primitives (Button, Card, Accordion, Carousel, NavigationMenu, Sheet, Dialog, Tabs)
+- **Framer Motion** (`framer-motion`) for all animation
+- **Lenis** (`lenis`) for smooth scroll — this is the backbone of the premium feel
+- **Embla** (ships with shadcn Carousel) for portfolio carousels
+- **lucide-react** for icons
+- `next/font/local` for the Satoshi typeface (see §4)
+
+Do **not** add: GSAP, ScrollMagic, AOS, or any other animation lib. Framer Motion + Lenis covers everything. Keep the dependency list tight.
+
+### Setup
+```bash
+npx create-next-app@latest milktree --typescript --tailwind --app --eslint
+cd milktree
+npx shadcn@latest init        # base color: neutral; CSS variables: yes
+npm i framer-motion lenis
+npx shadcn@latest add button card accordion carousel navigation-menu sheet dialog tabs
+```
+
+---
+
+## 3. Design system — brand tokens
+
+Milktree is **confident, premium, type-led**. True black canvas, one electric yellow accent, heavy rounded geometry. Restraint is the brand — lots of negative space, big type, one accent colour used sparingly.
+
+Define these as CSS variables in `globals.css` and map them in Tailwind:
 
 ```css
-@keyframes marquee-scroll {
-  from { transform: translateX(0%); }
-  to   { transform: translateX(-50%); }
+:root {
+  --background: #000000;      /* true black canvas */
+  --surface:    #0B0B0A;      /* raised sections */
+  --card:       #141200;      /* cards (warm near-black) */
+  --foreground: #FFFFFF;
+  --muted:      rgba(255,255,255,0.60);
+  --muted-2:    rgba(255,255,255,0.40);
+  --accent:     #FFDC04;      /* THE yellow — use sparingly */
+  --accent-ink: #000000;      /* text on yellow */
+  --border:     rgba(255,255,255,0.12);
+  --radius:     2.25rem;      /* 36px base — Milktree is heavily rounded */
+  --radius-pill: 9999px;      /* buttons are full pills */
 }
-.track {
-  animation: marquee-scroll 40s linear infinite;
-  will-change: transform;
+```
+
+**Rules of the brand:**
+- Yellow is a scalpel, not a paintbrush. One yellow element per viewport, max. It marks the single most important thing on screen (primary CTA, one keyword, one stat).
+- Buttons are **full pills** (`--radius-pill`). Cards use the large 36px radius.
+- Generous spacing. Base unit 4px; sections breathe with `py-24` to `py-40`.
+- Never use pure greys for text — use the white-alpha `--muted` tokens so everything sits on black correctly.
+- Dark theme only. No light mode.
+
+---
+
+## 4. Typography — Satoshi
+
+Headings and body are both **Satoshi** (Milktree's real typeface). It's free from [Fontshare](https://www.fontshare.com/fonts/satoshi) — download the woff2 files and load locally:
+
+```ts
+// app/fonts.ts
+import localFont from "next/font/local";
+export const satoshi = localFont({
+  src: [
+    { path: "../public/fonts/Satoshi-Regular.woff2", weight: "400" },
+    { path: "../public/fonts/Satoshi-Medium.woff2",  weight: "500" },
+    { path: "../public/fonts/Satoshi-Bold.woff2",     weight: "700" },
+    { path: "../public/fonts/Satoshi-Black.woff2",    weight: "900" },
+  ],
+  variable: "--font-satoshi",
+  display: "swap",
+});
+```
+
+**Type scale (fluid, use `clamp`):**
+- Display / hero `h1`: `clamp(3rem, 9vw, 8rem)`, weight 900, letter-spacing `-0.03em`, line-height `0.95`
+- Section `h2`: `clamp(2rem, 5vw, 3.75rem)`, weight 900, `-0.025em`
+- `h3`: ~1.5rem, weight 700
+- Body: 1.125–1.25rem, weight 500, line-height 1.6, colour `--muted`
+- Eyebrow/labels: 0.8rem, weight 700, `letter-spacing: 0.18em`, uppercase, often with a short yellow tick before it
+
+Headlines are tight and big. Don't be timid with size.
+
+---
+
+## 5. Motion system (the most important section)
+
+The reference site (Legora) feels premium because its motion is **slow, eased, and restrained** — one purposeful move at a time, never bouncy or flashy. We match that discipline and exceed it with sharper micro-interactions. **"Alive, not animated."**
+
+### 5.1 Global principles
+- Default easing: a custom cubic-bezier, `[0.16, 1, 0.3, 1]` (expo-out). Use it everywhere.
+- Default durations: 0.6–0.9s for reveals, 0.2–0.3s for hovers.
+- Everything reveals **once** on scroll-in (`viewport={{ once: true, margin: "-10% 0px" }}`), never re-triggering.
+- **Stagger** children (0.06–0.1s) so groups cascade rather than pop.
+- Target a steady **60fps** — only animate `transform` and `opacity`. Never animate layout, width, height, top/left.
+- **`prefers-reduced-motion` is mandatory** — when set, disable transforms/parallax and just fade or show instantly (see §5.8).
+
+### 5.2 Smooth scroll (Lenis) — do this first
+Wrap the app in a Lenis provider; this single thing carries most of the premium feel.
+```tsx
+// components/smooth-scroll.tsx — "use client"
+import { ReactLenis } from "lenis/react";
+export function SmoothScroll({ children }: { children: React.ReactNode }) {
+  return <ReactLenis root options={{ lerp: 0.1, duration: 1.2, smoothWheel: true }}>{children}</ReactLenis>;
 }
 ```
 
-**Rule:** Any element wider/taller than ~500px that animates infinitely → CSS only, never a JS animation library.
-
----
-
-## 🔴 RULE 2: Always unregister old service workers when migrating platforms
-
-**What broke:** The previous milktreeagency.com was on Framer. Framer registers a service worker. When the domain pointed to the new Vite/React app, returning visitors had a zombie SW intercepting every request — infinite loading loop.
-
-**Fix:** Add to `<head>` of the new site immediately after migration. Keep for ≥30 days:
-
-```html
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations()
-      .then(regs => regs.forEach(r => r.unregister()));
-  }
-</script>
-```
-
-Platforms that register SWs: **Framer, Next.js, Gatsby, any PWA.**
-Always test in a Chrome profile that previously visited the old domain — not just incognito.
-
----
-
-## 🟠 RULE 3: Defer ALL third-party iframe embeds with IntersectionObserver
-
-**What broke:** Cal.com `embed.js` is a full Next.js app (~400KB). Loading it on page mount alongside the site's own JS caused the browser to crash on mobile and low-end hardware.
-
-**Fix:** Inject embed scripts only when the section is near the viewport. Also do an immediate check at mount (critical for React.lazy components that mount while already in view):
-
+### 5.3 Reveal primitive (use for ~every section)
+Build one reusable component and use it everywhere:
 ```tsx
-useEffect(() => {
-  const section = sectionRef.current;
-  if (!section) return;
-  const init = () => { /* inject script */ };
-
-  // Already in/near viewport at mount time (lazy-loaded component)
-  if (section.getBoundingClientRect().top < window.innerHeight + 300) {
-    init(); return;
-  }
-  // Otherwise defer until scrolled into range
-  const io = new IntersectionObserver(([e]) => {
-    if (!e.isIntersecting) return;
-    io.disconnect(); init();
-  }, { rootMargin: '200px' });
-  io.observe(section);
-  return () => io.disconnect();
-}, []);
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  show: (i = 0) => ({ opacity: 1, y: 0,
+    transition: { duration: 0.8, ease: [0.16,1,0.3,1], delay: i * 0.08 } }),
+};
+// <motion.div variants={fadeUp} initial="hidden" whileInView="show"
+//   viewport={{ once: true, margin: "-10% 0px" }} />
 ```
 
-**Rule:** No iframe embed (Cal.com, Calendly, HubSpot, Intercom, Drift, etc.) ever loads at page start. No exceptions.
+### 5.4 Hero headline reveal
+Split the headline into words/lines and stagger them up with a clip-mask (each line wrapped in `overflow-hidden`, child translates from `y: 100%`). This is the signature opening moment — make it crisp.
 
----
-
-## 🟡 RULE 4: Keep animation wrapper components to ≤1 hook
-
-**What broke:** The `<Reveal>` component had 5 hooks (useAnimation, useInView, useState, 2× useEffect). With 40+ instances = 200+ hooks initialising simultaneously on first render + 200+ IntersectionObservers. Caused severe render blocking.
-
-**Fix:** Single `whileInView` motion.div — Framer handles intersection internally:
-
+### 5.5 Parallax (scroll-linked)
+For large portfolio images and hero media, drift with `useScroll` + `useTransform`:
 ```tsx
-const Reveal = ({ children, delay = 0 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: '-75px' }}
-    transition={{ duration: 0.6, delay }}
-  >
-    {children}
-  </motion.div>
-);
+const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+const y = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
+// <motion.img style={{ y }} />
 ```
 
----
+### 5.6 Count-up stats
+Numbers animate from 0 when in view (`useInView` + `animate(0 → value)`), e.g. "200+ brands", "[X]% retention". Mirror Legora's counters but sharper easing.
 
-## 🟡 RULE 5: Always code-split below-fold sections with React.lazy()
+### 5.7 Signature interactions (this is how we beat Legora)
+- **Magnetic primary CTA** — the pill button subtly pulls toward the cursor on hover (translate by a fraction of cursor offset), springs back on leave. Apply only to the main yellow CTA.
+- **Custom cursor** (desktop only) — a small circle that scales up and inverts over interactive elements and portfolio items. Subtle, optional, behind a reduced-motion + pointer-fine check.
+- **Portfolio hover** — cards lift slightly (`scale: 1.02`, soft shadow) and their video loop plays on hover, pauses on leave.
+- **Auto-scroll logo marquee** — infinite horizontal loop, pauses on hover.
+- **Sticky "way of working" section** — a pinned section where copy steps swap as you scroll through (Legora's aOS-style showcase, done cleaner with `useScroll` progress driving which panel is active).
+- **Page transitions** — `AnimatePresence` route transitions: a quick yellow wipe or fade between pages.
 
-**What broke:** Single 349KB JS bundle — browser parsed the entire app before rendering anything. All heavy sections initialised at once.
-
-**Fix:**
-
+### 5.8 Reduced motion
 ```tsx
-const FinalCTA = lazy(() => import('./sections/FinalCTA').then(m => ({ default: m.FinalCTA })));
-
-<Suspense fallback={null}>
-  <Problem /><WhatWeDo /><FinalCTA />
-</Suspense>
+const reduce = useReducedMotion();
+// If reduce: skip Lenis smoothing, disable parallax/magnetic/cursor,
+// set reveal variants to { opacity: 0 → 1 } only, no y, near-instant.
 ```
 
-**Target:** Main bundle under 150KB gzipped. Each lazy section chunk under 10KB.
+---
+
+## 6. Site structure (routes)
+
+```
+/                     Homepage
+/what-we-do           Services overview (+ optional sub-pages per service)
+/work                 Portfolio grid ("Our work")
+/work/[slug]          Case study detail
+/why-milktree         How it works / approach / results
+/plans                Pricing
+/insights             Journal / resources index
+/insights/[slug]      Article
+/book                 Free brand audit booking (embed Cal.com/Calendly)
+```
+
+**Navigation (sticky, blur-on-scroll header):**
+`What we do ▾` · `Our work` · `Why Milktree ▾` · `Insights ▾` · `Plans` · `[Book a brand audit]` (yellow pill) · `Client login`
+
+- Header is transparent over the hero, then gains a blurred dark background once scrolled (`backdrop-blur`, animate in).
+- Mobile: shadcn `Sheet` drawer, full-screen, staggered link reveal.
+- Dropdowns: shadcn `NavigationMenu` with a soft animated panel.
 
 ---
 
-## 🟡 RULE 6: Add SPA routing fallback before deploying
+## 7. Homepage spec (section by section)
 
-Without these, direct URL navigation and hard refreshes return 404:
+Build in this order. Each section uses the reveal primitive; specific motion noted.
 
-- **Netlify:** `public/_redirects` → `/* /index.html 200`
-- **Vercel:** `vercel.json` → `{"rewrites": [{"source": "/(.*)", "destination": "/index.html"}]}`
+**1. Hero**
+- Full-viewport. Looping muted background video (portfolio reel — see §9), dark overlay for legibility.
+- H1: **"Your creative department. On demand."** (line-mask reveal, §5.4)
+- Sub: "Milktree becomes your embedded brand & design team — senior, on-brand and fast — for a flat monthly fee."
+- Primary CTA (yellow pill, magnetic): **Book a free brand audit** · Secondary (ghost pill): **See our work**
+- Trust line: `200+ brands built · 5 years · No contracts · Pause anytime`
+
+**2. Trust bar** — "The team behind 200+ growing brands" + infinite logo marquee (§5.7).
+
+**3. The problem** — H2: "Your marketing team has the ideas. Not the firepower to ship them." Three cards: Freelancers / Hiring / Agencies — each a pain. Stagger in.
+
+**4. The new way** — large centered statement, the category reframe: "There's a better way to get design done. An embedded creative team you can switch on, scale and direct." One word in yellow.
+
+**5. What we do** — H2: "One team. Every kind of design." 6-tile grid (Brand Identity · Social & Content · Decks & Sales · Ads & Marketing · Web & Landing Pages · Creative Direction). Tiles lift on hover.
+
+**6. How it works** — 3 steps (Choose your plan → Send your requests → Get senior work back in days). Connected with an animated yellow line that draws as you scroll.
+
+**7. The way we work** — sticky/pinned showcase (§5.7): "Everything in one place." Show the managed-queue / living brand library concept. This is the Legora-aOS-equivalent moment — make it the visual centerpiece.
+
+**8. Why Milktree** — comparison table, 3 columns (Freelancer / In-house hire / Milktree) across Cost, Reliability, Consistency, Speed, Risk. Milktree column highlighted; rows reveal in stagger.
+
+**9. Proof** — "The work speaks for itself." Portfolio carousel (Embla) of case studies, each card a looping video; + 2–3 testimonials.
+
+**10. Stats bar** — count-up: `200+ brands · 15+ industries · 5 years · [X]% retention`.
+
+**11. Plans** — "A whole creative department for less than one hire." Three pricing cards: **Design Partner £2,000/mo**, **Embedded Creative Team £4,500/mo** (highlighted — "most teams choose this"), **Fractional Creative Department £7,999/mo**. Value-anchor line beneath: one designer costs £50k+/yr; the £4,500 tier is £54k with no hiring or notice period. CTA → /plans.
+
+**12. Insights teaser** (optional) — 3 latest journal cards.
+
+**13. Final CTA** — full-bleed, mostly black with a yellow accent: "Your business has outgrown its brand. Let's fix that." → **Book a free brand audit**.
+
+**Footer** — nav columns, big Milktree wordmark, socials.
 
 ---
 
-## Stack Notes for This Project
+## 8. Components to build
 
-- **Vite + React + Framer Motion + TypeScript** — keep as-is, the crashes were usage pattern issues, not stack issues.
-- **Framer Motion** is fine for: hover states, tap feedback, one-shot entrance animations (`whileInView` with `once: true`). Never for infinite loops on large elements.
-- **Cal.com embed** uses namespace pattern: `Cal("init", "namespace", ...)` + `Cal.ns["namespace"]("inline", ...)`. Current link: `milktree-agency/free-brand-digital-presence-audit-30-minutes`.
-- **Analytics:** GA4 `G-9GHX9JVN9S`, Microsoft Clarity `n9qw79cpo8`. Both installed in `index.html`.
+shadcn primitives: `Button` (extend with `pill` + `magnetic` variants), `Card`, `Accordion` (FAQ), `Carousel` (portfolio), `NavigationMenu`, `Sheet` (mobile nav), `Tabs`, `Dialog`.
 
----
+Custom: `SmoothScroll`, `Reveal`, `StaggerGroup`, `LogoMarquee`, `CountUp`, `MagneticButton`, `CustomCursor`, `PortfolioCard` (hover-video), `StickyShowcase`, `PageTransition`, `Header` (blur-on-scroll), `Eyebrow` (tick + label).
 
-## Pre-Launch Checklist (run before every deploy)
-
-- [ ] No JS `repeat: Infinity` on elements > 500px → use CSS keyframes
-- [ ] SW unregistration script in `<head>` if migrating from another platform
-- [ ] All iframe embeds (cal.com, forms, chat) deferred via IntersectionObserver
-- [ ] Animation wrapper components use ≤1 hook
-- [ ] `React.lazy()` on all below-fold sections
-- [ ] SPA routing fallback file present (`_redirects` or `vercel.json`)
-- [ ] `vite build` output: main chunk < 150KB gzipped
-- [ ] Test in a Chrome profile that visited the previous version of the domain
-- [ ] Test on a real Android mid-range device or Chrome DevTools CPU 4× slowdown
+Keep components small, typed, `"use client"` only where motion/state needs it. Sections in `components/sections/`, primitives in `components/ui/`.
 
 ---
 
-## For Future Projects (not just this one)
+## 9. Assets
 
-These rules apply universally to any Vite/React/Next.js/Astro marketing site:
+- **Portfolio images & videos** live in `/public/work/`. Videos are short, muted, looping MP4s (generated externally from portfolio stills). Always `muted playsInline loop autoPlay`, `poster` set to the still, and `preload="none"` / lazy below the fold.
+- **Hero video**: a 16:9 reel; provide a poster image for instant LCP, lazy-init the video.
+- **Logos**: monochrome SVGs in `/public/logos/`.
+- Use `next/image` for all stills (AVIF/WebP, sized, lazy). Never ship unoptimised images.
 
-1. Infinite CSS animations → GPU thread (CSS keyframes), never JS
-2. Platform migrations → SW unregistration for 30 days
-3. Third-party embeds → IntersectionObserver deferred loading
-4. Reusable animation components → ≤1 hook, prefer Framer's built-in whileInView
-5. All sections → code-split with React.lazy
-6. Consider **Astro** for future purely-marketing sites — ships zero JS by default
+---
+
+## 10. Copy (source of truth)
+
+**Positioning:** "Your creative department. On demand." Embedded brand & design team on subscription.
+
+**Offer / pricing:**
+- Design Partner — £2,000/mo — managed design queue (social, decks, ads, email, collateral)
+- Embedded Creative Team — £4,500/mo — dedicated senior designer + creative direction + web/campaign work (flagship)
+- Fractional Creative Department — £7,999/mo — creative director + brand strategy + full ownership
+- Brand identity projects — from £12,000 (front door into a subscription)
+- Value anchor: one mid designer = £50k+/yr + recruitment + management + software; the £4,500 tier = £54k/yr, no hiring, cancel anytime.
+
+**Proof:** 200+ brands · 15+ industries · 5 years. Free brand audit = the risk-reversal and the single primary CTA across the whole site.
+
+**Voice:** confident, premium, plain-spoken. Short lines. No hype, no exclamation marks, no emoji. Lead with the customer's problem and our proof, not our features.
+
+(Full long-form section copy is in the homepage spec above; reuse verbatim and expand naturally for sub-pages.)
+
+---
+
+## 11. Accessibility & performance (non-negotiable)
+
+- Respect `prefers-reduced-motion` everywhere (§5.8).
+- Keyboard accessible nav, focus-visible rings (use the yellow), proper landmarks and heading order.
+- Colour contrast: white/`--muted` on black passes AA; yellow is used on black or as a background with black text.
+- Performance budget: LCP < 2.5s. Lazy-load all video, poster images for instant paint, code-split heavy sections, no layout-animating. Test on mobile.
+- All interactive targets ≥ 44px.
+
+---
+
+## 12. File structure
+
+```
+app/
+  layout.tsx          # fonts, <SmoothScroll>, <CustomCursor>, header/footer
+  page.tsx            # homepage (composes sections)
+  (routes)/...
+components/
+  ui/                 # shadcn + extended primitives
+  sections/           # homepage + page sections
+  motion/             # Reveal, StaggerGroup, CountUp, MagneticButton, etc.
+lib/
+  motion.ts           # shared variants, easing, durations
+  utils.ts            # cn(), helpers
+public/
+  fonts/ work/ logos/
+```
+
+Centralise easing/variants in `lib/motion.ts` so motion stays consistent. Tailwind theme maps the CSS variables from §3.
+
+---
+
+## 13. Definition of done (quality bar)
+
+This site has to be better than Legora. Before calling anything finished:
+- Motion is smooth at 60fps, eased, restrained — one move at a time, never janky or bouncy.
+- The hero headline reveal and the sticky "way of working" section feel genuinely premium.
+- Yellow appears sparingly and always marks the single most important thing on screen.
+- `prefers-reduced-motion` produces a clean, static, fully-usable site.
+- Mobile is as considered as desktop; nothing is cropped or broken.
+- LCP < 2.5s with all that video.
+- It looks like the work of a top-tier brand studio — because it is the proof of one.
+
+Build it section by section, get the motion system (§5) right first, and treat this site as Milktree's most important portfolio piece.
