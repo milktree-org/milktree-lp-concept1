@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
       // domain cutover. Query strings (UTMs, fbclid) are forwarded automatically.
       { source: "/audit", destination: "/book", permanent: false },
       { source: "/audit/thank-you", destination: "/book", permanent: false },
+      // Old Vite site served legal at /privacy-policy; keep indexed/bookmarked links alive.
+      { source: "/privacy-policy", destination: "/privacy", permanent: true },
     ];
   },
 };
