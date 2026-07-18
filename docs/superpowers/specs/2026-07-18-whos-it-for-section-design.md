@@ -16,14 +16,14 @@ Between `WhyMilktree` and `Plans` in `app/page.tsx`. At that point the visitor h
 Type-led, editorial rows — **not** another card grid (the page already has 3-card trios in Problem and elsewhere).
 
 - Section wrapper matches sibling sections: `bg-background container-edge py-24 md:py-36`.
-- Header block: `Eyebrow` ("Who it's for") + `h2` in the site's `text-h2` scale. H2 direction: "Built for teams that ship." (final wording may be tuned during implementation, staying in brand voice: short, plain-spoken, no hype).
+- Header block: `Eyebrow` ("Who it's for") + `h2` in the site's `text-h2` scale. H2: "Built for teams that ship."
 - Three full-width rows, divided by `border-border` hairlines (like a large editorial index list). Each row:
   - **Label** (eyebrow-style, small caps): "For agencies" / "For marketing teams" / "For established brands"
   - **Headline** (`text-h3` or slightly larger, weight 700–900)
   - **Body** (1–2 lines, `text-body` / `--muted`)
 - Rows reveal with the standard stagger (`StaggerGroup`/`StaggerItem`, `VIEWPORT_ONCE`).
-- Hover: one keyword per row headline can shift to the accent yellow on row hover (desktop only, `duration-300`). At rest the section stays monochrome so the one-yellow-per-viewport rule holds (Plans' CTA is nearby).
-- Disqualifier: a single quiet sentence below the third row, `--muted-2` / small size, no card, no icon.
+- Hover: one keyword per row headline shifts to the accent yellow on row hover (desktop only, `duration-300`). Keywords: "white-label" (agencies), "firepower" (marketing teams), "leverage" (established brands). At rest the section stays monochrome so the one-yellow-per-viewport rule holds (Plans' CTA is nearby).
+- Disqualifier: a single quiet sentence below the third row — `--muted` (not the fainter `--faint` token, which fails AA contrast at small sizes), small size, no card, no icon.
 
 ## Copy (source of truth for implementation)
 
