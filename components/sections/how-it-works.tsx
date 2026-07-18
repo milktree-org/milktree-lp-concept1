@@ -7,10 +7,10 @@ import { Reveal } from "@/components/motion/reveal";
 import { steps, stepsFootnote } from "@/lib/site";
 
 /**
- * How it works (§3.5) — four steps (Subscribe → Request → Receive → Approve or
- * revise) connected by a yellow line that draws as you scroll. Horizontal
- * track on desktop, vertical on mobile. The drawing line is the single yellow
- * in this section.
+ * How it works (§3.5) — three steps (Subscribe → Request → Receive) connected
+ * by a yellow line that draws as you scroll. Horizontal track on desktop,
+ * vertical on mobile. The drawing line is the single yellow in this section.
+ * Kept slim: the pinned "way we work" showcase below carries the deep dive.
  */
 export function HowItWorks() {
   const ref = useRef<HTMLDivElement>(null);
@@ -32,7 +32,7 @@ export function HowItWorks() {
           <Eyebrow>How it works</Eyebrow>
         </Reveal>
         <Reveal index={1}>
-          <h2 className="text-h2 mt-6">Senior design in four steps.</h2>
+          <h2 className="text-h2 mt-6">Senior design in three steps.</h2>
         </Reveal>
       </div>
 
@@ -52,7 +52,7 @@ export function HowItWorks() {
           className="absolute bottom-9 left-9 top-9 w-px origin-top bg-brand md:hidden"
         />
 
-        <div className="flex flex-col gap-12 md:grid md:grid-cols-4 md:gap-8">
+        <div className="flex flex-col gap-12 md:grid md:grid-cols-3 md:gap-8">
           {steps.map((step, i) => (
             <Reveal
               key={step.n}

@@ -122,12 +122,7 @@ export const steps = [
   {
     n: "03",
     title: "Receive",
-    body: "Senior work back in around 48 hours, creative-directed so nothing ships off-brand.",
-  },
-  {
-    n: "04",
-    title: "Approve or revise",
-    body: "One click to approve, or send it back. One revision round is included on every request.",
+    body: "Senior work back in around 48 hours. Approve in a click, or send it back — one revision round is included on every request.",
   },
 ];
 

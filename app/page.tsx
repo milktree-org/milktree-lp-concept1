@@ -11,15 +11,15 @@ import { WhyMilktree } from "@/components/sections/why-milktree";
 import { WhoItsFor } from "@/components/sections/who-its-for";
 import { Plans } from "@/components/sections/plans";
 import { Faq } from "@/components/sections/faq";
-import { CareersBand } from "@/components/sections/careers-band";
 import { FinalCTA } from "@/components/sections/final-cta";
 import { JsonLd } from "@/components/seo/json-ld";
 import { faqJsonLd, serviceJsonLd } from "@/lib/seo";
 
 /**
  * Homepage flow follows the conversion sequence the category leaders use:
- * hook → problem → reframe → mechanism → what's included → proof → ask →
- * comparison → price → objections → close. Proof always lands before price.
+ * hook → problem → reframe → what's included → mechanism → proof → ask →
+ * comparison → who it's for → price → objections → close. Proof always
+ * lands before price; no non-buyer sections between hero and close.
  */
 export default function Home() {
   return (
@@ -28,9 +28,9 @@ export default function Home() {
       <Hero />
       <Problem />
       <NewWay />
+      <Services />
       <HowItWorks />
       <WayWeWork />
-      <Services />
       <Proof />
       <InstagramSection />
       <CtaBand />
@@ -38,7 +38,6 @@ export default function Home() {
       <WhoItsFor />
       <Plans />
       <Faq />
-      <CareersBand />
       <FinalCTA />
     </>
   );
