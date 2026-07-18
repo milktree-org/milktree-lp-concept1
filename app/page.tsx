@@ -8,6 +8,7 @@ import { Proof } from "@/components/sections/proof";
 import { InstagramSection } from "@/components/sections/instagram";
 import { CtaBand } from "@/components/sections/cta-band";
 import { WhyMilktree } from "@/components/sections/why-milktree";
+import { WhoItsFor } from "@/components/sections/who-its-for";
 import { Plans } from "@/components/sections/plans";
 import { Faq } from "@/components/sections/faq";
 import { CareersBand } from "@/components/sections/careers-band";
@@ -34,6 +35,7 @@ export default function Home() {
       <InstagramSection />
       <CtaBand />
       <WhyMilktree />
+      <WhoItsFor />
       <Plans />
       <Faq />
       <CareersBand />
