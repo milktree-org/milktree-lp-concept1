@@ -172,6 +172,203 @@ export function teamNotifyEmail(input: {
   return { subject, html, text };
 }
 
+/* ------------------------- Brand audit email ------------------------------ */
+
+import type { AuditFinding } from "@/lib/audit";
+import { SEVERITY_LABELS } from "@/lib/audit";
+import type { BenchmarkResult as AuditBenchmark } from "@/lib/quiz";
+
+const SEVERITY_COLORS: Record<AuditFinding["severity"], string> = {
+  critical: "#FF5C5C",
+  warning: YELLOW,
+  good: "rgba(255,255,255,0.45)",
+};
+
+export function auditReportEmail(input: {
+  company: string;
+  score: number | null;
+  findings: AuditFinding[];
+  benchmark: AuditBenchmark | null;
+}): { subject: string; html: string; text: string } {
+  const subject =
+    input.score !== null
+      ? `Your Brand Audit — ${input.company} scored ${input.score}/100`
+      : `Your Brand Audit — ${input.company}`;
+
+  const findingRows = input.findings
+    .map(
+      (f) => `
+      <tr>
+        <td style="padding:10px 12px 10px 0;vertical-align:top;white-space:nowrap;">
+          <span style="font-family:${FONT};font-size:10.5px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${SEVERITY_COLORS[f.severity]};">${SEVERITY_LABELS[f.severity]}</span>
+        </td>
+        <td style="padding:10px 0;">
+          <p style="margin:0;font-family:${FONT};font-size:14px;font-weight:800;color:#ffffff;">${f.title}</p>
+          <p style="margin:4px 0 0;font-family:${FONT};font-size:13px;line-height:1.6;color:rgba(255,255,255,0.65);">${f.detail}</p>
+        </td>
+      </tr>`,
+    )
+    .join("");
+
+  const bm = input.benchmark;
+  let benchmarkHtml = "";
+  let benchmarkText = "";
+  if (bm && bm.competitors.length > 0) {
+    const compRows = bm.competitors
+      .map(
+        (c) => `
+        <tr>
+          <td style="padding:8px 12px 8px 0;font-family:${FONT};font-size:13.5px;color:#ffffff;font-weight:700;">${c.name || c.domain}</td>
+          <td style="padding:8px 12px 8px 0;font-family:${FONT};font-size:13px;color:rgba(255,255,255,0.55);">${c.domain}</td>
+          <td style="padding:8px 0;font-family:${FONT};font-size:13.5px;color:${YELLOW};font-weight:700;">#${c.bestPosition}</td>
+        </tr>`,
+      )
+      .join("");
+    benchmarkHtml = `
+      <p style="margin:20px 0 10px;font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);">You vs the page-1 players</p>
+      ${p(`Live Google results for ${bm.terms.map((t) => `“${t}”`).join(", ")}:`)}
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px;">${compRows}</table>
+      ${p(
+        bm.userBestPosition !== null
+          ? `${input.company} ranks <strong style="color:#ffffff;">#${bm.userBestPosition}</strong> for “${bm.userBestTerm}”.`
+          : `${input.company} doesn't appear in the top 20 for these terms.`,
+      )}
+    `;
+    benchmarkText = [
+      "You vs the page-1 players:",
+      ...bm.competitors.map(
+        (c) => `  ${c.name || c.domain} (${c.domain}) — best position #${c.bestPosition}`,
+      ),
+      bm.userBestPosition !== null
+        ? `  ${input.company} — #${bm.userBestPosition} for "${bm.userBestTerm}"`
+        : `  ${input.company} — not in the top 20`,
+      "",
+    ].join("\n");
+  }
+
+  const html = shell(`
+    ${h(
+      input.score !== null
+        ? `${input.company} — Brand Audit <span style="color:${YELLOW};">${input.score}/100</span>`
+        : `${input.company} — Brand Audit`,
+    )}
+    ${p(
+      "This is what we actually found when we looked at your website and your market's live search results — no self-assessment, no fluff. Keep it, forward it, action it.",
+    )}
+    <p style="margin:0 0 4px;font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);">Findings</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 14px;">${findingRows}</table>
+    ${benchmarkHtml}
+    ${p(
+      `Every “fix first” item above is a standard request on a Milktree plan — from <strong style="color:#ffffff;">£1,999/mo</strong>, unlimited requests, senior work back in ~48 hours, cancel any month.`,
+    )}
+    ${button("See if Milktree fits", `${SITE_URL}/start`)}
+  `);
+
+  const text = [
+    input.score !== null
+      ? `${input.company} — Brand Audit ${input.score}/100`
+      : `${input.company} — Brand Audit`,
+    "",
+    "Findings:",
+    ...input.findings.map(
+      (f) => `  [${SEVERITY_LABELS[f.severity]}] ${f.title} — ${f.detail}`,
+    ),
+    "",
+    benchmarkText,
+    "Every 'fix first' item is a standard request on a Milktree plan — from £1,999/mo.",
+    `See if Milktree fits: ${SITE_URL}/start`,
+  ].join("\n");
+
+  return { subject, html, text };
+}
+
+/* ----------------------- Hire calculator email ---------------------------- */
+
+import {
+  PLAN_COSTS,
+  formatGBP,
+  type CostBreakdown,
+} from "@/lib/calculator";
+
+export function calculatorReportEmail(input: {
+  firstName?: string;
+  roleLabel: string;
+  breakdown: CostBreakdown;
+}): { subject: string; html: string; text: string } {
+  const { breakdown } = input;
+  const subject = `The real cost of that ${input.roleLabel.toLowerCase()}: ${formatGBP(breakdown.total)}`;
+  const greeting = input.firstName ? `Hi ${input.firstName} — ` : "";
+  const saving = breakdown.total - PLAN_COSTS.designLead.annual;
+
+  const lineRows = breakdown.lines
+    .map(
+      (l) => `
+      <tr>
+        <td style="padding:8px 12px 8px 0;font-family:${FONT};font-size:13.5px;color:#ffffff;font-weight:700;">${l.label}<br/><span style="font-size:12px;font-weight:400;color:rgba(255,255,255,0.45);">${l.detail}</span></td>
+        <td style="padding:8px 0;font-family:${FONT};font-size:13.5px;font-weight:700;color:#ffffff;text-align:right;vertical-align:top;">${formatGBP(l.amount)}</td>
+      </tr>`,
+    )
+    .join("");
+
+  const html = shell(`
+    ${h(`${greeting}here's the real number.`)}
+    ${p(`The true first-year cost of hiring a ${input.roleLabel.toLowerCase()}, itemised:`)}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 6px;">
+      ${lineRows}
+      <tr>
+        <td style="padding:14px 12px 0 0;border-top:1px solid rgba(255,255,255,0.15);font-family:${FONT};font-size:15px;font-weight:800;color:#ffffff;">Real cost, year one</td>
+        <td style="padding:14px 0 0;border-top:1px solid rgba(255,255,255,0.15);font-family:${FONT};font-size:18px;font-weight:800;color:${YELLOW};text-align:right;">${formatGBP(breakdown.total)}</td>
+      </tr>
+    </table>
+    ${p(`That's ${formatGBP(breakdown.monthly)}/month — for one skill set, three months of ramp-up, and a notice period if it doesn't work out.`)}
+    ${p(`<strong style="color:#ffffff;">The same money at Milktree:</strong>`)}
+    ${planCard("Essentials", "£1,999/mo", [
+      `${formatGBP(PLAN_COSTS.essentials.annual)}/yr — unlimited requests, one at a time`,
+      "~48h turnaround · pause anytime, unused time banks",
+    ])}
+    ${planCard(
+      "Design Lead",
+      "£3,999/mo",
+      [
+        `${formatGBP(PLAN_COSTS.designLead.annual)}/yr — unlimited requests, two at a time`,
+        "Your own dedicated senior designer, direct on Slack",
+        "Creative direction on everything · brand builds in 4–6 weeks",
+      ],
+      true,
+    )}
+    ${
+      saving > 0
+        ? p(
+            `Against your numbers, Design Lead is <strong style="color:#ffffff;">${formatGBP(saving)} less in year one</strong> than the hire — senior across every discipline, starts this week, cancel any month.`,
+          )
+        : p(
+            "Senior across every discipline, starts this week, cancel any month — with no recruitment risk and no notice periods.",
+          )
+    }
+    ${button("See if Milktree fits", `${SITE_URL}/start`)}
+    ${p("Two minutes, and you'll know which plan (if any) makes sense for you.")}
+  `);
+
+  const text = [
+    `${greeting}here's the real number.`,
+    "",
+    `True first-year cost of hiring a ${input.roleLabel.toLowerCase()}:`,
+    ...breakdown.lines.map((l) => `  ${l.label}: ${formatGBP(l.amount)} (${l.detail})`),
+    `  Real cost, year one: ${formatGBP(breakdown.total)} — ${formatGBP(breakdown.monthly)}/month`,
+    "",
+    "The same money at Milktree:",
+    `  Essentials — £1,999/mo (${formatGBP(PLAN_COSTS.essentials.annual)}/yr): unlimited requests, one at a time, ~48h turnaround, pause anytime.`,
+    `  Design Lead — £3,999/mo (${formatGBP(PLAN_COSTS.designLead.annual)}/yr): two at a time, your own dedicated senior designer on Slack, creative direction on everything.`,
+    saving > 0
+      ? `Against your numbers, Design Lead is ${formatGBP(saving)} less in year one than the hire.`
+      : "Senior across every discipline, starts this week, cancel any month.",
+    "",
+    `See if Milktree fits: ${SITE_URL}/start`,
+  ].join("\n");
+
+  return { subject, html, text };
+}
+
 /* --------------------------- Quiz report email ---------------------------- */
 
 import type { BenchmarkResult, QuizCategory } from "@/lib/quiz";
