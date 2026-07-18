@@ -10,22 +10,19 @@ import {
 } from "@/lib/funnel";
 
 /**
- * Qualification rules (spec §1/§4) — evaluated ONLY here, server-side.
- * QUALIFIED   = team ≥ 10 AND budget ≥ £1,000–£2,000 band.
- * UNQUALIFIED = team < 10 OR budget = Under £1,000.
+ * Qualification rules — evaluated ONLY here, server-side.
+ * QUALIFIED   = budget ≥ the £1,000–£2,000 band → straight to the Cal booking.
+ * UNQUALIFIED = budget under £1,000 → "not the right time" + Brand Score quiz.
+ * Team size informs the sales conversation but never disqualifies a lead.
  * Any route value sent by the client is ignored.
  */
-const QUALIFIED_TEAMS = new Set(["10-50", "51-100", "100+"]);
 const QUALIFIED_BUDGETS = new Set(["1k-2k", "2k-4k", "4k+"]);
 
 export function evaluateRoute(input: {
   teamSize: string;
   budget: string;
 }): LeadRoute {
-  return QUALIFIED_TEAMS.has(input.teamSize) &&
-    QUALIFIED_BUDGETS.has(input.budget)
-    ? "qualified"
-    : "unqualified";
+  return QUALIFIED_BUDGETS.has(input.budget) ? "qualified" : "unqualified";
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

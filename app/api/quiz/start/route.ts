@@ -1,5 +1,6 @@
 import { after } from "next/server";
 import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
+import { sendToFormspree } from "@/lib/server/formspree";
 import { runBenchmark } from "@/lib/server/benchmark";
 import { SECTORS, type SectorValue } from "@/lib/quiz";
 
@@ -46,9 +47,22 @@ export async function POST(request: Request) {
   if (!EMAIL_RE.test(email))
     return Response.json({ error: "A valid email is required" }, { status: 400 });
 
+  // Capture the lead at the gate — even an abandoned quiz is a stored lead.
+  const formspreeStored = await sendToFormspree("brandScore", {
+    _subject: `Brand quiz lead — ${company}`,
+    form: "brand-quiz",
+    company,
+    website,
+    sector,
+    region,
+    email,
+    consent,
+    source,
+  });
+
   const supabase = getSupabase();
   if (!supabase) {
-    // No persistence configured (local dev): self-assessment-only session.
+    // No DB configured: self-assessment-only session; Formspree has the lead.
     console.error("[quiz] Supabase not configured; running self-assessment-only");
     return Response.json({ sessionId: null });
   }
@@ -71,6 +85,11 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("[quiz] session insert failed:", error.message);
+    if (formspreeStored) {
+      // Lead is safe in Formspree — degrade to a self-assessment-only session
+      // rather than erroring the user out.
+      return Response.json({ sessionId: null });
+    }
     return Response.json(
       { error: "Something went wrong. Please try again." },
       { status: 500 },

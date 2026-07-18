@@ -421,25 +421,25 @@ function UnqualifiedScreen({ quizUrl }: { quizUrl: string }) {
   return (
     <div className="mx-auto w-full max-w-xl text-center">
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">
-        Something useful first
+        An honest read
       </p>
       <h2 className="mx-auto mt-4 max-w-[20ch] text-balance text-[clamp(1.8rem,4.5vw,3rem)] font-bold leading-[1.05] tracking-[-0.025em]">
-        Here&apos;s a genuinely useful next step.
+        Now might not be the right time.
       </h2>
       <p className="text-body mx-auto mt-5 max-w-lg">
-        Milktree&apos;s subscription is built for teams of 10+, and it looks
-        like you&apos;re not quite there yet. But here&apos;s something
-        genuinely useful: our{" "}
-        <strong className="text-foreground">free Brand Ranking Report</strong>.
-        See how your brand stacks up against the top three players in your
-        market, with fixes you can action this week.
+        Milktree starts at £1,999/mo, and it sounds like that&apos;s beyond
+        the budget right now. No hard feelings — timing matters. In the
+        meantime, get your{" "}
+        <strong className="text-foreground">free Brand Score</strong>: see how
+        your brand stacks up against the top three players in your market,
+        with fixes you can action this week.
       </p>
       <a
         href={quizUrl}
         data-cursor="hover"
         className="mt-9 inline-flex h-13 items-center justify-center gap-2 rounded-[44px] bg-brand px-8 text-[0.98rem] font-bold text-brand-ink transition-all hover:brightness-105 hover:shadow-[0_10px_40px_-8px_rgba(255,220,4,0.55)]"
       >
-        Get my free brand report
+        Get my free brand score
         <ArrowRight className="size-4" />
       </a>
       <p className="mt-5 text-sm text-faint">
