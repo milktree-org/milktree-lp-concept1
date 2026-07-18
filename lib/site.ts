@@ -469,3 +469,31 @@ export const logoWordmarks = [
   "ATLAS",
   "AURORA",
 ];
+
+/* ------------------------------ Who it's for ------------------------------ */
+// Editorial audience rows. `keyword` is the single word (or hyphenated
+// phrase) inside `title` that turns yellow on row hover — it must appear
+// verbatim exactly once in `title`.
+export const audiences = [
+  {
+    label: "For agencies",
+    title: "Your overflow team, white-label.",
+    keyword: "white-label",
+    body: "Take on more work without hiring. Senior design capacity under your banner — your clients never know we exist.",
+  },
+  {
+    label: "For marketing teams",
+    title: "The ideas are yours. The firepower is ours.",
+    keyword: "firepower",
+    body: "Ship campaigns, decks and landing pages without waiting on a stretched design resource.",
+  },
+  {
+    label: "For established brands",
+    title: "For businesses that know design is leverage.",
+    keyword: "leverage",
+    body: "Senior-level craft on everything you put out — not just the big projects.",
+  },
+] as const;
+
+export const notAFit =
+  "Not the right fit if you need a one-off logo, or design isn't a priority yet.";
