@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
  */
 export function Proof() {
   return (
-    <section id="work" className="scroll-mt-28 py-24 md:py-36">
+    <section id="work" className="scroll-mt-28 pt-24 md:pt-36">
       <div className="container-edge">
         <div className="max-w-2xl">
           <Reveal>
