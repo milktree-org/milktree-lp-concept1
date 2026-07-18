@@ -10,7 +10,7 @@ function KeywordTitle({ title, keyword }: { title: string; keyword: string }) {
   return (
     <h3 className="text-h3">
       {before}
-      <span className="transition-colors duration-300 group-hover:text-brand">
+      <span className="transition-colors duration-300 md:group-hover:text-brand">
         {keyword}
       </span>
       {after}
