@@ -25,7 +25,7 @@ function KeywordTitle({ title, keyword }: { title: string; keyword: string }) {
  */
 export function WhoItsFor() {
   return (
-    <section id="who" className="container-edge scroll-mt-28 py-24 md:py-36">
+    <section className="container-edge py-24 md:py-36">
       <div className="max-w-3xl">
         <Reveal>
           <Eyebrow>Who it&apos;s for</Eyebrow>
