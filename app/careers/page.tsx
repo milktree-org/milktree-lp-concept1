@@ -35,7 +35,7 @@ export default function CareersPage() {
             {careers.headline}
           </h1>
           <p className="text-body mx-auto mt-5 max-w-lg">
-            Applying takes a couple of minutes — a few quick questions and a
+            Applying takes a couple of minutes. A few quick questions and a
             link to your portfolio. That&apos;s it. No CV required.
           </p>
           <ul className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-faint">

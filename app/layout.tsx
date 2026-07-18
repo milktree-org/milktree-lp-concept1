@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: seo.title,
-    template: "%s — Milktree",
+    template: "%s | Milktree",
   },
   description: seo.description,
   alternates: {
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   keywords: seo.keywords,
   openGraph: {
-    title: "Milktree — Your creative department. On demand.",
+    title: "Milktree | Your creative department. On demand.",
     description: seo.ogDescription,
     type: "website",
     url: SITE_URL,
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Milktree — Your creative department. On demand.",
+    title: "Milktree | Your creative department. On demand.",
     description: seo.ogDescription,
   },
 };

@@ -10,14 +10,14 @@ export const metadata: Metadata = {
     canonical: "/brand-report",
   },
   openGraph: {
-    title: "Free Brand Ranking Report — Milktree",
+    title: "Free Brand Ranking Report | Milktree",
     description:
       "See who owns page 1 in your market, how their brands compare to yours, and what to fix first. Free, takes two minutes.",
     url: "/brand-report",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free Brand Ranking Report — Milktree",
+    title: "Free Brand Ranking Report | Milktree",
     description:
       "See who owns page 1 in your market, how their brands compare to yours, and what to fix first. Free, takes two minutes.",
   },

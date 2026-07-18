@@ -253,7 +253,7 @@ export default function LoginPage() {
           className="object-cover"
         />
         <div className="absolute bottom-6 right-6 rounded-full border border-white/15 bg-black/55 px-4 py-2 text-xs font-bold tracking-tight text-white backdrop-blur-md">
-          EazyPhone — Brand Identity by Milktree
+          EazyPhone · Brand Identity by Milktree
         </div>
       </div>
     </div>
