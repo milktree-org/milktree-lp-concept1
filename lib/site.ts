@@ -2,11 +2,11 @@ import type { PortfolioItem } from "@/components/ui/portfolio-card";
 
 /**
  * Cal.com — intro call for qualified leads. Override with NEXT_PUBLIC_CAL_URL
- * once the dedicated intro-call event exists; falls back to the legacy event.
+ * if the event slug ever changes.
  */
 export const CAL_URL =
   process.env.NEXT_PUBLIC_CAL_URL ??
-  "https://cal.com/milktree-agency/free-brand-digital-presence-audit-30-minutes";
+  "https://cal.com/milktree-agency/intro-call";
 
 export const CONTACT_EMAIL = "hello@milktreeagency.com";
 
@@ -95,7 +95,7 @@ export const problems = [
 /* ---------------------------- What's included (§3.6) ---------------------- */
 export const included = [
   { id: "brand", title: "Brand identity & guidelines", body: "Logos, systems and rules that hold up everywhere." },
-  { id: "ai", title: "AI design", body: "AI-native creative — systems, assets and workflows your team can actually ship." },
+  { id: "ai", title: "AI design", body: "AI-native creative: systems, assets and workflows your team can actually ship." },
   { id: "social", title: "Social & templates", body: "Always-on creative that keeps your feed sharp." },
   { id: "ads", title: "Ads & email design", body: "Static and motion ads, plus campaigns and flows that convert." },
   { id: "decks", title: "Decks & sales collateral", body: "Pitch decks and sales material that close." },
@@ -122,7 +122,7 @@ export const steps = [
   {
     n: "03",
     title: "Receive",
-    body: "Senior work back in around 48 hours. Approve in a click, or send it back — one revision round is included on every request.",
+    body: "Senior work back in around 48 hours. Approve it in a click or send it back. Every request includes one revision round.",
   },
 ];
 
@@ -227,7 +227,7 @@ export const plans: Plan[] = [
       "A design lead costs £65k+ a year in the UK before National Insurance, holiday cover and recruitment, and buys one skill set. Design Lead is £48k a year, senior across every discipline, cancel any month.",
     features: [
       "Unlimited requests, two at a time",
-      "Your own dedicated senior designer — the same person, every time",
+      "Your own dedicated senior designer, the same person every time",
       "Direct Slack access to your design lead",
       "Creative direction on every piece",
       "Full brand builds, typically 4–6 weeks",
@@ -252,7 +252,7 @@ export const stats = [
     value: 200,
     suffix: "+",
     label: "Brands built",
-    sub: "Identity, campaigns, packaging and web — end to end.",
+    sub: "Identity, campaigns, packaging and web, end to end.",
   },
   {
     value: 15,
@@ -351,7 +351,7 @@ export const portfolio: PortfolioItem[] = [
 export const faqs = [
   {
     q: "What is a design subscription?",
-    a: "A design subscription replaces project quotes and retainers with one flat monthly fee. You subscribe, add unlimited design requests to your queue, and senior work comes back in around 48 hours — an in-house creative department without the headcount, the recruitment or the notice periods.",
+    a: "A design subscription replaces project quotes and retainers with one flat monthly fee. You subscribe, add unlimited design requests to your queue, and senior work comes back in around 48 hours. It works like an in-house creative department, without the headcount, the recruitment or the notice periods.",
   },
   {
     q: "How does “unlimited requests” work?",
@@ -371,19 +371,19 @@ export const faqs = [
   },
   {
     q: "How is Milktree different from cheaper £500–950 design subscriptions?",
-    a: "Those services put one generalist on a ticket queue — production, not brand. Milktree is a senior team with creative direction on every piece, covering brand identity, campaigns, packaging, web and everything between. It's an unlimited design service run like a creative department, not a help desk.",
+    a: "Those services put one generalist on a ticket queue. That's production, not brand. Milktree is a senior team with creative direction on every piece, covering brand identity, campaigns, packaging, web and everything between. It's an unlimited design service run like a creative department, not a help desk.",
   },
   {
     q: "Is Milktree a UK design agency?",
-    a: "Yes. Milktree is a UK-based design agency working on subscription — six years as an agency, 200+ brands built, for scaling companies in the UK and beyond. Prices are in GBP, and there are no contracts: pause or cancel any month.",
+    a: "Yes. Milktree is a UK-based design agency working on subscription. Six years as an agency, 200+ brands built, and clients scaling across the UK and beyond. Prices are in GBP, and there are no contracts: pause or cancel any month.",
   },
   {
     q: "Who's actually doing the design?",
-    a: "No juniors, no outsourcing marketplaces, on either plan. On Essentials, every request is worked by a vetted designer from our bench of 50+ experienced designers and checked by a creative director before it ships. On Design Lead, one senior designer is assigned to you as your permanent design lead — the same person, every time — plus creative direction on everything, so nothing ships off-brand.",
+    a: "No juniors, no outsourcing marketplaces, on either plan. On Essentials, every request is worked by a vetted designer from our bench of 50+ experienced designers and checked by a creative director before it ships. On Design Lead, one senior designer is assigned to you as your permanent design lead. You work with the same person every time, with creative direction on everything, so nothing ships off-brand.",
   },
   {
     q: "What's the Slack channel on Design Lead for?",
-    a: "A dedicated channel with your design lead and creative director — drop notes, ask quick questions, share references, and get real-time updates between deliverables. It's not a ticket queue; it's how you'd talk to an in-house team.",
+    a: "A dedicated channel with your design lead and creative director. Drop notes, ask quick questions, share references and get real-time updates between deliverables. It's not a ticket queue. It's how you'd talk to an in-house team.",
   },
   {
     q: "What's out of scope?",
@@ -474,7 +474,7 @@ export const audiences = [
     label: "For agencies",
     title: "Your overflow team, white-label.",
     keyword: "white-label",
-    body: "Take on more work without hiring. Senior design capacity under your banner — your clients never know we exist.",
+    body: "Take on more work without hiring. Senior design capacity under your banner, and your clients never know we exist.",
   },
   {
     label: "For marketing teams",
@@ -486,7 +486,7 @@ export const audiences = [
     label: "For established brands",
     title: "For businesses that know design is leverage.",
     keyword: "leverage",
-    body: "Senior-level craft on everything you put out — not just the big projects.",
+    body: "Senior-level craft on everything you put out, not just the big projects.",
   },
 ] as const;
 

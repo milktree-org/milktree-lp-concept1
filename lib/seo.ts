@@ -10,9 +10,9 @@ export const SITE_URL = "https://www.milktreeagency.com";
 
 export const seo = {
   /** Root <title> — keyword-carrying but still on-brand. */
-  title: "Milktree — Design Subscription UK | Your Creative Department, On Demand",
+  title: "Milktree | Design Subscription UK | Your Creative Department, On Demand",
   description:
-    "Milktree is a UK design subscription — your embedded brand & design team. Unlimited design requests, senior work back in 48 hours, one flat monthly fee. 200+ brands built over 6 years as an agency.",
+    "Milktree is a UK design subscription: your embedded brand & design team. Unlimited design requests, senior work back in 48 hours, one flat monthly fee. 200+ brands built over 6 years as an agency.",
   ogDescription:
     "A UK design subscription: unlimited requests, senior work in 48 hours, one flat monthly fee.",
   keywords: [
@@ -71,7 +71,7 @@ export function serviceJsonLd() {
     "@type": "Service",
     "@id": `${SITE_URL}/#service`,
     name: "Design subscription",
-    serviceType: "Design subscription — unlimited design requests on a flat monthly fee",
+    serviceType: "Design subscription: unlimited design requests on a flat monthly fee",
     description:
       "An embedded brand and design team on subscription. Unlimited design requests, senior work back in around 48 hours, pause or cancel any month.",
     provider: { "@id": `${SITE_URL}/#organization` },

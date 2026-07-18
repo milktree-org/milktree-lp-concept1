@@ -42,7 +42,7 @@ export function Services() {
         </div>
         <Reveal index={2}>
           <p className="text-body max-w-sm md:text-right">
-            One design subscription across your whole brand — so everything you
+            One design subscription across your whole brand, so everything you
             ship looks like it came from the same place.
           </p>
         </Reveal>

@@ -319,7 +319,7 @@ export function CareersForm() {
             <StepPanel key="work" stepKey="work" direction={direction}>
               <StepHeading
                 title="Show us the work."
-                sub="Your portfolio is the application. Behance, Dribbble, a personal site — whatever shows your best."
+                sub="Your portfolio is the application. Behance, Dribbble, a personal site, whatever shows your best."
               />
               <div className="grid gap-5">
                 <FunnelInput
@@ -388,7 +388,7 @@ export function CareersForm() {
             <StepPanel key="you" stepKey="you" direction={direction}>
               <StepHeading
                 title="Last step. The practical bits."
-                sub="We hire worldwide — location and rate just help us make a fair offer."
+                sub="We hire worldwide. Location and rate just help us make a fair offer."
               />
               <div className="grid gap-5">
                 <div className="grid gap-5 sm:grid-cols-2">
@@ -484,7 +484,7 @@ function SubmittedScreen({ name }: { name: string }) {
       </h2>
       <p className="text-body mx-auto mt-5 max-w-md">
         We read every application personally and reply to the ones that feel
-        like a fit — usually within a week. Your portfolio does the talking
+        like a fit, usually within a week. Your portfolio does the talking
         from here.
       </p>
     </div>

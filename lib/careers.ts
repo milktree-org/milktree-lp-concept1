@@ -28,7 +28,7 @@ export const AVAILABILITY_OPTIONS = [
 ] as const;
 
 export const AI_USAGE_OPTIONS = [
-  { value: "Daily user", label: "Daily — it's part of my workflow" },
+  { value: "Daily user", label: "Daily, it's part of my workflow" },
   { value: "Occasionally", label: "Occasionally, for the right task" },
   { value: "Not yet", label: "Not yet, but keen to learn" },
 ] as const;
@@ -46,7 +46,7 @@ export const careers = {
   headline: "World-class talent, wherever it lives.",
   sub: "Milktree is a senior, remote-first design team building 200+ brands and counting. If you sweat the details and ship fast, we want to see your work.",
   perks: [
-    "Fully remote — work from anywhere",
+    "Fully remote, work from anywhere",
     "Senior team, zero busywork",
     "Real brands, shipped fast",
   ],

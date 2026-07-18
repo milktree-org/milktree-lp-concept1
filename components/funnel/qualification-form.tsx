@@ -24,6 +24,7 @@ import {
   TEAM_OPTIONS,
   MARKETING_OPTIONS,
   BUDGET_OPTIONS,
+  optionLabel,
   type LeadRoute,
 } from "@/lib/funnel";
 import { getLeadTrackingFields } from "@/lib/analytics/lead-tracking";
@@ -179,7 +180,7 @@ export function QualificationForm() {
 
   if (result) {
     return result.route === "qualified" ? (
-      <QualifiedScreen />
+      <QualifiedScreen answers={answers} />
     ) : (
       <UnqualifiedScreen quizUrl={quizUrl} />
     );
@@ -375,7 +376,28 @@ function stepForField(field: "need" | "teamSize" | "marketing" | "budget") {
 
 /* ------------------------------ Result screens ---------------------------- */
 
-function QualifiedScreen() {
+function QualifiedScreen({ answers }: { answers: Answers }) {
+  const prefill = useMemo(() => {
+    const summary = [
+      answers.company.trim() && `Company: ${answers.company.trim()}`,
+      answers.website.trim() && `Website: ${answers.website.trim()}`,
+      answers.need && `Looking for: ${optionLabel(NEED_OPTIONS, answers.need)}`,
+      answers.teamSize && `Team size: ${optionLabel(TEAM_OPTIONS, answers.teamSize)}`,
+      answers.marketing &&
+        `Marketing: ${optionLabel(MARKETING_OPTIONS, answers.marketing)}`,
+      answers.budget && `Budget: ${optionLabel(BUDGET_OPTIONS, answers.budget)}`,
+    ].filter(Boolean) as string[];
+
+    return {
+      name: answers.name.trim() || undefined,
+      email: answers.email.trim() || undefined,
+      phone: answers.phone.trim() || undefined,
+      company: answers.company.trim() || undefined,
+      website: answers.website.trim() || undefined,
+      notes: summary.length ? summary.join("\n") : undefined,
+    };
+  }, [answers]);
+
   return (
     <div className="mx-auto w-full max-w-4xl text-center">
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">
@@ -389,7 +411,7 @@ function QualifiedScreen() {
         all works to your inbox.
       </p>
       <div className="mt-10 overflow-hidden rounded-[2rem] border border-border bg-surface p-2 text-left sm:p-4">
-        <BookingEmbed source="Website — /start Qualified" />
+        <BookingEmbed source="Website — /start Qualified" prefill={prefill} />
       </div>
     </div>
   );

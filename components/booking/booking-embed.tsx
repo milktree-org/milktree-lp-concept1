@@ -18,9 +18,28 @@ const CAL_LINK = CAL_URL.replace(/^https?:\/\/(app\.)?cal\.com\//, "");
  * `generate_lead` — carrying first/last-touch ad attribution as Cal metadata so
  * the booking can be tied back to the ad that produced it.
  */
-export function BookingEmbed({ source = "Website — /book" }: { source?: string }) {
+export type BookingPrefill = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  website?: string;
+  notes?: string;
+};
+
+export function BookingEmbed({
+  source = "Website — /book",
+  prefill,
+}: {
+  source?: string;
+  prefill?: BookingPrefill;
+}) {
   const initialised = useRef(false);
   const booked = useRef(false);
+  // Latest prefill, read at init time so answers already collected by the
+  // qualification form autofill the calendar without re-initialising the embed.
+  const prefillRef = useRef(prefill);
+  prefillRef.current = prefill;
 
   useEffect(() => {
     if (initialised.current) return;
@@ -61,15 +80,27 @@ export function BookingEmbed({ source = "Website — /book" }: { source?: string
 
     const Cal = window.Cal;
     const trackingMetadata = getCalcomTrackingMetadata();
+    const pf = prefillRef.current;
+
+    // Only include fields we actually have, so an empty value never overwrites
+    // something the visitor starts typing. Unknown keys (company/website) map
+    // to matching Cal booking questions when present and are ignored otherwise.
+    const config: Record<string, any> = {
+      layout: "month_view",
+      theme: "dark",
+      metadata: { source, ...trackingMetadata },
+    };
+    if (pf?.name) config.name = pf.name;
+    if (pf?.email) config.email = pf.email;
+    if (pf?.notes) config.notes = pf.notes;
+    if (pf?.phone) config.attendeePhoneNumber = pf.phone;
+    if (pf?.company) config.company = pf.company;
+    if (pf?.website) config.website = pf.website;
 
     Cal("init", CAL_NAMESPACE, { origin: "https://cal.com" });
     Cal.ns[CAL_NAMESPACE]("inline", {
       elementOrSelector: "#intro-call-cal",
-      config: {
-        layout: "month_view",
-        theme: "dark",
-        metadata: { source, ...trackingMetadata },
-      },
+      config,
       calLink: CAL_LINK,
     });
     Cal.ns[CAL_NAMESPACE]("ui", {

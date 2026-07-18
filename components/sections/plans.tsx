@@ -120,8 +120,8 @@ export function Plans() {
         <p className="text-body text-[0.95rem]">
           {planAnchor}{" "}
           <a
-            href={`mailto:${CONTACT_EMAIL}?subject=More firepower`}
-            className="font-bold text-foreground underline underline-offset-4 transition-colors hover:text-brand"
+            href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("More firepower")}`}
+            className="inline-flex min-h-11 items-center font-bold text-foreground underline underline-offset-4 transition-colors hover:text-brand"
           >
             Let&apos;s talk.
           </a>

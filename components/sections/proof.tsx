@@ -7,6 +7,7 @@ import { CountUp } from "@/components/motion/count-up";
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
 import { stats, testimonials } from "@/lib/site";
 import { workProjects } from "@/lib/work";
+import { WorkDeckDialog } from "@/components/ui/work-deck-dialog";
 import { cn } from "@/lib/utils";
 
 /**
@@ -67,6 +68,11 @@ export function Proof() {
             </StaggerItem>
           ))}
         </StaggerGroup>
+
+        {/* Full portfolio deck in a dialog */}
+        <Reveal className="mt-10 flex justify-center">
+          <WorkDeckDialog />
+        </Reveal>
 
         {/* Testimonials [slot] — swap for named client quotes */}
         <StaggerGroup className="mt-20 grid gap-5 md:grid-cols-3">

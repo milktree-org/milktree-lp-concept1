@@ -68,9 +68,9 @@ export function Footer() {
               Unlimited design, senior work in 48 hours, one flat monthly fee.
             </p>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              Milktree is a UK design subscription — an embedded brand &amp;
+              Milktree is a UK design subscription: an embedded brand &amp;
               design team for scaling companies. Six years as an agency, 200+
-              brands built, 50+ experienced designers — across brand identity,
+              brands built and 50+ experienced designers across brand identity,
               campaigns, packaging and web.
             </p>
             <div className="mt-7">

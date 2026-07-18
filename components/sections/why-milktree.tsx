@@ -24,7 +24,7 @@ export function WhyMilktree() {
         </Reveal>
         <Reveal index={2}>
           <p className="text-body mt-4">
-            Compare the options most teams weigh up — and where an embedded
+            Compare the options most teams weigh up, and where an embedded
             creative partner lands.
           </p>
         </Reveal>

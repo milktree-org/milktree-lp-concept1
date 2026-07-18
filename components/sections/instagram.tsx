@@ -60,7 +60,7 @@ export async function InstagramSection() {
             </Reveal>
             <Reveal index={2}>
               <p className="text-body-lg mt-5 max-w-lg">
-                Latest from the studio — brand and design in the open.
+                The latest from the studio, brand and design in the open.
                 Follow{" "}
                 <a
                   href={instagram.url}
