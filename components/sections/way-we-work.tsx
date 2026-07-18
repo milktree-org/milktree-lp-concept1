@@ -42,7 +42,7 @@ const STEPS: Step[] = [
   },
   {
     title: "A living brand library",
-    body: "Every logo, asset, template and guideline in one organised place — always current, never lost in inboxes.",
+    body: "Every logo, asset, template and guideline in one organised place. Always current, never lost in inboxes.",
     Icon: Library,
   },
   {
@@ -171,8 +171,8 @@ function Header() {
       </Reveal>
       <Reveal index={2}>
         <p className="text-body mt-4">
-          Briefs, assets, delivery and feedback — one managed workspace, so your
-          brand stays consistent and nothing slips through the cracks.
+          Briefs, assets, delivery and feedback in one managed workspace, so
+          your brand stays consistent and nothing slips through the cracks.
         </p>
       </Reveal>
     </div>
@@ -198,7 +198,8 @@ function StepRow({ step, index, active }: { step: Step; index: number; active: b
       </span>
       <div>
         <h3 className="text-lg font-bold tracking-tight">
-          {String(index + 1).padStart(2, "0")} — {step.title}
+          <span className="mr-2 text-faint">{String(index + 1).padStart(2, "0")}</span>
+          {step.title}
         </h3>
         <p className="text-body mt-1 text-[0.98rem]">{step.body}</p>
       </div>

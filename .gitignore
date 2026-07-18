@@ -50,3 +50,6 @@ next-env.d.ts
 /audits/
 /ads skill/
 /skills/
+
+# Visual brainstorm companion session files
+.superpowers/

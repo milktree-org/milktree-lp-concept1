@@ -28,9 +28,9 @@ function InstagramIcon({ className }: { className?: string }) {
 }
 
 /**
- * Instagram social proof — top-performing posts from the last 12 months,
- * synced via `npm run sync:instagram`. Each tile links to the real post
- * and shows live engagement (likes + comments).
+ * Instagram social proof — one row of three recent posts (the newest is
+ * skipped), synced via `npm run sync:instagram`. Each tile links to the
+ * real post.
  */
 export async function InstagramSection() {
   const feed = await getInstagramFeed();
@@ -39,7 +39,7 @@ export async function InstagramSection() {
   return (
     <section
       id="instagram"
-      className="scroll-mt-28 border-t border-border bg-surface/40 py-24 md:py-32"
+      className="theme-light scroll-mt-28 bg-background py-24 text-foreground md:py-32"
     >
       <div className="container-edge">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -49,7 +49,8 @@ export async function InstagramSection() {
             </Reveal>
             <Reveal index={1}>
               <h2 className="text-h2 mt-6 text-balance">
-                <span className="text-brand">
+                {/* highlighter mark — echoes the yellow marks in the posts */}
+                <span className="box-decoration-clone bg-brand px-2 text-brand-ink">
                   <CountUp value={followers} suffix="+" />
                 </span>
                 <span className="mt-1 block sm:mt-0 sm:inline sm:before:content-['_']">
@@ -59,14 +60,14 @@ export async function InstagramSection() {
             </Reveal>
             <Reveal index={2}>
               <p className="text-body-lg mt-5 max-w-lg">
-                Our top-performing posts — brand and design in the open.
+                Latest from the studio — brand and design in the open.
                 Follow{" "}
                 <a
                   href={instagram.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-cursor="hover"
-                  className="inline-flex min-h-11 items-center font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:text-brand hover:decoration-brand"
+                  className="inline-flex min-h-11 items-center font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
                 >
                   @{feed.handle}
                 </a>{" "}
@@ -81,7 +82,7 @@ export async function InstagramSection() {
               target="_blank"
               rel="noopener noreferrer"
               data-cursor="hover"
-              className={cn(buttonVariants({ variant: "ghostPill", size: "pill" }), "w-full sm:w-auto")}
+              className={cn(buttonVariants({ variant: "default", size: "pill" }), "w-full sm:w-auto")}
             >
               <InstagramIcon />
               Follow on Instagram
@@ -89,7 +90,7 @@ export async function InstagramSection() {
           </Reveal>
         </div>
 
-        <InstagramGrid posts={feed.posts} />
+        <InstagramGrid posts={feed.posts.slice(1, 4)} />
 
         <Reveal index={1}>
           <a

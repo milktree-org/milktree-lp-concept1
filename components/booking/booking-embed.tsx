@@ -6,19 +6,19 @@ import { trackLead, trackSchedule } from "@/lib/analytics/meta-tracking";
 import { getCalcomTrackingMetadata } from "@/lib/analytics/lead-tracking";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-9GHX9JVN9S";
-const CAL_NAMESPACE = "brand-audit";
+const CAL_NAMESPACE = "intro-call";
 // Cal.com embeds want the bare "<user>/<event>" slug, not the full URL.
 const CAL_LINK = CAL_URL.replace(/^https?:\/\/(app\.)?cal\.com\//, "");
 
 /**
- * Inline Cal.com booking embed (dark, brand-yellow) for the free brand audit.
+ * Inline Cal.com booking embed (dark, brand-yellow) for the intro call.
  *
  * On a completed booking it fires the conversion events that the whole funnel
  * exists for — Meta `Lead` + `Schedule` (Pixel + CAPI, deduplicated) and a GA4
  * `generate_lead` — carrying first/last-touch ad attribution as Cal metadata so
  * the booking can be tied back to the ad that produced it.
  */
-export function BookingEmbed() {
+export function BookingEmbed({ source = "Website — /book" }: { source?: string }) {
   const initialised = useRef(false);
   const booked = useRef(false);
 
@@ -64,11 +64,11 @@ export function BookingEmbed() {
 
     Cal("init", CAL_NAMESPACE, { origin: "https://cal.com" });
     Cal.ns[CAL_NAMESPACE]("inline", {
-      elementOrSelector: "#brand-audit-cal",
+      elementOrSelector: "#intro-call-cal",
       config: {
         layout: "month_view",
         theme: "dark",
-        metadata: { source: "Website — /book", ...trackingMetadata },
+        metadata: { source, ...trackingMetadata },
       },
       calLink: CAL_LINK,
     });
@@ -85,24 +85,24 @@ export function BookingEmbed() {
 
         if (typeof window.gtag === "function") {
           window.gtag("event", "generate_lead", {
-            event_category: "Brand Audit",
+            event_category: "Intro Call",
             event_label: "Website — Cal.com Booking",
             value: 150,
             currency: "GBP",
             send_to: GA_ID,
           });
         }
-        trackLead({ eventSource: "Website — /book Booking" });
+        trackLead({ eventSource: `${source} Booking` });
         trackSchedule({ eventSource: "Website — Cal.com Booking" });
       },
     });
     /* eslint-enable @typescript-eslint/no-explicit-any */
-  }, []);
+  }, [source]);
 
   return (
     <div
-      id="brand-audit-cal"
-      aria-label="Brand audit booking calendar"
+      id="intro-call-cal"
+      aria-label="Intro call booking calendar"
       className="min-h-[clamp(680px,90vh,900px)] w-full"
     />
   );

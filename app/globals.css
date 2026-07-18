@@ -19,8 +19,12 @@
   --color-brand: var(--brand);
   --color-brand-ink: var(--brand-ink);
 
+  /* warm near-black block colour (light concept dark sections) */
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+
   --font-sans: var(--font-satoshi);
-  --font-heading: var(--font-satoshi);
+  --font-heading: var(--font-instrument);
   --font-mono: var(--font-geist-mono);
 
   --color-ring: var(--ring);
@@ -91,7 +95,58 @@
   --radius: 2.25rem; /* 36px base — Milktree is heavily rounded */
   --radius-pill: 9999px;
 
+  /* warm near-black — the dark contrast block on the light concept */
+  --ink: #141200;
+  --ink-foreground: #fffef2;
+
   color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Light editorial concept (/concept-2) — scoped token overrides.     */
+/*  White/off-white canvas, near-black type, yellow kept as the        */
+/*  scalpel accent. Default Button flips to a warm-black pill.         */
+/* ------------------------------------------------------------------ */
+.theme-light {
+  --background: #fafaf7; /* warm off-white canvas */
+  --surface: #f1f0ea; /* raised cards / pricing */
+  --card: #f1f0ea;
+  --card-foreground: #101009;
+  --foreground: #101009;
+
+  --popover: #ffffff;
+  --popover-foreground: #101009;
+
+  /* default Button = warm-black pill; yellow reserved for THE CTA */
+  --primary: #141200;
+  --primary-foreground: #fffef2;
+
+  --secondary: rgba(16, 16, 9, 0.06);
+  --secondary-foreground: #101009;
+
+  --muted: rgba(16, 16, 9, 0.05);
+  --muted-foreground: rgba(16, 16, 9, 0.64);
+  --faint: rgba(16, 16, 9, 0.42);
+
+  --accent: rgba(16, 16, 9, 0.06);
+  --accent-foreground: #101009;
+
+  --border: rgba(16, 16, 9, 0.14);
+  --input: rgba(16, 16, 9, 0.18);
+  --ring: #141200; /* yellow ring fails contrast on white */
+
+  color-scheme: light;
+}
+
+/* Yellow outline is invisible on white — use ink for keyboard focus. */
+.theme-light :focus-visible {
+  outline-color: var(--ink);
+}
+
+/* Concept pages carry their own chrome; hide the global dark shell. */
+body:has([data-hide-chrome]) .site-header,
+body:has([data-hide-chrome]) .site-footer {
+  display: none;
 }
 
 @layer base {
@@ -100,9 +155,23 @@
   }
   html {
     @apply font-sans;
+    /* Instrument's wght axis tops out at 700; never fake-embolden beyond it */
+    font-synthesis-weight: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: clip;
+  }
+  /* Headings = Instrument Sans Condensed (width 75). Body/UI stays Satoshi.
+     Concept pages that set their own heading face (e.g. .c3-display) still
+     win via class specificity. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-stretch: 75%;
   }
   body {
     @apply bg-background text-foreground;
@@ -130,17 +199,24 @@
 /*  Type scale (§4) — fluid, component classes keep section code clean */
 /* ------------------------------------------------------------------ */
 @layer components {
+  /* Headlines are caps condensed bold — the poster style from the socials */
   .text-display {
-    font-weight: 900;
+    font-family: var(--font-heading);
+    font-stretch: 75%;
+    font-weight: 700;
     font-size: clamp(3rem, 9vw, 8rem);
     line-height: 0.95;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
   }
   .text-h2 {
-    font-weight: 900;
+    font-family: var(--font-heading);
+    font-stretch: 75%;
+    font-weight: 700;
     font-size: clamp(2rem, 5vw, 3.75rem);
-    line-height: 1;
-    letter-spacing: -0.025em;
+    line-height: 0.98;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
   }
   .text-h3 {
     font-weight: 700;
@@ -149,13 +225,13 @@
     letter-spacing: -0.01em;
   }
   .text-body-lg {
-    font-weight: 500;
+    font-weight: 400;
     font-size: clamp(1.125rem, 1.4vw, 1.3rem);
     line-height: 1.6;
     color: var(--muted-foreground);
   }
   .text-body {
-    font-weight: 500;
+    font-weight: 400;
     font-size: 1.0625rem;
     line-height: 1.6;
     color: var(--muted-foreground);
@@ -190,6 +266,8 @@
 /* ------------------------------------------------------------------ */
 .hero {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 100dvh;
   overflow: hidden;
   background: var(--background);
@@ -206,15 +284,22 @@
   pointer-events: none;
 }
 
-.hero__video {
+.hero__showreel {
   position: absolute;
   inset: 0;
   height: 100%;
   width: 100%;
-  object-fit: cover;
-  object-position: 50% 50%;
+  overflow: hidden;
   background: #000;
-  opacity: 0.45;
+  opacity: 0.5;
+}
+
+.hero__showreel-slide {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  will-change: opacity, transform;
 }
 
 .hero__media-scrim {
@@ -239,9 +324,17 @@
   position: relative;
   z-index: 2;
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
+  justify-content: space-between;
   width: 100%;
+  min-height: 100dvh;
+}
+
+.hero__footer {
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .hero__shell {
@@ -265,17 +358,36 @@
 }
 
 .hero__headline {
-  font-weight: 900;
-  font-size: clamp(2.5rem, 5.5vw, 4.5rem);
-  letter-spacing: -0.03em;
-  line-height: 1.08;
+  font-family: var(--font-heading);
+  font-stretch: 75%;
+  font-weight: 700;
+  font-size: clamp(2.5rem, 5.5vw, 4.75rem);
+  letter-spacing: -0.01em;
+  line-height: 1.02;
   color: #fff;
   text-wrap: balance;
+  text-transform: uppercase;
+}
+
+/* Setup line stays at the headline size; punch line is ~30% larger. */
+.hero__headline-setup {
+  display: block;
+}
+
+.hero__headline-setup-break {
+  display: inline;
+}
+
+.hero__headline-punch {
+  display: block;
+  font-size: 1.3em;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
 }
 
 .hero__subheadline {
   font-size: clamp(1rem, 1.6vw, 1.25rem);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.35;
   color: rgba(255, 255, 255, 0.92);
   max-width: 500px;
@@ -291,8 +403,12 @@
   width: 100%;
 }
 
-.hero__cta-primary {
-  min-width: min(100%, 240px);
+/* Fixed (non-percentage) floor so both pills match — a percentage-based
+   min-width would collapse to 0 during the magnetic wrapper's intrinsic-size
+   pass, leaving "Get started" narrower than "See plans". */
+.hero__cta-primary,
+.hero__cta-secondary {
+  min-width: 216px;
 }
 
 .hero__cta-secondary {
@@ -326,16 +442,24 @@
   margin-top: 4px;
 }
 
-.hero__showcase {
+/* Full-bleed work marquee (§WorkStrip) — mid-page, inside the manifesto band */
+.work-strip {
   width: 100%;
   overflow: hidden;
   position: relative;
-  z-index: 2;
   /* marquee children are wide — clip so they never expand the page */
   contain: layout paint;
+  /* soft edges so cards emerge from the black instead of hard-clipping */
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
 }
 
-.hero__showcase-track {
+.work-strip__track {
   display: flex;
   gap: 16px;
   width: max-content;
@@ -344,11 +468,11 @@
   will-change: transform;
 }
 
-.hero__showcase:hover .hero__showcase-track {
+.work-strip:hover .work-strip__track {
   animation-play-state: paused;
 }
 
-.hero__showcase-track--static {
+.work-strip__track--static {
   animation: none;
   overflow-x: auto;
   width: 100%;
@@ -365,8 +489,9 @@
   }
 }
 
-.hero__showcase-card {
-  border-radius: 16px;
+.work-strip__card {
+  position: relative;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.07);
   flex-shrink: 0;
   overflow: hidden;
@@ -375,12 +500,42 @@
   max-width: min(280px, 78vw);
 }
 
-.hero__card-img {
+.work-strip__img {
   display: block;
   height: 400px;
   width: auto;
   max-width: 100%;
   object-fit: cover;
+}
+
+.work-strip__caption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 28px 16px 14px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.work-strip__card:hover .work-strip__caption {
+  opacity: 1;
+}
+
+.work-strip__caption-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.work-strip__caption-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 @media (min-width: 1024px) {
@@ -395,11 +550,20 @@
 }
 
 @media (max-width: 1024px) {
+  /* Center the copy in the space between header and marquee — otherwise the
+     block hugs the top on tablet portrait and leaves a dead zone below. */
   .hero__shell {
+    flex: 1;
+    justify-content: center;
+    min-height: 0;
     padding-top: 104px;
   }
 
-  .hero__card-img {
+  .hero__headline {
+    font-size: clamp(2.75rem, 7vw, 4.25rem);
+  }
+
+  .work-strip__img {
     height: 280px;
   }
 
@@ -415,43 +579,82 @@
 }
 
 @media (max-width: 640px) {
+  /* Lock the first screen: copy centers in the leftover space, marquee pins bottom. */
+  .hero {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .hero__inner {
+    min-height: 0;
+    height: 100%;
+  }
+
   .hero__shell {
-    padding: 96px 16px 40px;
-    gap: 32px;
+    flex: 1;
+    justify-content: center;
+    min-height: 0;
+    padding: max(72px, env(safe-area-inset-top, 0px) + 56px) 16px 12px;
+    gap: 0;
+  }
+
+  .hero__copy {
+    gap: 14px;
   }
 
   .hero__headline {
-    font-size: clamp(2.125rem, 10vw, 2.75rem);
+    font-size: clamp(2.5rem, 11.5vw, 3.25rem);
+  }
+
+  /* Soft-break the setup so it doesn't crush the punch line on narrow screens. */
+  .hero__headline-setup-break {
+    display: block;
   }
 
   .hero__subheadline {
     font-size: 15px;
-    max-width: 100%;
+    line-height: 1.45;
+    max-width: 32ch;
   }
 
-  .hero__showcase-card {
+  .hero__cta-group {
+    margin-top: 2px;
+    gap: 10px;
+  }
+
+  .hero__trust {
+    margin-top: 0;
+    font-size: 0.75rem;
+  }
+
+  .hero__marquee-wrap {
+    padding: 12px 0 max(16px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .hero__marquee-logo {
+    height: 36px;
+  }
+
+  .work-strip__card {
     max-width: min(220px, 72vw);
     border-radius: 12px;
   }
 
-  .hero__card-img {
+  .work-strip__img {
     height: 168px;
     width: 100%;
   }
 
-  .hero__showcase-track {
+  .work-strip__track {
     gap: 12px;
     padding-left: 16px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero__showcase-track {
+  .work-strip__track {
     animation: none;
-  }
-
-  .hero__video {
-    display: none;
   }
 }
 
@@ -491,10 +694,15 @@
 
 .hero__marquee-track {
   display: flex;
-  gap: 0;
   width: max-content;
-  animation: marquee-scroll 40s linear infinite;
+  animation: marquee-scroll 50s linear infinite;
   will-change: transform;
+}
+
+.hero__marquee-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
 }
 
 .hero__marquee-wrap:hover .hero__marquee-track {
@@ -507,30 +715,30 @@
   width: 100%;
 }
 
+/* Two equal groups → -50% lands exactly on the seam. */
 @keyframes marquee-scroll {
-  0% {
-    transform: translate(0);
+  from {
+    transform: translateX(0);
   }
   to {
-    transform: translate(-50%);
+    transform: translateX(-50%);
   }
 }
 
 .hero__marquee-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 16px;
+  padding: 0 20px;
   flex-shrink: 0;
 }
 
 .hero__marquee-logo {
-  height: 28px;
+  height: 42px;
   width: auto;
   object-fit: contain;
-  opacity: 0.55;
+  opacity: 0.5;
   filter: brightness(0) invert(1);
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s ease;
 }
 
 .hero__marquee-logo:hover {
@@ -539,11 +747,11 @@
 
 @media (min-width: 768px) {
   .hero__marquee-item {
-    padding: 0 28px;
+    padding: 0 32px;
   }
 
   .hero__marquee-logo {
-    height: 36px;
+    height: 54px;
   }
 }
 
@@ -551,6 +759,192 @@
   .hero__marquee-track {
     animation: none;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  /concept-2 — light editorial concept                               */
+/* ------------------------------------------------------------------ */
+
+/* Vucko-scale display headline: all-caps, fills the viewport width. */
+.c2-display {
+  font-family: var(--font-heading);
+  font-stretch: 75%;
+  font-weight: 700;
+  font-size: clamp(2.6rem, 9.5vw, 9.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+/* Editorial parenthetical section label, e.g. "(The problem)". */
+.c2-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--faint);
+  letter-spacing: 0.01em;
+}
+
+/* Light logo marquee — hairline-bounded, logos knocked to black. */
+.c2-marquee {
+  overflow: hidden;
+  position: relative;
+  contain: layout paint;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+}
+
+.c2-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 45s linear infinite;
+  will-change: transform;
+}
+
+.c2-marquee:hover .c2-marquee__track {
+  animation-play-state: paused;
+}
+
+.c2-marquee__track--static {
+  animation: none;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.c2-marquee__item {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 20px;
+}
+
+.c2-marquee__logo {
+  height: 26px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.45;
+  filter: brightness(0);
+  transition: opacity 0.2s ease;
+}
+
+.c2-marquee__logo:hover {
+  opacity: 0.75;
+}
+
+@media (min-width: 768px) {
+  .c2-marquee__item {
+    padding: 0 32px;
+  }
+
+  .c2-marquee__logo {
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c2-marquee__track {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  /concept-3 — dark cinematic concept (liquid glass + video)         */
+/* ------------------------------------------------------------------ */
+
+.theme-cinema {
+  --c3-bg: #050403; /* deep warm black */
+  --c3-cream: #fffef2;
+  --c3-accent: #ffdc04; /* Milktree yellow replaces the neon green */
+  background: var(--c3-bg);
+  color: var(--c3-cream);
+}
+
+/* Anton-style condensed display type — all headings and nav. */
+.c3-display {
+  font-family: var(--font-anton), "Arial Narrow", sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+/* Condiment cursive — the accent overlays, normal case. */
+.c3-script {
+  font-family: var(--font-condiment), cursive;
+  text-transform: none;
+}
+
+.c3-mono {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+    monospace;
+}
+
+/* Liquid glass — nav pill, cards, overlays, social buttons. */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.liquid-glass-hover {
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.liquid-glass-hover:hover {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+
+.liquid-glass-hover:active {
+  transform: scale(0.98);
+}
+
+/* Mobile menu glass — heavier blur than the pill. */
+.mobile-menu-glass {
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Hide custom-cursor element on touch / coarse pointers */

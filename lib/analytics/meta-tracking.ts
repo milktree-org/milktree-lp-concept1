@@ -333,7 +333,7 @@ export function trackPageView(): void {
 }
 
 /**
- * Contact — user clicks a CTA to book a brand audit.
+ * Contact — user clicks a primary CTA into the qualification funnel.
  * This is the primary conversion event for Milktree.
  */
 export function trackContact(params: BaseEventParams = {}): void {

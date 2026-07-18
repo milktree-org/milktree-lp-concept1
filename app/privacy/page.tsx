@@ -5,9 +5,12 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
     "How Milktree collects, uses and protects your data, including the analytics and advertising tools we use.",
+  alternates: {
+    canonical: "/privacy",
+  },
 };
 
-const UPDATED = "24 June 2026";
+const UPDATED = "4 July 2026";
 
 export default function PrivacyPage() {
   return (
@@ -15,15 +18,22 @@ export default function PrivacyPage() {
       <p>
         This Privacy Policy explains how <strong>Milktree</strong> (&ldquo;we&rdquo;,
         &ldquo;us&rdquo;) collects, uses and protects information when you visit{" "}
-        <strong>milktreeagency.com</strong> (the &ldquo;Site&rdquo;) or book a free brand
-        audit with us. We are a UK-based brand &amp; design studio and act as the data
-        controller for the personal data described here.
+        <strong>milktreeagency.com</strong> (the &ldquo;Site&rdquo;), submit an enquiry or
+        book an intro call with us. We are a UK-based brand &amp; design studio and act as
+        the data controller for the personal data described here.
       </p>
 
       <h2>Information we collect</h2>
       <ul>
         <li>
-          <strong>Booking details</strong> — when you book a brand audit, the name, email
+          <strong>Enquiry details</strong> — when you complete our &ldquo;Get
+          started&rdquo; form or Brand Ranking Quiz: your name, work email, phone
+          (optional), company name, website, team size, budget band and your quiz
+          answers. These are stored securely in our database (Supabase, hosted in the
+          UK/EU) so we never lose your enquiry.
+        </li>
+        <li>
+          <strong>Booking details</strong> — when you book an intro call, the name, email
           and any details you provide through our scheduling provider (Cal.com).
         </li>
         <li>
@@ -61,13 +71,37 @@ export default function PrivacyPage() {
           usage analytics and session insights.
         </li>
         <li>
-          <strong>Cal.com</strong> — to schedule and manage your brand-audit booking.
+          <strong>Cal.com</strong> — to schedule and manage your intro-call booking.
+        </li>
+        <li>
+          <strong>Resend</strong> — to send transactional email (your plan options or
+          your Brand Ranking Report) and, only where you have ticked the consent box,
+          occasional marketing emails. Every email includes a way to opt out.
+        </li>
+        <li>
+          <strong>Supabase</strong> — secure storage of form and quiz submissions.
         </li>
       </ul>
 
+      <h2>Brand Ranking Report data</h2>
+      <p>
+        When you request a Brand Ranking Report we look up publicly available
+        information to build it: live Google search results for search terms relevant
+        to your sector and region (via Apify), and publicly visible brand elements —
+        colours, typography, headlines — from your website and the top-ranking
+        competitor websites (via Firecrawl). Search results are cached for up to 7 days
+        and brand extractions for up to 30 days. Where any figure is an estimate, the
+        report says so.
+      </p>
+
       <h2>How we use your information</h2>
       <ul>
-        <li>To respond to enquiries and deliver the free brand audit you request.</li>
+        <li>To respond to enquiries and deliver anything you request from us — including
+          your Brand Ranking Report, which we send by email regardless of marketing
+          consent because it&apos;s what you asked for.</li>
+        <li>To send occasional brand tips and marketing email <strong>only where you
+          have opted in</strong> (the consent box is never pre-ticked). You can
+          unsubscribe at any time.</li>
         <li>To measure, attribute and improve our advertising and the Site.</li>
         <li>To operate, secure and improve our services.</li>
       </ul>
@@ -77,14 +111,16 @@ export default function PrivacyPage() {
         We rely on <strong>consent</strong> for non-essential analytics and advertising
         cookies, <strong>legitimate interests</strong> for running and securing the Site and
         measuring our marketing, and <strong>performance of a contract / pre-contract
-        steps</strong> when you book an audit. You can withdraw consent at any time.
+        steps</strong> when you make an enquiry or book a call. You can withdraw consent at
+        any time.
       </p>
 
       <h2>Sharing</h2>
       <p>
         We share data with the service providers named above (Meta, Google, Microsoft,
-        Cal.com) acting as processors or independent controllers for the limited purposes
-        described. We do not sell your personal data.
+        Cal.com, Resend, Supabase, Apify, Firecrawl) acting as processors or independent
+        controllers for the limited purposes described. We do not sell your personal
+        data.
       </p>
 
       <h2>Retention</h2>

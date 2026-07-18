@@ -1,7 +1,28 @@
 "use client";
 
-import { ReactLenis } from "lenis/react";
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { ReactLenis, useLenis } from "lenis/react";
 import { useReducedMotion } from "framer-motion";
+
+/**
+ * Lenis holds its own scroll position across App Router client navigations,
+ * so a new route would otherwise open wherever the last page was scrolled.
+ * Jump to the top instantly whenever the pathname changes (hash links are
+ * handled separately by AnchorLink).
+ */
+function ScrollToTopOnNavigate() {
+  const pathname = usePathname();
+  const lenis = useLenis();
+
+  useEffect(() => {
+    if (window.location.hash) return;
+    lenis?.scrollTo(0, { immediate: true, force: true });
+    window.scrollTo(0, 0);
+  }, [pathname, lenis]);
+
+  return null;
+}
 
 /**
  * Lenis smooth scroll (§5.2) — the backbone of the premium feel.
@@ -22,6 +43,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
         smoothWheel: true,
       }}
     >
+      <ScrollToTopOnNavigate />
       {children}
     </ReactLenis>
   );

@@ -17,7 +17,7 @@ export function LegalLayout({
     <section className="relative scroll-mt-28 py-28 md:py-36">
       <div className="container-edge relative z-10 mx-auto max-w-3xl">
         <Reveal>
-          <h1 className="text-balance text-[clamp(2.25rem,5vw,3.75rem)] font-black leading-[1.0] tracking-[-0.03em]">
+          <h1 className="text-balance text-[clamp(2.25rem,5vw,3.75rem)] font-bold leading-[1.0] tracking-[-0.03em]">
             {title}
           </h1>
         </Reveal>

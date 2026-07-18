@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
  * Syncs @milktreeagency Instagram feed:
- * - Fetches posts from the last 12 months
- * - Ranks by engagement (likes + comments)
- * - Keeps top 6, downloads images to /public/instagram
+ * - Fetches recent posts from the profile
+ * - Keeps the 8 most recent, downloads images to /public/instagram
  * - Writes metadata to /data/instagram-feed.json
  *
  * Uses Instagram Graph API when INSTAGRAM_ACCESS_TOKEN + INSTAGRAM_USER_ID are set.
@@ -21,7 +20,7 @@ const DATA_PATH = path.join(ROOT, "data/instagram-feed.json");
 const IMG_DIR = path.join(ROOT, "public/instagram");
 const HANDLE = "milktreeagency";
 const MONTHS = 12;
-const TOP_N = 6;
+const TOP_N = 8;
 const IG_APP_ID = "936619743392459";
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
@@ -82,35 +81,6 @@ function parseProfileEdge(node) {
   };
 }
 
-function parseFeedItem(item) {
-  const ts =
-    item.taken_at != null
-      ? item.taken_at * 1000
-      : item.device_timestamp > 1e12
-        ? item.device_timestamp
-        : item.device_timestamp * 1000;
-  const likes = item.like_count ?? 0;
-  const comments = item.comment_count ?? 0;
-  let remoteImage = item.image_versions2?.candidates?.[0]?.url;
-  if (!remoteImage && item.carousel_media?.[0]) {
-    remoteImage = item.carousel_media[0].image_versions2?.candidates?.[0]?.url;
-  }
-  const code = item.code ?? item.shortcode;
-  const caption =
-    typeof item.caption === "object" ? (item.caption?.text ?? "") : (item.caption ?? "");
-  return {
-    shortcode: code,
-    timestamp: new Date(ts).toISOString(),
-    likes,
-    comments,
-    engagement: engagement(likes, comments),
-    remoteImage,
-    permalink: `https://www.instagram.com/p/${code}/`,
-    caption: caption.slice(0, 160),
-    ts,
-  };
-}
-
 async function fetchJson(url, opts = {}, retries = 4) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -153,22 +123,14 @@ async function fetchViaGraphApi(token, userId) {
     "like_count",
     "comments_count",
   ].join(",");
+  // Graph media endpoint returns newest-first; one page covers TOP_N.
+  const url = `https://graph.facebook.com/v22.0/${userId}/media?fields=${fields}&limit=${TOP_N}&access_token=${token}`;
+  const data = await fetchJson(url);
   const posts = [];
-  let url = `https://graph.facebook.com/v22.0/${userId}/media?fields=${fields}&limit=100&access_token=${token}`;
-
-  while (url) {
-    const data = await fetchJson(url);
-    for (const node of data.data ?? []) {
-      const post = parseGraphNode(node);
-      if (post.ts < cutoff) continue;
-      if (post.remoteImage) posts.push(post);
-    }
-    const oldest = (data.data ?? []).at(-1);
-    if (oldest && new Date(oldest.timestamp).getTime() < cutoff) break;
-    url = data.paging?.next ?? null;
-    if (url) await sleep(200);
+  for (const node of data.data ?? []) {
+    const post = parseGraphNode(node);
+    if (post.remoteImage) posts.push(post);
   }
-
   return { posts, source: "graph-api" };
 }
 
@@ -188,45 +150,9 @@ async function fetchViaPublicApi() {
     if (post.ts >= cutoff) posts.push(post);
   };
 
+  // Profile timeline is newest-first; first page is enough for TOP_N.
   for (const edge of user.edge_owner_to_timeline_media.edges) {
     add(parseProfileEdge(edge.node));
-  }
-
-  let nextMaxId = user.edge_owner_to_timeline_media.page_info.end_cursor;
-  let page = 0;
-  let hitCutoff = false;
-
-  while (nextMaxId && page < 100 && !hitCutoff) {
-    page += 1;
-    await sleep(page === 1 ? 400 : 900);
-    let data;
-    try {
-      // Feed pagination is aggressively rate-limited on fetch(); curl is more reliable.
-      data = curlJson(
-        `https://www.instagram.com/api/v1/feed/user/${userId}/?count=50&max_id=${encodeURIComponent(nextMaxId)}`,
-      );
-    } catch (err) {
-      console.warn(`  pagination stopped at page ${page}: ${err.message}`);
-      break;
-    }
-
-    let oldest = null;
-    for (const item of data.items ?? []) {
-      const post = parseFeedItem(item);
-      oldest = oldest == null ? post.ts : Math.min(oldest, post.ts);
-      add(post);
-    }
-
-    if (oldest != null) {
-      console.log(
-        `  page ${page}: ${posts.length} posts in window (oldest ${new Date(oldest).toISOString().slice(0, 10)})`,
-      );
-      if (oldest < cutoff) hitCutoff = true;
-    } else {
-      console.log(`  page ${page}: no new posts`);
-    }
-
-    nextMaxId = data.more_available ? data.next_max_id : null;
   }
 
   return { posts, followers, source: "public-api" };
@@ -242,7 +168,7 @@ async function downloadImage(url, dest) {
     buf = execFileSync("curl", ["-sL", url], { maxBuffer: 15 * 1024 * 1024 });
   }
   await sharp(buf)
-    .resize(1080, 1080, { fit: "cover", position: "centre" })
+    .resize(1080, 1440, { fit: "cover", position: "centre" })
     .webp({ quality: 82 })
     .toFile(dest);
 }
@@ -254,7 +180,7 @@ async function main() {
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
   const userId = process.env.INSTAGRAM_USER_ID;
 
-  console.log(`▸ Syncing @${HANDLE} — top ${TOP_N} posts, last ${MONTHS} months`);
+  console.log(`▸ Syncing @${HANDLE} — ${TOP_N} most recent posts`);
 
   let result;
   if (token && userId) {
@@ -262,13 +188,13 @@ async function main() {
     result = await fetchViaGraphApi(token, userId);
     result.followers = await fetchFollowersGraph(token, userId);
   } else {
-    console.log("  source: public API (set INSTAGRAM_ACCESS_TOKEN for full history)");
+    console.log("  source: public API (set INSTAGRAM_ACCESS_TOKEN for Graph API)");
     result = await fetchViaPublicApi();
   }
 
-  const ranked = [...result.posts].sort((a, b) => b.engagement - a.engagement);
+  const ranked = [...result.posts].sort((a, b) => b.ts - a.ts);
   const top = ranked.slice(0, TOP_N);
-  console.log(`  scanned ${ranked.length} posts in window → top ${top.length}`);
+  console.log(`  scanned ${ranked.length} posts → ${top.length} most recent`);
 
   // Clear old images
   for (const f of fs.readdirSync(IMG_DIR)) {

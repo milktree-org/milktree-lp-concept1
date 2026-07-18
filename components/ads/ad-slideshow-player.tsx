@@ -148,7 +148,7 @@ function SlideVisual({ slide }: { slide: SocialAd["slides"][number]; format?: Ad
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
         {slide.kind === "stat" ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <p className="text-[clamp(3rem,14vw,4.5rem)] font-black leading-none tracking-tight text-brand">
+            <p className="text-[clamp(3rem,14vw,4.5rem)] font-bold leading-none tracking-tight text-brand">
               {slide.value}
             </p>
             <p className="mt-3 text-lg font-bold text-foreground">{slide.label}</p>
@@ -166,7 +166,7 @@ function SlideVisual({ slide }: { slide: SocialAd["slides"][number]; format?: Ad
   if (slide.kind === "cta") {
     return (
       <div className="flex h-full flex-col items-center justify-center bg-black px-8 text-center">
-        <p className="text-[clamp(1.6rem,7vw,2.2rem)] font-black tracking-tight text-foreground">
+        <p className="text-[clamp(1.6rem,7vw,2.2rem)] font-bold tracking-tight text-foreground">
           {slide.headline}
         </p>
         <span className="mt-8 inline-flex rounded-full bg-brand px-6 py-3 text-sm font-bold text-brand-ink">
@@ -184,7 +184,7 @@ function SlideVisual({ slide }: { slide: SocialAd["slides"][number]; format?: Ad
   return (
     <div className="flex h-full flex-col items-center justify-center bg-black px-8 text-center">
       <span className="mb-6 block h-0.5 w-10 bg-brand" />
-      <h3 className="max-w-[16ch] text-[clamp(1.8rem,8vw,2.6rem)] font-black leading-[0.95] tracking-tight text-foreground">
+      <h3 className="max-w-[16ch] text-[clamp(1.8rem,8vw,2.6rem)] font-bold leading-[0.95] tracking-tight text-foreground">
         {accent ? (
           accent.map((part, i) =>
             part.toLowerCase() === slide.accentWord?.toLowerCase() ? (

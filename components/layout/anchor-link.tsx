@@ -31,6 +31,9 @@ export function AnchorLink({
       } else {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+    } else {
+      // Section lives on the homepage — navigate there with the hash.
+      window.location.href = `/${href}`;
     }
     onNavigate?.();
   }

@@ -4,9 +4,12 @@ import { LegalLayout } from "@/components/layout/legal-layout";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "The terms governing your use of the Milktree website.",
+  alternates: {
+    canonical: "/terms",
+  },
 };
 
-const UPDATED = "24 June 2026";
+const UPDATED = "4 July 2026";
 
 export default function TermsPage() {
   return (
@@ -26,9 +29,9 @@ export default function TermsPage() {
 
       <h2>Bookings &amp; enquiries</h2>
       <p>
-        Booking a free brand audit is a request for an introductory consultation and does
-        not create a binding engagement. Any paid work is governed by a separate written
-        agreement. Scheduling is handled by our provider, Cal.com.
+        Booking an intro call or submitting an enquiry is a request for an introductory
+        consultation and does not create a binding engagement. Any paid work is governed by
+        a separate written agreement. Scheduling is handled by our provider, Cal.com.
       </p>
 
       <h2>Intellectual property</h2>

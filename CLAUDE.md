@@ -2,13 +2,15 @@
 
 > Build spec for an AI coding agent (Claude Code / Cursor). Read this fully before scaffolding. The goal is a **premium, motion-rich marketing site for Milktree** that is measurably more refined than our reference, [legora.com](https://legora.com). This site IS Milktree's best portfolio piece — treat every detail as if a creative director will judge it pixel by pixel.
 
+> **OFFER & FUNNEL UPDATE (supersedes anything below that conflicts):** Milktree now sells a **productised design subscription** — Essentials £1,999/mo and Design Lead £3,999/mo (+VAT), founding rate £3,500/mo for the first 10 Design Lead clients. Essentials is worked by **vetted designers from the bench, quality-checked by a creative director** — never call the Essentials designer "senior." Design Lead's headline upgrade is a **named, dedicated senior designer** (the same person every time) reachable **direct on Slack** — a relationship, not just a faster queue. "Senior" is reserved for Design Lead only in per-plan copy (feature bullets, plan FAQ, plan emails); it's fine as a general brand-level claim elsewhere (hero, footer, meta). There is **no project pricing** and **no brand-audit CTA**. The single primary CTA is **"Get started"** → the multistep qualification form at `/start`; unqualified leads route to the Brand Ranking Quiz at `/brand-report`. See `MILKTREE-LANDING.md` for the authoritative offer, copy, qualification and funnel spec. Design system, motion rules and quality bar below remain in force.
+
 ---
 
 ## 1. What we're building
 
-**Milktree** is an embedded brand & design partner — "your creative department, on demand." A senior team that plugs into scaling companies and delivers brand and design on a flat monthly subscription. 200+ brands built over 5 years. UK-based.
+**Milktree** is an embedded brand & design partner — "your creative department, on demand." A senior team that plugs into scaling companies and delivers brand and design on a flat monthly subscription. The subscription offer is new, but Milktree has operated as an agency for 6 years — 200+ brands built, with access to 50+ experienced designers. Never claim the subscription itself has been running for years. UK-based.
 
-This is the **marketing website**: a homepage plus supporting pages, built to convert cold ad/outreach traffic into booked "free brand audit" calls. The bar is a Framer-class site (Legora) but better — buttery 60fps motion, distinctive type-led design, zero generic-SaaS feel.
+This is the **marketing website**: a homepage plus supporting pages, built to convert cold ad/outreach traffic into qualified subscription leads (multistep form at `/start`; Brand Ranking Quiz at `/brand-report` for unqualified leads). The bar is a Framer-class site (Legora) but better — buttery 60fps motion, distinctive type-led design, zero generic-SaaS feel.
 
 > Note: Milktree has a sister brand, **Riftly** (green/mint, separate site). This repo is **Milktree only** — black & yellow. Do not mix the two brands.
 
@@ -175,11 +177,13 @@ const reduce = useReducedMotion();
 /plans                Pricing
 /insights             Journal / resources index
 /insights/[slug]      Article
-/book                 Free brand audit booking (embed Cal.com/Calendly)
+/start                Multistep qualification form (primary CTA target)
+/brand-report         Brand Ranking Quiz (unqualified redirect + lead magnet)
+/book                 Intro call booking for qualified leads (Cal.com embed)
 ```
 
 **Navigation (sticky, blur-on-scroll header):**
-`What we do ▾` · `Our work` · `Why Milktree ▾` · `Insights ▾` · `Plans` · `[Book a brand audit]` (yellow pill) · `Client login`
+`What's included ▾` · `Our work` · `Why Milktree ▾` · `Plans` · `FAQ` · `[Get started]` (yellow pill) · `Client login`
 
 - Header is transparent over the hero, then gains a blurred dark background once scrolled (`backdrop-blur`, animate in).
 - Mobile: shadcn `Sheet` drawer, full-screen, staggered link reveal.
@@ -194,9 +198,9 @@ Build in this order. Each section uses the reveal primitive; specific motion not
 **1. Hero**
 - Full-viewport. Looping muted background video (portfolio reel — see §9), dark overlay for legibility.
 - H1: **"Your creative department. On demand."** (line-mask reveal, §5.4)
-- Sub: "Milktree becomes your embedded brand & design team — senior, on-brand and fast — for a flat monthly fee."
-- Primary CTA (yellow pill, magnetic): **Book a free brand audit** · Secondary (ghost pill): **See our work**
-- Trust line: `200+ brands built · 5 years · No contracts · Pause anytime`
+- Sub: "Milktree becomes your embedded brand & design team — unlimited requests, senior work back in 48 hours, for one flat monthly fee. No hiring. No freelancer roulette. No waiting weeks."
+- Primary CTA (yellow pill, magnetic): **Get started →** (opens the multistep form at /start) · Secondary (ghost pill): **See plans**
+- Trust line: `200+ brands built · 6 years as an agency · No contracts · Pause anytime`
 
 **2. Trust bar** — "The team behind 200+ growing brands" + infinite logo marquee (§5.7).
 
@@ -204,7 +208,7 @@ Build in this order. Each section uses the reveal primitive; specific motion not
 
 **4. The new way** — large centered statement, the category reframe: "There's a better way to get design done. An embedded creative team you can switch on, scale and direct." One word in yellow.
 
-**5. What we do** — H2: "One team. Every kind of design." 6-tile grid (Brand Identity · Social & Content · Decks & Sales · Ads & Marketing · Web & Landing Pages · Creative Direction). Tiles lift on hover.
+**5. What's included** — H2: "One subscription. Every kind of design." 8-tile grid (Brand identity & guidelines · Social & templates · Ads (static + simple motion) · Decks & sales collateral · Email design · Landing page & web design · Packaging & print · Presentations & OOH). Footer line: "One request = one deliverable with one revision round included." Tiles lift on hover.
 
 **6. How it works** — 3 steps (Choose your plan → Send your requests → Get senior work back in days). Connected with an animated yellow line that draws as you scroll.
 
@@ -214,13 +218,13 @@ Build in this order. Each section uses the reveal primitive; specific motion not
 
 **9. Proof** — "The work speaks for itself." Portfolio carousel (Embla) of case studies, each card a looping video; + 2–3 testimonials.
 
-**10. Stats bar** — count-up: `200+ brands · 15+ industries · 5 years · [X]% retention`.
+**10. Stats bar** — count-up: `200+ brands · 15+ industries · 6 years as an agency · 50+ experienced designers`.
 
-**11. Plans** — "A whole creative department for less than one hire." Three pricing cards: **Design Partner £2,000/mo**, **Embedded Creative Team £4,500/mo** (highlighted — "most teams choose this"), **Fractional Creative Department £7,999/mo**. Value-anchor line beneath: one designer costs £50k+/yr; the £4,500 tier is £54k with no hiring or notice period. CTA → /plans.
+**11. Plans** — "A whole creative department for less than one hire." Two pricing cards: **Essentials £1,999/mo** (unlimited requests, one at a time, vetted designers matched per request and quality-checked by a creative director, ~48h turnaround, pause anytime) and **Design Lead £3,999/mo** (highlighted — "Most teams choose Design Lead" — two at a time, your own dedicated senior designer as a permanent design lead, direct Slack access to them, creative direction, brand builds in 4–6 weeks). The dedicated design lead + Slack access is the headline jump from Essentials — it turns the relationship from a rotating bench into a named person on your team, always reachable. Founding banner on Design Lead: first 10 Design Lead clients lock £3,500/mo for life. All prices +VAT. Value anchor: a UK design lead costs £65k+/yr before NI, holiday cover and recruitment; Design Lead (the plan) is £48k/yr, senior across every discipline, cancel any month. CTA → /start.
 
 **12. Insights teaser** (optional) — 3 latest journal cards.
 
-**13. Final CTA** — full-bleed, mostly black with a yellow accent: "Your business has outgrown its brand. Let's fix that." → **Book a free brand audit**.
+**13. Final CTA** — full-bleed, mostly black with a yellow accent: "Your business has outgrown its brand. Let's fix that." → **Get started →**.
 
 **Footer** — nav columns, big Milktree wordmark, socials.
 
@@ -249,14 +253,14 @@ Keep components small, typed, `"use client"` only where motion/state needs it. S
 
 **Positioning:** "Your creative department. On demand." Embedded brand & design team on subscription.
 
-**Offer / pricing:**
-- Design Partner — £2,000/mo — managed design queue (social, decks, ads, email, collateral)
-- Embedded Creative Team — £4,500/mo — dedicated senior designer + creative direction + web/campaign work (flagship)
-- Fractional Creative Department — £7,999/mo — creative director + brand strategy + full ownership
-- Brand identity projects — from £12,000 (front door into a subscription)
-- Value anchor: one mid designer = £50k+/yr + recruitment + management + software; the £4,500 tier = £54k/yr, no hiring, cancel anytime.
+**Offer / pricing (see MILKTREE-LANDING.md for the authoritative version):**
+- Essentials — £1,999/mo (+VAT) — unlimited requests, one at a time, vetted designers matched from the bench per request and quality-checked by a creative director, ~48h turnaround, pause/cancel anytime
+- Design Lead — £3,999/mo (+VAT) — unlimited requests, two at a time, your own dedicated senior designer (same person every time) as a permanent design lead, direct Slack access to them, creative direction on everything; full brand builds happen ON Design Lead (4–6 weeks). Flagship — "most teams choose Design Lead."
+- Founding rate: first 10 Design Lead clients lock £3,500/mo for life
+- No project pricing, no proposals, no quotes, no hourly billing. "Need more firepower? Let's talk" is the only unpublished tier.
+- Value anchor: a UK design lead = £65k+/yr + National Insurance + holiday cover + recruitment; Design Lead (the plan) = £48k/yr, senior across every discipline, cancel any month.
 
-**Proof:** 200+ brands · 15+ industries · 5 years. Free brand audit = the risk-reversal and the single primary CTA across the whole site.
+**Proof:** 200+ brands · 15+ industries · 6 years as an agency · 50+ experienced designers. The multistep form at /start = the single primary CTA across the whole site; the free Brand Ranking Report (/brand-report) is the unqualified-lead magnet.
 
 **Voice:** confident, premium, plain-spoken. Short lines. No hype, no exclamation marks, no emoji. Lead with the customer's problem and our proof, not our features.
 

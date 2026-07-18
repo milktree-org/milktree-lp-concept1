@@ -6,10 +6,11 @@ import { comparison } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /**
- * Why Milktree (§7.8) — comparison table on desktop; stacked cards on mobile
- * so nothing requires horizontal scrolling.
+ * Why Milktree (§3.8) — four-way comparison (freelancer / hire / budget
+ * subscriptions / Milktree) on desktop; stacked cards on mobile so nothing
+ * requires horizontal scrolling.
  */
-const GRID = "grid grid-cols-[1.1fr_1fr_1fr_1.1fr]";
+const GRID = "grid grid-cols-[0.9fr_1fr_1fr_1.15fr_1.15fr]";
 
 export function WhyMilktree() {
   return (

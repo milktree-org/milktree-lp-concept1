@@ -1,5 +1,5 @@
 import { Reveal } from "@/components/motion/reveal";
-import { BookButton } from "@/components/layout/book-button";
+import { StartButton } from "@/components/layout/start-button";
 import { AnchorLink } from "@/components/layout/anchor-link";
 import { buttonVariants } from "@/components/ui/button";
 import { site } from "@/lib/site";
@@ -20,18 +20,18 @@ export function FinalCTA() {
 
       <div className="container-edge relative z-10 flex flex-col items-center text-center">
         <Reveal>
-          <h2 className="mx-auto max-w-[16ch] text-balance text-[clamp(2.5rem,7vw,6rem)] font-black leading-[0.98] tracking-[-0.03em]">
+          <h2 className="mx-auto max-w-[16ch] text-balance text-[clamp(2.5rem,7vw,6rem)] font-bold leading-[0.98] tracking-[-0.03em]">
             Your business has outgrown its brand.
           </h2>
         </Reveal>
         <Reveal index={1}>
           <p className="text-body-lg mt-6 max-w-xl">
-            Let&apos;s fix that. Book a free brand audit and we&apos;ll show you
-            exactly where to start.
+            Let&apos;s fix that. Answer six quick questions and we&apos;ll take
+            it from there.
           </p>
         </Reveal>
         <Reveal index={2} className="mt-10 flex w-full max-w-md flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:items-center sm:justify-center">
-          <BookButton size="pill-lg" magnetic withIcon className="w-full sm:w-auto" />
+          <StartButton size="pill-lg" magnetic source="Final CTA" className="w-full sm:w-auto" />
           <AnchorLink
             href="#plans"
             className={cn(

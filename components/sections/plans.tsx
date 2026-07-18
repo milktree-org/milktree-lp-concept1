@@ -2,14 +2,14 @@ import { Check } from "lucide-react";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/motion/reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
-import { BookButton } from "@/components/layout/book-button";
-import { plans, planJourney, planAnchor } from "@/lib/site";
+import { StartButton } from "@/components/layout/start-button";
+import { plans, planAnchor, planVatNote, CONTACT_EMAIL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /**
- * Plans (§7.11) — two clear paths: a one-off Brand Build foundation and an
- * ongoing Creative Partner subscription, sequenced so they never compete on
- * price. The subscription is the flagship. Every CTA routes to the brand audit.
+ * Plans (§3.7) — Essentials and Design Lead subscriptions. Design Lead is the
+ * flagship, carrying the founding-rate banner. Every CTA routes into the
+ * qualification funnel.
  */
 export function Plans() {
   return (
@@ -20,12 +20,14 @@ export function Plans() {
         </Reveal>
         <Reveal index={1}>
           <h2 className="text-h2 mt-6">
-            Build the brand once. Keep it growing.
+            A whole creative department for less than one hire.
           </h2>
         </Reveal>
         <Reveal index={2}>
           <p className="text-body mx-auto mt-6 max-w-xl text-[0.95rem]">
-            {planJourney}
+            A UK design subscription: unlimited requests, senior work in ~48
+            hours, pause or cancel any month. No proposals, no quotes, no
+            hourly billing.
           </p>
         </Reveal>
       </div>
@@ -42,7 +44,7 @@ export function Plans() {
             )}
           >
             {plan.featured && plan.note && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand px-4 py-1 text-xs font-bold text-brand-ink">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand px-4 py-1 text-xs font-bold text-brand-ink">
                 {plan.note}
               </span>
             )}
@@ -59,11 +61,21 @@ export function Plans() {
             <p className="text-body mt-2 text-[0.95rem]">{plan.summary}</p>
 
             <div className="mt-7 flex flex-wrap items-baseline gap-1.5">
-              <span className="text-[clamp(2.5rem,10vw,3rem)] font-black tracking-tight text-foreground">
+              <span className="text-[clamp(2.5rem,10vw,3rem)] font-bold tracking-tight text-foreground">
                 {plan.price}
               </span>
-              <span className="text-base font-medium text-faint">{plan.cadence}</span>
+              <span className="text-base font-medium text-faint">
+                {plan.cadence}
+              </span>
+              <span className="text-sm font-medium text-faint">+VAT</span>
             </div>
+
+            {plan.banner && (
+              <p className="mt-4 rounded-2xl border border-brand/40 bg-brand/[0.08] px-4 py-3 text-sm font-semibold leading-snug text-foreground">
+                {plan.banner}
+              </p>
+            )}
+
             <p
               className={cn(
                 "mt-4 border-l-2 pl-3 text-[0.875rem] leading-snug text-muted-foreground",
@@ -91,22 +103,31 @@ export function Plans() {
             </ul>
 
             <div className="mt-10">
-              <BookButton
+              <StartButton
                 variant={plan.featured ? "brand" : "ghostPill"}
                 size="pill"
                 className="w-full"
+                source={`Plans — ${plan.name}`}
               >
                 {plan.cta}
-              </BookButton>
+              </StartButton>
             </div>
           </StaggerItem>
         ))}
       </StaggerGroup>
 
       <Reveal className="mx-auto mt-16 max-w-3xl text-center">
-        <p className="text-body text-[0.95rem]">{planAnchor}</p>
+        <p className="text-body text-[0.95rem]">
+          {planAnchor}{" "}
+          <a
+            href={`mailto:${CONTACT_EMAIL}?subject=More firepower`}
+            className="font-bold text-foreground underline underline-offset-4 transition-colors hover:text-brand"
+          >
+            Let&apos;s talk.
+          </a>
+        </p>
         <p className="mt-6 text-sm font-medium text-faint">
-          No contracts · Pause anytime · Free brand audit first
+          {planVatNote} · No contracts · Pause anytime
         </p>
       </Reveal>
     </section>

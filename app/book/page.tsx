@@ -4,9 +4,9 @@ import { BookingEmbed } from "@/components/booking/booking-embed";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Book a free brand audit",
+  title: "Book your intro call",
   description:
-    "Book your free 30-minute brand audit. We'll show you exactly where your brand and website are costing you clients — and what to fix first.",
+    "Book a 30-minute intro call. We'll walk through how the subscription works, what your first month looks like, and answer anything else.",
   robots: { index: false, follow: true },
 };
 
@@ -15,14 +15,15 @@ export default function BookPage() {
     <section className="relative scroll-mt-28 py-28 md:py-36">
       <div className="container-edge relative z-10 flex flex-col items-center text-center">
         <Reveal>
-          <h1 className="mx-auto max-w-[18ch] text-balance text-[clamp(2.5rem,6vw,5rem)] font-black leading-[0.98] tracking-[-0.03em]">
-            Book your free brand audit
+          <h1 className="mx-auto max-w-[18ch] text-balance text-[clamp(2.5rem,6vw,5rem)] font-bold leading-[0.98] tracking-[-0.03em]">
+            Book your intro call
           </h1>
         </Reveal>
         <Reveal index={1}>
           <p className="text-body-lg mt-6 max-w-xl">
-            30 minutes, no commitment. We&apos;ll show you exactly where your
-            brand and website are costing you clients — and what to fix first.
+            30 minutes, no commitment. We&apos;ll walk through how the
+            subscription works, what your first month looks like, and answer
+            anything else.
           </p>
         </Reveal>
         <Reveal index={2}>

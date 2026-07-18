@@ -49,11 +49,11 @@ export default function OpengraphImage() {
               marginTop: 28,
             }}
           >
-            Embedded brand &amp; design team — senior, on-brand, fast.
+            Unlimited requests · senior work in 48 hours · one flat monthly fee.
           </div>
         </div>
         <div style={{ fontSize: 26, color: "rgba(255,255,255,0.5)" }}>
-          200+ brands built · 5 years · Book a free brand audit
+          200+ brands built · 6 years as an agency · No contracts · Pause anytime
         </div>
       </div>
     ),

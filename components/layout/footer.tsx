@@ -1,16 +1,39 @@
 import { AnchorLink } from "@/components/layout/anchor-link";
-import { BookButton } from "@/components/layout/book-button";
+import { StartButton } from "@/components/layout/start-button";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { instagram } from "@/lib/site";
+import {
+  BehanceIcon,
+  FacebookIcon,
+  InstagramIcon,
+  LinkedInIcon,
+} from "@/components/ui/social-icons";
+import { socials } from "@/lib/site";
+
+const socialIcons = {
+  Instagram: InstagramIcon,
+  Behance: BehanceIcon,
+  LinkedIn: LinkedInIcon,
+  Facebook: FacebookIcon,
+} as const;
 
 const columns = [
   {
-    heading: "What we do",
+    heading: "What's included",
     links: [
-      { label: "Brand Identity", href: "#services" },
-      { label: "Social & Content", href: "#services" },
-      { label: "Web & Landing Pages", href: "#services" },
-      { label: "Creative Direction", href: "#services" },
+      { label: "Brand identity & guidelines", href: "#services" },
+      { label: "AI design", href: "#services" },
+      { label: "Ads & email design", href: "#services" },
+      { label: "Landing page & web design", href: "#services" },
+    ],
+  },
+  {
+    heading: "Selected work",
+    links: [
+      { label: "EazyPhone", href: "/work/eazyphone" },
+      { label: "Mint Mortgages", href: "/work/mint-mortgages" },
+      { label: "Alltrad Roofing", href: "/work/alltrad-roofing" },
+      { label: "Baya Vodka Soda", href: "/work/baya-vodka-soda" },
+      { label: "Zillwoods", href: "/work/zillwoods" },
     ],
   },
   {
@@ -19,50 +42,56 @@ const columns = [
       { label: "Our work", href: "#work" },
       { label: "Why Milktree", href: "#why" },
       { label: "Plans", href: "#plans" },
-      { label: "Insights", href: "#insights" },
+      { label: "FAQ", href: "#faq" },
+      { label: "Careers", href: "/careers" },
     ],
   },
   {
     heading: "Get started",
     links: [
-      { label: "Book a brand audit", href: "#book" },
-      { label: "Client login", href: "#" },
+      { label: "Start your subscription", href: "/start" },
+      { label: "Free brand report", href: "/brand-report" },
+      { label: "Client login", href: "/login" },
     ],
   },
 ];
 
-const socials = [
-  { label: "Instagram", short: "IG", href: instagram.url },
-  { label: "LinkedIn", short: "IN", href: "#" },
-  { label: "Twitter", short: "X", href: "#" },
-  { label: "Dribbble", short: "DR", href: "#" },
-];
-
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-border bg-surface">
+    <footer className="site-footer relative overflow-hidden border-t border-border bg-surface">
       <div className="container-edge py-20 md:py-28">
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-14">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr] lg:gap-12">
           {/* Brand + CTA */}
           <div className="max-w-sm">
             <Eyebrow>Your creative department</Eyebrow>
             <p className="mt-5 text-2xl font-bold tracking-tight text-foreground">
-              Senior brand &amp; design, on a flat monthly fee.
+              Unlimited design, senior work in 48 hours, one flat monthly fee.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              Milktree is a UK design subscription — an embedded brand &amp;
+              design team for scaling companies. Six years as an agency, 200+
+              brands built, 50+ experienced designers — across brand identity,
+              campaigns, packaging and web.
             </p>
             <div className="mt-7">
-              <BookButton size="pill">Book a free brand audit</BookButton>
+              <StartButton size="pill" source="Footer">Get started</StartButton>
             </div>
             <div className="mt-8 flex gap-3">
-              {socials.map(({ label, short, href }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="grid size-11 place-items-center rounded-full border border-border text-xs font-bold tracking-wide text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground"
-                >
-                  {short}
-                </a>
-              ))}
+              {socials.map(({ label, href }) => {
+                const Icon = socialIcons[label];
+                return (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="grid size-11 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground"
+                  >
+                    <Icon className="size-[1.125rem]" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
@@ -114,7 +143,7 @@ export function Footer() {
         aria-hidden
         className="pointer-events-none select-none overflow-hidden px-4 pb-6 text-center"
       >
-        <span className="block bg-gradient-to-b from-white/[0.08] to-white/[0.01] bg-clip-text text-[20vw] font-black leading-[0.8] tracking-[-0.05em] text-transparent">
+        <span className="block bg-gradient-to-b from-white/[0.08] to-white/[0.01] bg-clip-text text-[20vw] font-bold leading-[0.8] tracking-[-0.05em] text-transparent">
           milktree
         </span>
       </div>

@@ -34,8 +34,8 @@ export function AdPreviewGallery() {
         </Reveal>
         <Reveal index={2}>
           <p className="text-body mt-6 max-w-2xl">
-            Interactive story and square ads built from real Milktree work — 10–15 seconds,
-            sound on, ready to drive traffic to the homepage or brand audit booking.
+            Interactive story and square ads built from real Milktree work: 10–15 seconds,
+            sound on, ready to drive traffic to the homepage or the qualification funnel.
           </p>
         </Reveal>
       </div>
@@ -52,7 +52,7 @@ export function AdPreviewGallery() {
             >
               {(() => {
                 const last = active.slides.at(-1);
-                return last?.kind === "cta" ? last.sub : "Book a free brand audit";
+                return last?.kind === "cta" ? last.sub : "Get started at milktreeagency.com";
               })()}
               <ArrowUpRight className="size-4" />
             </a>

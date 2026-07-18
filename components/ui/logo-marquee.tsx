@@ -3,26 +3,41 @@
 import { useReducedMotion } from "framer-motion";
 
 const LOGOS = Array.from(
-  { length: 13 },
+  { length: 12 },
   (_, i) => `/logos/logo-${i + 1}.png`,
 );
 
-/** Three identical sets for a seamless infinite loop. */
-const MARQUEE_LOGOS = [...LOGOS, ...LOGOS, ...LOGOS];
+/** One sequence — doubled so a single half always fills wide viewports. */
+const SEQUENCE = [...LOGOS, ...LOGOS];
+
+function LogoRow({ ariaHidden = false }: { ariaHidden?: boolean }) {
+  return (
+    <div className="hero__marquee-group" aria-hidden={ariaHidden || undefined}>
+      {SEQUENCE.map((src, i) => (
+        <div key={`${src}-${i}`} className="hero__marquee-item">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt="" className="hero__marquee-logo" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /**
- * Auto-scroll client logo marquee — infinite horizontal loop, pauses on hover.
+ * Auto-scroll client logo marquee — seamless infinite loop, pauses on hover.
+ * Two identical groups; CSS translates by exactly 50% so the seam is invisible.
  */
 export function LogoMarquee() {
   const reduce = useReducedMotion();
 
   if (reduce) {
     return (
-      <div className="hero__marquee-wrap" style={{ opacity: 1 }}>
-        <div className="hero__marquee-track hero__marquee-track--static">
+      <div className="hero__marquee-wrap" role="presentation">
+        <div className="hero__marquee-track hero__marquee-track--static" aria-hidden>
           {LOGOS.map((src) => (
             <div key={src} className="hero__marquee-item">
-              <img src={src} alt="client logo" className="hero__marquee-logo" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="hero__marquee-logo" />
             </div>
           ))}
         </div>
@@ -31,17 +46,10 @@ export function LogoMarquee() {
   }
 
   return (
-    <div className="hero__marquee-wrap" style={{ opacity: 1 }}>
+    <div className="hero__marquee-wrap">
       <div className="hero__marquee-track">
-        {MARQUEE_LOGOS.map((src, i) => (
-          <div
-            key={`${src}-${i}`}
-            className="hero__marquee-item"
-            aria-hidden={i >= LOGOS.length}
-          >
-            <img src={src} alt="client logo" className="hero__marquee-logo" />
-          </div>
-        ))}
+        <LogoRow />
+        <LogoRow ariaHidden />
       </div>
     </div>
   );
