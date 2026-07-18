@@ -7,6 +7,7 @@ import { audiences, notAFit } from "@/lib/site";
 // the yellow accent on hover without duplicating copy in the data file.
 function KeywordTitle({ title, keyword }: { title: string; keyword: string }) {
   const [before, after] = title.split(keyword);
+  if (after === undefined) return <h3 className="text-h3">{title}</h3>;
   return (
     <h3 className="text-h3">
       {before}
