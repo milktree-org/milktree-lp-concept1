@@ -197,7 +197,7 @@ function StepRow({ step, index, active }: { step: Step; index: number; active: b
         <step.Icon className="size-5" />
       </span>
       <div>
-        <h3 className="text-lg font-bold tracking-tight">
+        <h3 className="text-lg font-bold uppercase tracking-tight">
           <span className="mr-2 text-faint">{String(index + 1).padStart(2, "0")}</span>
           {step.title}
         </h3>

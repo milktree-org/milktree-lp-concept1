@@ -54,7 +54,7 @@ Define these as CSS variables in `globals.css` and map them in Tailwind:
   --foreground: #FFFFFF;
   --muted:      rgba(255,255,255,0.60);
   --muted-2:    rgba(255,255,255,0.40);
-  --accent:     #FFDC04;      /* THE yellow — use sparingly */
+  --accent:     #FFEE02;      /* THE yellow — use sparingly */
   --accent-ink: #000000;      /* text on yellow */
   --border:     rgba(255,255,255,0.12);
   --radius:     2.25rem;      /* 36px base — Milktree is heavily rounded */

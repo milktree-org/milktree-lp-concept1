@@ -106,7 +106,7 @@ export function BookingEmbed({
     Cal.ns[CAL_NAMESPACE]("ui", {
       hideEventTypeDetails: false,
       layout: "month_view",
-      cssVarsPerTheme: { dark: { "cal-brand": "#FFDC04" } },
+      cssVarsPerTheme: { dark: { "cal-brand": "#FFEE02" } },
     });
     Cal.ns[CAL_NAMESPACE]("on", {
       action: "bookingSuccessful",

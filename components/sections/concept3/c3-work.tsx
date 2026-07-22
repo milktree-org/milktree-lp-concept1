@@ -86,7 +86,7 @@ export function C3Work() {
                 <Link
                   href="/#work"
                   aria-label={`View ${card.label} work`}
-                  className="grid size-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ffdc04] to-[#e0b400] text-black shadow-lg shadow-yellow-500/40 transition-transform duration-300 hover:scale-110"
+                  className="grid size-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ffee02] to-[#e0b400] text-black shadow-lg shadow-yellow-500/40 transition-transform duration-300 hover:scale-110"
                 >
                   <ChevronRight className="size-5" />
                 </Link>

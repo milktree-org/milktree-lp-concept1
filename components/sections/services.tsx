@@ -63,7 +63,7 @@ export function Services() {
               <span className="grid size-11 place-items-center rounded-2xl bg-white/5 text-foreground transition-colors duration-300 group-hover:bg-brand group-hover:text-brand-ink">
                 <Icon className="size-5" />
               </span>
-              <h3 className="mt-6 text-lg font-bold tracking-tight">{s.title}</h3>
+              <h3 className="mt-6 text-lg font-bold uppercase tracking-tight">{s.title}</h3>
               <p className="text-body mt-2 text-[0.95rem]">{s.body}</p>
             </StaggerItem>
           );

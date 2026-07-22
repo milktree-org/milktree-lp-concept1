@@ -20,7 +20,7 @@ export function FinalCTA() {
 
       <div className="container-edge relative z-10 flex flex-col items-center text-center">
         <Reveal>
-          <h2 className="mx-auto max-w-[16ch] text-balance text-[clamp(2.5rem,7vw,6rem)] font-bold leading-[0.98] tracking-[-0.03em]">
+          <h2 className="mx-auto max-w-[16ch] text-balance text-[clamp(2.5rem,7vw,6rem)] font-bold uppercase leading-[0.98] tracking-[-0.03em]">
             Your business has outgrown its brand.
           </h2>
         </Reveal>

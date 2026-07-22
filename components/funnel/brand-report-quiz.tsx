@@ -513,7 +513,7 @@ function ScoreGauge({ score }: { score: number }) {
         <motion.path
           d="M 26 110 A 84 84 0 0 1 194 110"
           fill="none"
-          stroke="#FFDC04"
+          stroke="#FFEE02"
           strokeWidth="12"
           strokeLinecap="round"
           strokeDasharray={circumference}

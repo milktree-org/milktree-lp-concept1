@@ -6,7 +6,7 @@ import "server-only";
  */
 
 const SITE_URL = "https://www.milktreeagency.com";
-const YELLOW = "#FFDC04";
+const YELLOW = "#FFEE02";
 const FONT = "'Satoshi', Helvetica, Arial, sans-serif";
 
 function shell(content: string): string {

@@ -29,7 +29,7 @@ export function NewWay() {
         <Eyebrow>A better way</Eyebrow>
 
         <motion.h2
-          className="mt-8 max-w-[24ch] text-balance text-[clamp(2.5rem,7.5vw,5.75rem)] font-bold leading-[1.02] tracking-[-0.025em]"
+          className="mt-8 max-w-[24ch] text-balance text-[clamp(2.5rem,7.5vw,5.75rem)] font-bold uppercase leading-[1.02] tracking-[-0.025em]"
           variants={staggerParent(0.05)}
           initial="hidden"
           whileInView="show"

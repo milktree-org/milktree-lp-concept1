@@ -69,9 +69,9 @@
   --popover-foreground: #ffffff;
 
   /* yellow is primary, so the default Button is the yellow CTA pill */
-  --primary: #ffdc04;
+  --primary: #ffee02;
   --primary-foreground: #000000;
-  --brand: #ffdc04;
+  --brand: #ffee02;
   --brand-ink: #000000;
 
   --secondary: rgba(255, 255, 255, 0.06);
@@ -90,7 +90,7 @@
 
   --border: rgba(255, 255, 255, 0.12);
   --input: rgba(255, 255, 255, 0.14);
-  --ring: #ffdc04; /* focus ring = yellow (a11y, §11) */
+  --ring: #ffee02; /* focus ring = yellow (a11y, §11) */
 
   --radius: 2.25rem; /* 36px base — Milktree is heavily rounded */
   --radius-pill: 9999px;
@@ -223,6 +223,7 @@ body:has([data-hide-chrome]) .site-footer {
     font-size: clamp(1.25rem, 2vw, 1.6rem);
     line-height: 1.15;
     letter-spacing: -0.01em;
+    text-transform: uppercase;
   }
   .text-body-lg {
     font-weight: 400;
@@ -333,8 +334,16 @@ body:has([data-hide-chrome]) .site-footer {
 }
 
 .hero__footer {
+  position: relative;
   width: 100%;
   flex-shrink: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.7) 30%,
+    #000 65%,
+    #000 100%
+  );
 }
 
 .hero__shell {
@@ -736,13 +745,13 @@ body:has([data-hide-chrome]) .site-footer {
   height: 42px;
   width: auto;
   object-fit: contain;
-  opacity: 0.5;
+  opacity: 0.32;
   filter: brightness(0) invert(1);
   transition: opacity 0.25s ease;
 }
 
 .hero__marquee-logo:hover {
-  opacity: 0.85;
+  opacity: 0.6;
 }
 
 @media (min-width: 768px) {
@@ -865,7 +874,7 @@ body:has([data-hide-chrome]) .site-footer {
 .theme-cinema {
   --c3-bg: #050403; /* deep warm black */
   --c3-cream: #fffef2;
-  --c3-accent: #ffdc04; /* Milktree yellow replaces the neon green */
+  --c3-accent: #ffee02; /* Milktree yellow replaces the neon green */
   background: var(--c3-bg);
   color: var(--c3-cream);
 }

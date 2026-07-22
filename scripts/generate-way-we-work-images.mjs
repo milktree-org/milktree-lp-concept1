@@ -17,7 +17,7 @@ const root = path.resolve(import.meta.dirname, "..");
 const outDir = path.join(root, "public/work/way-we-work");
 
 const PROMPT_BASE =
-  "Premium dark-mode SaaS product UI screenshot, creative agency dashboard, true black background, warm near-black cards, electric yellow #FFDC04 accent used sparingly on one element only, heavily rounded 36px corners, clean modern sans-serif typography, subtle rgba white borders, Framer-quality product design, photorealistic screen capture, no real brand logos, fictional UI";
+  "Premium dark-mode SaaS product UI screenshot, creative agency dashboard, true black background, warm near-black cards, electric yellow #FFEE02 accent used sparingly on one element only, heavily rounded 36px corners, clean modern sans-serif typography, subtle rgba white borders, Framer-quality product design, photorealistic screen capture, no real brand logos, fictional UI";
 
 const PANELS = [
   {

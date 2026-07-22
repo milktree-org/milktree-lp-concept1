@@ -55,7 +55,7 @@ export function Proof() {
                       <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-faint">
                         {project.category}
                       </p>
-                      <h3 className="mt-1 text-xl font-bold tracking-tight text-foreground">
+                      <h3 className="mt-1 text-xl font-bold uppercase tracking-tight text-foreground">
                         {project.title}
                       </h3>
                     </div>

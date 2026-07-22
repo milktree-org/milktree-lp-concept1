@@ -248,7 +248,7 @@ export function ConsentCheckbox({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-1 size-4 shrink-0 accent-[#FFDC04]"
+        className="mt-1 size-4 shrink-0 accent-[#FFEE02]"
       />
       <span className="text-sm leading-relaxed text-muted-foreground">
         {label}

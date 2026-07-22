@@ -82,5 +82,5 @@ Video URLs are resolved in `lib/media.ts` — when the CDN env var is set at bui
 ## Quality notes
 
 - `prefers-reduced-motion` is honoured at the primitive level + a global CSS safety net (smooth scroll, parallax, magnetic and custom cursor all disable; reveals become instant fades; the pinned showcase becomes a normal stacked layout).
-- Dark theme only. Yellow (`#FFDC04`) is used sparingly — one accent per viewport.
+- Dark theme only. Yellow (`#FFEE02`) is used sparingly — one accent per viewport.
 - Keyboard accessible, yellow focus rings, ≥44px targets, statically prerendered for fast LCP.

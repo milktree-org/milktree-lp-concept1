@@ -133,12 +133,12 @@ function textSlide(fontStyle, w, h, headline, sub, accentWord, compact) {
   let text = escapeXml(headline);
   if (accentWord) {
     const re = new RegExp(`(${escapeRegex(accentWord)})`, "i");
-    text = escapeXml(headline).replace(re, `<tspan fill="#FFDC04">$1</tspan>`);
+    text = escapeXml(headline).replace(re, `<tspan fill="#FFEE02">$1</tspan>`);
   }
   return `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
     <style>${fontStyle}</style>
     <rect width="100%" height="100%" fill="#000000"/>
-    <rect x="${w * 0.08}" y="${h * 0.42}" width="${w * 0.08}" height="4" fill="#FFDC04"/>
+    <rect x="${w * 0.08}" y="${h * 0.42}" width="${w * 0.08}" height="4" fill="#FFEE02"/>
     <text x="${w / 2}" y="${sub ? h * 0.46 : h * 0.5}" text-anchor="middle" fill="#FFFFFF"
       font-family="SatoshiBlack" font-size="${size}" font-weight="900" letter-spacing="-2">${text}</text>
     ${sub ? `<text x="${w / 2}" y="${h * 0.54}" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-family="SatoshiMed" font-size="${subSize}">${escapeXml(sub)}</text>` : ""}
@@ -156,7 +156,7 @@ function ctaSlide(fontStyle, w, h, headline, sub) {
     <style>${fontStyle}</style>
     <rect width="100%" height="100%" fill="#000000"/>
     <text x="${w / 2}" y="${h * 0.38}" text-anchor="middle" fill="#FFFFFF" font-family="SatoshiBlack" font-size="${headSize}" font-weight="900">${escapeXml(headline)}</text>
-    <rect x="${pillX}" y="${pillY}" width="${pillW}" height="${pillH}" rx="${pillH / 2}" fill="#FFDC04"/>
+    <rect x="${pillX}" y="${pillY}" width="${pillW}" height="${pillH}" rx="${pillH / 2}" fill="#FFEE02"/>
     <text x="${w / 2}" y="${pillY + pillH * 0.68}" text-anchor="middle" fill="#000000" font-family="SatoshiBold" font-size="${subSize}" font-weight="700">${escapeXml(sub)}</text>
     <text x="${w / 2}" y="${h * 0.82}" text-anchor="middle" fill="rgba(255,255,255,0.45)" font-family="SatoshiMed" font-size="${Math.round(w * 0.028)}">milktree.agency</text>
   </svg>`;
@@ -174,7 +174,7 @@ function statOverlay(fontStyle, w, h, value, label) {
       </linearGradient>
     </defs>
     <rect width="100%" height="100%" fill="url(#g)"/>
-    <text x="${w / 2}" y="${h * 0.48}" text-anchor="middle" fill="#FFDC04" font-family="SatoshiBlack" font-size="${valSize}" font-weight="900">${escapeXml(value)}</text>
+    <text x="${w / 2}" y="${h * 0.48}" text-anchor="middle" fill="#FFEE02" font-family="SatoshiBlack" font-size="${valSize}" font-weight="900">${escapeXml(value)}</text>
     <text x="${w / 2}" y="${h * 0.56}" text-anchor="middle" fill="#FFFFFF" font-family="SatoshiBold" font-size="${labSize}">${escapeXml(label)}</text>
   </svg>`;
 }
@@ -191,7 +191,7 @@ function imageOverlay(fontStyle, w, h, label) {
     <style>${fontStyle}</style>
     <defs><linearGradient id="g" x1="0" y1="0.55" x2="0" y2="1"><stop offset="0%" stop-color="rgba(0,0,0,0)"/><stop offset="100%" stop-color="rgba(0,0,0,0.8)"/></linearGradient></defs>
     <rect width="100%" height="100%" fill="url(#g)"/>
-    <rect x="${w * 0.08}" y="${h * 0.86}" width="${w * 0.06}" height="3" fill="#FFDC04"/>
+    <rect x="${w * 0.08}" y="${h * 0.86}" width="${w * 0.06}" height="3" fill="#FFEE02"/>
     <text x="${w * 0.08}" y="${h * 0.915}" fill="#FFFFFF" font-family="SatoshiBold" font-size="${labSize}">${escapeXml(label)}</text>
   </svg>`;
 }

@@ -254,7 +254,7 @@ export function HireCalculator() {
               salaryTouched.current = true;
               setSalary(Number(e.target.value));
             }}
-            className="h-11 w-full cursor-pointer accent-[#FFDC04]"
+            className="h-11 w-full cursor-pointer accent-[#FFEE02]"
           />
           <div className="flex justify-between text-xs font-medium text-faint">
             <span>{formatGBP(SALARY_MIN)}</span>

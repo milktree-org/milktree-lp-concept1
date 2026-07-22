@@ -24,7 +24,7 @@ export default function OpengraphImage() {
           style={{
             fontSize: 40,
             fontWeight: 800,
-            color: "#FFDC04",
+            color: "#FFEE02",
             letterSpacing: "-0.02em",
           }}
         >
