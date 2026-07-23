@@ -12,6 +12,10 @@ const ENDPOINTS = {
   newsletter:
     process.env.FORMSPREE_NEWSLETTER_ENDPOINT ??
     "https://formspree.io/f/PLACEHOLDER",
+  // Contact-page messages ride the always-on intake endpoint unless a
+  // dedicated form is configured.
+  contact:
+    process.env.FORMSPREE_CONTACT_ENDPOINT ?? "https://formspree.io/f/xwvgokob",
 } as const;
 
 export type FormspreeForm = keyof typeof ENDPOINTS;

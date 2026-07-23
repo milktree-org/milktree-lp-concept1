@@ -10,6 +10,16 @@ export const CAL_URL =
 
 export const CONTACT_EMAIL = "hello@milktreeagency.com";
 
+/* ------------------------------- Contact page ----------------------------- */
+// [slot] — swap `name` and `addressLines` for the real contact details.
+export const contact = {
+  name: "Milktree",
+  role: "Brand & design studio",
+  email: CONTACT_EMAIL,
+  addressLines: ["Milktree Studio", "United Kingdom"],
+  responseNote: "We reply to every message within one working day.",
+};
+
 /** Founding-rate urgency — decrement manually as Design Lead spots fill. */
 export const foundingSpotsRemaining = Number(
   process.env.NEXT_PUBLIC_FOUNDING_SPOTS ?? "7",

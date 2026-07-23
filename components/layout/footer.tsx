@@ -44,6 +44,7 @@ const columns = [
       { label: "Plans", href: "#plans" },
       { label: "FAQ", href: "#faq" },
       { label: "Careers", href: "/careers" },
+      { label: "Contact us", href: "/contact" },
     ],
   },
   {
