@@ -1,14 +1,17 @@
 import "server-only";
 
 /**
- * Formspree forwarding — the funnel's always-on lead store. Two endpoints:
- * "intake" for the /start qualification form, "brandScore" for the brand
- * audit / brand quiz lead magnets. Submissions are forwarded server-side so
- * they're captured even when Supabase isn't configured.
+ * Formspree forwarding — the funnel's always-on lead store. Endpoints:
+ * "intake" for /start, "brandScore" for brand audit / quiz, "newsletter" for
+ * /subscribe (override with FORMSPREE_NEWSLETTER_ENDPOINT). Submissions are
+ * forwarded server-side so they're captured even when Supabase isn't configured.
  */
 const ENDPOINTS = {
   intake: "https://formspree.io/f/xwvgokob",
   brandScore: "https://formspree.io/f/xrenqgql",
+  newsletter:
+    process.env.FORMSPREE_NEWSLETTER_ENDPOINT ??
+    "https://formspree.io/f/PLACEHOLDER",
 } as const;
 
 export type FormspreeForm = keyof typeof ENDPOINTS;
@@ -18,8 +21,16 @@ export async function sendToFormspree(
   form: FormspreeForm,
   fields: Record<string, unknown>,
 ): Promise<boolean> {
+  const endpoint = ENDPOINTS[form];
+  if (form === "newsletter" && endpoint.includes("PLACEHOLDER")) {
+    console.error(
+      "[formspree] FORMSPREE_NEWSLETTER_ENDPOINT is not set — newsletter submissions disabled",
+    );
+    return false;
+  }
+
   try {
-    const res = await fetch(ENDPOINTS[form], {
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

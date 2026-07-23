@@ -40,6 +40,7 @@ This build is the **homepage** plus the lead funnel:
 - `/start` — multistep qualification form (one question per screen). Routing is evaluated **server-side** in `POST /api/lead` (team ≥ 10 AND budget ≥ £1,000–£2,000 band = qualified); every submission is persisted to Supabase **before** any email or notification fires.
 - `/brand-report` — Brand Ranking Quiz: self-assessment + live SERP benchmark (Apify) + competitor brand extraction (Firecrawl), email-gated results, full report by email.
 - `/book` — Cal.com intro-call embed for qualified leads.
+- `/subscribe` — newsletter opt-in (name + email) → Formspree + optional GHL webhook.
 
 Other routes in `CLAUDE.md` §6 are deferred — nav links resolve to on-page section anchors and smooth-scroll via Lenis.
 
@@ -57,6 +58,8 @@ Other routes in `CLAUDE.md` §6 are deferred — nav links resolve to on-page se
 | `FIRECRAWL_API_KEY` | Competitor brand extraction for quiz benchmarks |
 | `NEXT_PUBLIC_CAL_URL` | Cal.com intro-call event (overrides the default in `lib/site.ts`) |
 | `NEXT_PUBLIC_FOUNDING_SPOTS` | Founding-rate spots remaining (shown on Design Lead plan) |
+| `FORMSPREE_NEWSLETTER_ENDPOINT` | Formspree form URL for `/subscribe` (e.g. `https://formspree.io/f/xxxxx`) |
+| `GHL_NEWSLETTER_WEBHOOK_URL` | Optional — GoHighLevel inbound webhook for newsletter subs |
 
 All integrations degrade gracefully when unset: without Supabase the funnel still works (leads logged to the server console only); without Apify/Firecrawl the quiz falls back to self-assessment-only scoring.
 
