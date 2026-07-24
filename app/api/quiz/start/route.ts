@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
   // Capture the lead at the gate — even an abandoned quiz is a stored lead.
   const formspreeStored = await sendToFormspree("brandScore", {
-    _subject: `Brand quiz lead — ${company}`,
+    _subject: `New Brand Score Lead — ${company}`,
     form: "brand-quiz",
     company,
     website,

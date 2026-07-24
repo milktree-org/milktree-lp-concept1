@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   const supabase = getSupabase();
   const [formspreeStored, supabaseResult] = await Promise.all([
     sendToFormspree("intake", {
-      _subject: `New ${route} lead — ${lead.company}`,
+      _subject: `${route === "qualified" ? "New Qualified Lead" : "New Unqualified Lead"} — ${lead.company}`,
       form: "intake",
       route,
       name: lead.name,

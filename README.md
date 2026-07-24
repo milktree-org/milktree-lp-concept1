@@ -60,6 +60,7 @@ Other routes in `CLAUDE.md` §6 are deferred — nav links resolve to on-page se
 | `NEXT_PUBLIC_FOUNDING_SPOTS` | Founding-rate spots remaining (shown on Design Lead plan) |
 | `FORMSPREE_NEWSLETTER_ENDPOINT` | Formspree form URL for `/subscribe` (e.g. `https://formspree.io/f/xxxxx`) |
 | `GHL_NEWSLETTER_WEBHOOK_URL` | Optional — GoHighLevel inbound webhook for newsletter subs |
+| `GHL_CONTACT_WEBHOOK_URL` | Optional — GoHighLevel inbound webhook for `/contact` messages (falls back to `GHL_NEWSLETTER_WEBHOOK_URL`) |
 
 All integrations degrade gracefully when unset: without Supabase the funnel still works (leads logged to the server console only); without Apify/Firecrawl the quiz falls back to self-assessment-only scoring.
 

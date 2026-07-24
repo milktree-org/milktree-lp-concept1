@@ -1,14 +1,28 @@
 import "server-only";
 
 /**
- * GoHighLevel inbound webhook — optional second sink for newsletter subs.
- * Set GHL_NEWSLETTER_WEBHOOK_URL to your GHL workflow / inbound webhook URL.
- * Failures are logged and never thrown.
+ * GoHighLevel inbound webhooks — optional second sink alongside Formspree.
+ * "newsletter" uses GHL_NEWSLETTER_WEBHOOK_URL; "contact" uses
+ * GHL_CONTACT_WEBHOOK_URL, falling back to the newsletter URL so a single
+ * GHL workflow can route by tags. Failures are logged and never thrown.
  */
+export type GhlWebhook = "newsletter" | "contact";
+
+function webhookUrl(webhook: GhlWebhook): string | undefined {
+  if (webhook === "contact") {
+    return (
+      process.env.GHL_CONTACT_WEBHOOK_URL ??
+      process.env.GHL_NEWSLETTER_WEBHOOK_URL
+    );
+  }
+  return process.env.GHL_NEWSLETTER_WEBHOOK_URL;
+}
+
 export async function sendToGhlWebhook(
+  webhook: GhlWebhook,
   fields: Record<string, unknown>,
 ): Promise<boolean> {
-  const url = process.env.GHL_NEWSLETTER_WEBHOOK_URL;
+  const url = webhookUrl(webhook);
   if (!url) return false;
 
   try {
@@ -22,11 +36,11 @@ export async function sendToGhlWebhook(
     });
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
-      console.error(`[ghl] webhook failed (${res.status}):`, detail);
+      console.error(`[ghl] ${webhook} webhook failed (${res.status}):`, detail);
     }
     return res.ok;
   } catch (e) {
-    console.error("[ghl] webhook errored:", e);
+    console.error(`[ghl] ${webhook} webhook errored:`, e);
     return false;
   }
 }

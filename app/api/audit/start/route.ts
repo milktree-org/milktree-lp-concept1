@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   // Capture the lead at the gate — even if the audit pipeline can't run,
   // the submission is stored.
   await sendToFormspree("brandScore", {
-    _subject: `Brand audit lead — ${company}`,
+    _subject: `New Brand Score Lead — ${company}`,
     form: "brand-audit",
     company,
     website,

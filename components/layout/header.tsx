@@ -27,15 +27,23 @@ import { EASE_OUT_EXPO } from "@/lib/motion";
  */
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const [pastHero, setPastHero] = useState(false);
   const [open, setOpen] = useState(false);
   const isHome = usePathname() === "/";
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 24);
+      // The hero owns the only yellow element in the first viewport (§3);
+      // the header CTA turns yellow once the hero CTA has scrolled away.
+      setPastHero(window.scrollY > window.innerHeight * 0.6);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const ctaVariant = isHome && !pastHero ? "ghostPill" : "brand";
 
   return (
     <header
@@ -124,13 +132,19 @@ export function Header() {
           </Link>
           <StartButton
             size="pill"
+            variant={ctaVariant}
             withIcon={false}
             source="Header"
             className="h-11 shrink-0 px-3.5 text-[0.78rem] sm:px-5 sm:text-[0.85rem] lg:hidden"
           >
             Get started
           </StartButton>
-          <StartButton size="pill" source="Header" className="hidden h-11 lg:inline-flex">
+          <StartButton
+            size="pill"
+            variant={ctaVariant}
+            source="Header"
+            className="hidden h-11 lg:inline-flex"
+          >
             Get started
           </StartButton>
 

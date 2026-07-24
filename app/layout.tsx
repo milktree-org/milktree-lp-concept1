@@ -52,6 +52,12 @@ export default function RootLayout({
       lang="en"
       className={`${instrumentSans.variable} ${satoshi.variable} antialiased`}
     >
+      <head>
+        {/* Warm up Vimeo origins so the hero showreel iframe boots faster */}
+        <link rel="preconnect" href="https://player.vimeo.com" />
+        <link rel="preconnect" href="https://f.vimeocdn.com" />
+        <link rel="preconnect" href="https://i.vimeocdn.com" />
+      </head>
       <body className="min-h-dvh bg-background text-foreground">
         <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
         <TrackingScripts />

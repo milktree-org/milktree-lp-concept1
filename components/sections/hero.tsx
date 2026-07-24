@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 import { LineMask } from "@/components/motion/line-mask";
-import { HeroShowreel } from "@/components/motion/hero-showreel";
+import { HeroVideo } from "@/components/motion/hero-video";
 import { StartButton } from "@/components/layout/start-button";
 import { AnchorLink } from "@/components/layout/anchor-link";
 import { LogoMarquee } from "@/components/ui/logo-marquee";
@@ -20,17 +20,17 @@ const fadeUp = {
 };
 
 /**
- * Hero — centered copy over a showreel backdrop, closed by the client logo
- * marquee. The work showcase strip now lives further down the page (§WorkStrip)
- * so imagery is spread across the scroll instead of front-loaded here.
+ * Hero — black canvas with centered copy, the showreel video framed in a
+ * media card below the CTAs, closed by the client logo marquee. The work
+ * showcase strip
+ * lives further down the page (§WorkStrip) so imagery is spread across the
+ * scroll instead of front-loaded here.
  */
 export function Hero() {
   const reduce = useReducedMotion();
 
   return (
     <section id="hero" className="hero">
-      <HeroMediaBackground />
-
       <div className="hero__inner">
         <div className="hero__shell">
           <div className="hero__copy">
@@ -43,15 +43,7 @@ export function Hero() {
             >
               <LineMask
                 className="inline-block text-center"
-                lines={[
-                  <span key="setup" className="hero__headline-setup">
-                    Your creative{" "}
-                    <span className="hero__headline-setup-break">department.</span>
-                  </span>,
-                  <span key="punch" className="hero__headline-punch">
-                    On demand.
-                  </span>,
-                ]}
+                lines={["Design shouldn\u2019t be", "your bottleneck."]}
                 startDelay={0.05}
               />
             </motion.h1>
@@ -63,9 +55,8 @@ export function Hero() {
               initial="hidden"
               animate="visible"
             >
-              Milktree becomes your embedded brand &amp; design team. Unlimited
-              design requests, senior work back in 48 hours, one flat monthly
-              subscription. No hiring. No freelancer roulette. No waiting weeks.
+              Your embedded brand &amp; design team. Unlimited requests, senior
+              work back in 48 hours, one flat monthly fee.
             </motion.p>
 
             <motion.div
@@ -94,6 +85,16 @@ export function Hero() {
               {site.trustLine}
             </motion.p>
           </div>
+
+          <motion.div
+            className="hero__media-card"
+            custom={4}
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+          >
+            <HeroVideo />
+          </motion.div>
         </div>
 
         <motion.div
@@ -106,14 +107,5 @@ export function Hero() {
         </motion.div>
       </div>
     </section>
-  );
-}
-
-function HeroMediaBackground() {
-  return (
-    <div aria-hidden className="hero__media">
-      <HeroShowreel />
-      <div className="hero__media-scrim" />
-    </div>
   );
 }

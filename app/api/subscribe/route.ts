@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       lastName,
       source: "website-subscribe",
     }),
-    sendToGhlWebhook({
+    sendToGhlWebhook("newsletter", {
       name,
       email,
       firstName,

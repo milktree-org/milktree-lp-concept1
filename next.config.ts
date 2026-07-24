@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    qualities: [75, 80],
+  },
   async redirects() {
     return [
       // Live Meta ads point at /audit on the production domain. The new site's

@@ -405,29 +405,6 @@ export const faqs = [
   },
 ];
 
-/* --------------------------- Hero showreel -------------------------------- */
-// Curated case-study stills for the hero backdrop — a Ken Burns crossfade
-// loop replacing the single hero-bg.mp4 master. Picked for cinematic OOH/
-// environmental weight (billboards, storefronts, print in real light) over
-// flat product or social crops, so the reel reads as premium proof, not a
-// mood board. Order is the play order.
-export type HeroShowreelItem = { src: string; title: string };
-
-export const heroShowreel: HeroShowreelItem[] = [
-  { src: "/work/portfolio/ejw-builttolast.webp", title: "EJW Concrete — Out-of-Home" },
-  { src: "/work/portfolio/alltrad-ooh.webp", title: "Alltrad Roofing — Out-of-Home" },
-  { src: "/work/portfolio/mailmans.webp", title: "Mailmans — Signage" },
-  { src: "/work/portfolio/melt-pizza.webp", title: "Melt Pizza Co — Brand Campaign" },
-  { src: "/work/portfolio/figurati-invite.webp", title: "Figurati — VIP Collateral" },
-  { src: "/work/portfolio/zillwoods-cards.webp", title: "Zillwoods — Brand Identity" },
-  { src: "/work/portfolio/eazyphone-identity.webp", title: "EazyPhone — Brand Identity" },
-  { src: "/work/portfolio/lusso-billboard.webp", title: "Lussobrunch — Out-of-Home" },
-  { src: "/work/strip/samuelharper-billboard.webp", title: "Samuel Harper — Out-of-Home" },
-  { src: "/work/strip/zillwoods-storefront.webp", title: "Zillwoods — Storefront Signage" },
-  { src: "/work/strip/eazyphone-posters.webp", title: "EazyPhone — Poster Campaign" },
-  { src: "/work/strip/salesprout-rooftop.webp", title: "SaleSprout — Rooftop Out-of-Home" },
-];
-
 /* ----------------------- Work showcase strip (full-bleed) ----------------- */
 export type WorkShowcaseItem = {
   src: string;

@@ -263,7 +263,7 @@ body:has([data-hide-chrome]) .site-footer {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Hero — Extra.email-inspired: video bounded to hero, copy + reel     */
+/*  Hero — black canvas, centered copy, showreel framed in a media card */
 /* ------------------------------------------------------------------ */
 .hero {
   position: relative;
@@ -275,50 +275,41 @@ body:has([data-hide-chrome]) .site-footer {
   isolation: isolate;
 }
 
-/* Bounded to the hero only (absolute, not fixed) so the video never bleeds
-   behind the sections below it. */
-.hero__media {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+/* Showreel framed below the CTAs — full-bleed within the card only. */
+.hero__media-card {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
   overflow: hidden;
-  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #000;
+  /* border-radius clipping fix for Safari (keeps the iframe inside the corners) */
+  transform: translateZ(0);
 }
 
-.hero__showreel {
+.hero__video {
   position: absolute;
   inset: 0;
-  height: 100%;
-  width: 100%;
   overflow: hidden;
   background: #000;
-  opacity: 0.5;
+  /* Size container so the iframe can cover-crop via cqw/cqh below. */
+  container-type: size;
 }
 
-.hero__showreel-slide {
+/* The Vimeo stream is 16:9 but the card is 2:1 on desktop — oversize the
+   iframe to whichever dimension covers, centered, like object-fit: cover. */
+.hero__video-frame {
   position: absolute;
-  inset: 0;
-  height: 100%;
-  width: 100%;
-  will-change: opacity, transform;
-}
-
-.hero__media-scrim {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.48) 0%,
-      rgba(0, 0, 0, 0.32) 35%,
-      rgba(0, 0, 0, 0.52) 75%,
-      rgba(0, 0, 0, 0.72) 100%
-    ),
-    radial-gradient(
-      ellipse 80% 60% at 35% 45%,
-      rgba(0, 0, 0, 0.35),
-      transparent 75%
-    );
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, calc(100cqh * 16 / 9));
+  height: max(100cqh, calc(100cqw * 9 / 16));
+  transform: translate(-50%, -50%);
+  border: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
 }
 
 .hero__inner {
@@ -350,10 +341,10 @@ body:has([data-hide-chrome]) .site-footer {
   display: flex;
   flex-flow: column;
   align-items: center;
-  gap: 40px;
+  gap: 32px;
   width: 100%;
   max-width: 1320px;
-  padding: 120px 20px 56px;
+  padding: 104px 20px 56px;
 }
 
 .hero__copy {
@@ -370,28 +361,11 @@ body:has([data-hide-chrome]) .site-footer {
   font-family: var(--font-heading);
   font-stretch: 75%;
   font-weight: 700;
-  font-size: clamp(2.5rem, 5.5vw, 4.75rem);
-  letter-spacing: -0.01em;
-  line-height: 1.02;
-  color: #fff;
-  text-wrap: balance;
-  text-transform: uppercase;
-}
-
-/* Setup line stays at the headline size; punch line is ~30% larger. */
-.hero__headline-setup {
-  display: block;
-}
-
-.hero__headline-setup-break {
-  display: inline;
-}
-
-.hero__headline-punch {
-  display: block;
-  font-size: 1.3em;
+  font-size: clamp(3rem, 6vw, 4.75rem);
   letter-spacing: -0.02em;
   line-height: 0.95;
+  color: #fff;
+  text-transform: uppercase;
 }
 
 .hero__subheadline {
@@ -399,7 +373,8 @@ body:has([data-hide-chrome]) .site-footer {
   font-weight: 400;
   line-height: 1.35;
   color: rgba(255, 255, 255, 0.92);
-  max-width: 500px;
+  max-width: 620px;
+  text-wrap: balance;
 }
 
 .hero__cta-group {
@@ -449,6 +424,7 @@ body:has([data-hide-chrome]) .site-footer {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.38);
   margin-top: 4px;
+  text-wrap: balance;
 }
 
 /* Full-bleed work marquee (§WorkStrip) — mid-page, inside the manifesto band */
@@ -548,13 +524,21 @@ body:has([data-hide-chrome]) .site-footer {
 }
 
 @media (min-width: 1024px) {
+  /* Tight enough that ~half the media card clears a 900px fold — the card
+     peeking mid-image is the scroll magnet. */
   .hero__shell {
-    gap: 48px;
-    padding: 160px 20px 72px;
+    gap: 36px;
+    padding: 112px 20px 72px;
   }
 
   .hero__headline {
-    font-size: clamp(3.5rem, 6vw, 5.5rem);
+    font-size: clamp(4rem, 6vw, 5rem);
+  }
+
+  /* Cinematic ratio on desktop: the cover-crop centers on the billboard
+     (the money shot), and more of the card clears the fold. */
+  .hero__media-card {
+    aspect-ratio: 2 / 1;
   }
 }
 
@@ -569,7 +553,7 @@ body:has([data-hide-chrome]) .site-footer {
   }
 
   .hero__headline {
-    font-size: clamp(2.75rem, 7vw, 4.25rem);
+    font-size: clamp(3.25rem, 7.5vw, 4.75rem);
   }
 
   .work-strip__img {
@@ -588,16 +572,9 @@ body:has([data-hide-chrome]) .site-footer {
 }
 
 @media (max-width: 640px) {
-  /* Lock the first screen: copy centers in the leftover space, marquee pins bottom. */
-  .hero {
-    height: 100dvh;
-    min-height: 100dvh;
-    max-height: 100dvh;
-  }
-
+  /* Copy + media card + marquee no longer fit one screen — let the hero grow. */
   .hero__inner {
     min-height: 0;
-    height: 100%;
   }
 
   .hero__shell {
@@ -605,7 +582,11 @@ body:has([data-hide-chrome]) .site-footer {
     justify-content: center;
     min-height: 0;
     padding: max(72px, env(safe-area-inset-top, 0px) + 56px) 16px 12px;
-    gap: 0;
+    gap: 24px;
+  }
+
+  .hero__media-card {
+    border-radius: 20px;
   }
 
   .hero__copy {
@@ -613,12 +594,7 @@ body:has([data-hide-chrome]) .site-footer {
   }
 
   .hero__headline {
-    font-size: clamp(2.5rem, 11.5vw, 3.25rem);
-  }
-
-  /* Soft-break the setup so it doesn't crush the punch line on narrow screens. */
-  .hero__headline-setup-break {
-    display: block;
+    font-size: clamp(2.75rem, 11.5vw, 3.5rem);
   }
 
   .hero__subheadline {

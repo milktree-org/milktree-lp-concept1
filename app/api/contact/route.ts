@@ -1,5 +1,6 @@
 import { after } from "next/server";
 import { sendToFormspree } from "@/lib/server/formspree";
+import { sendToGhlWebhook } from "@/lib/server/ghl";
 import { getResend, FROM, NOTIFY_TO, notifySlack } from "@/lib/server/resend";
 import { rateLimit, requestIp } from "@/lib/server/supabase";
 
@@ -18,8 +19,9 @@ type ContactBody = {
 /**
  * POST /api/contact — general enquiries from /contact.
  *
- * Persists to Formspree first (contact endpoint, defaults to the always-on
- * intake form), then notifies the team via Slack or Resend in after() so
+ * Persists to Formspree (contact endpoint, defaults to the always-on intake
+ * form) and the GoHighLevel webhook in parallel — succeeds if either sink
+ * accepts. Then notifies the team via Slack or Resend in after() so
  * notification failures never lose the message.
  */
 export async function POST(request: Request) {
@@ -57,17 +59,34 @@ export async function POST(request: Request) {
     return Response.json({ error: "Message is too long." }, { status: 400 });
   }
 
-  const stored = await sendToFormspree("contact", {
-    _subject: `Contact message — ${name}`,
-    form: "contact",
-    name,
-    email,
-    company,
-    message,
-    source: "website-contact",
-  });
+  const firstName = name.split(/\s+/)[0] ?? name;
+  const lastName = name.split(/\s+/).slice(1).join(" ");
 
-  if (!stored) {
+  const [formspreeStored, ghlStored] = await Promise.all([
+    sendToFormspree("contact", {
+      _subject: `Contact message — ${name}`,
+      form: "contact",
+      name,
+      email,
+      company,
+      message,
+      source: "website-contact",
+    }),
+    sendToGhlWebhook("contact", {
+      name,
+      email,
+      firstName,
+      lastName,
+      first_name: firstName,
+      last_name: lastName,
+      company,
+      message,
+      source: "website-contact",
+      tags: ["contact", "website-contact"],
+    }),
+  ]);
+
+  if (!formspreeStored && !ghlStored) {
     return Response.json(
       { error: "Something went wrong. Please try again." },
       { status: 500 },
