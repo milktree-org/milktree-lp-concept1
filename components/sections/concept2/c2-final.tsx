@@ -27,7 +27,7 @@ const columns = [
     heading: "Get started",
     links: [
       { label: "Start your subscription", href: "/start" },
-      { label: "Free brand report", href: "/brand-report" },
+      { label: "Free brand score", href: "/brand-report" },
       { label: "Client login", href: "#" },
     ],
   },

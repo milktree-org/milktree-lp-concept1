@@ -27,7 +27,7 @@ export default function PrivacyPage() {
       <ul>
         <li>
           <strong>Enquiry details</strong> — when you complete our &ldquo;Get
-          started&rdquo; form or Brand Ranking Quiz: your name, work email, phone
+          started&rdquo; form or Brand Score: your name, work email, phone
           (optional), company name, website, team size, budget band and your quiz
           answers. These are stored securely in our database (Supabase, hosted in the
           UK/EU) so we never lose your enquiry.
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Resend</strong> — to send transactional email (your plan options or
-          your Brand Ranking Report) and, only where you have ticked the consent box,
+          your Brand Score) and, only where you have ticked the consent box,
           occasional marketing emails. Every email includes a way to opt out.
         </li>
         <li>
@@ -83,9 +83,9 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
-      <h2>Brand Ranking Report data</h2>
+      <h2>Brand Score data</h2>
       <p>
-        When you request a Brand Ranking Report we look up publicly available
+        When you request a Brand Score we look up publicly available
         information to build it: live Google search results for search terms relevant
         to your sector and region (via Apify), and publicly visible brand elements —
         colours, typography, headlines — from your website and the top-ranking
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
       <h2>How we use your information</h2>
       <ul>
         <li>To respond to enquiries and deliver anything you request from us — including
-          your Brand Ranking Report, which we send by email regardless of marketing
+          your Brand Score, which we send by email regardless of marketing
           consent because it&apos;s what you asked for.</li>
         <li>To send occasional brand tips and marketing email <strong>only where you
           have opted in</strong> (the consent box is never pre-ticked). You can

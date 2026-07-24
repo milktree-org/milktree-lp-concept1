@@ -381,7 +381,7 @@ export function quizReportEmail(input: {
   actions: string[];
   benchmark: BenchmarkResult | null;
 }): { subject: string; html: string; text: string } {
-  const subject = `Your Brand Ranking Report — ${input.company} scored ${input.score}/100`;
+  const subject = `Your Brand Score — ${input.company} scored ${input.score}/100`;
 
   const scoreRows = (Object.entries(input.categoryScores) as [QuizCategory, number][])
     .map(
@@ -472,7 +472,7 @@ export function quizReportEmail(input: {
 
   const html = shell(`
     ${h(`${input.company} — Brand Score <span style="color:${YELLOW};">${input.score}/100</span>`)}
-    ${p("Here's your full Brand Ranking Report — score breakdown, how you stack up against the players dominating your market's search results, and the 10 fixes that will move the needle fastest.")}
+    ${p("Here's your full Brand Score — score breakdown, how you stack up against the players dominating your market's search results, and the 10 fixes that will move the needle fastest.")}
     <p style="margin:0 0 10px;font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);">Score breakdown</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">${scoreRows}</table>
     ${benchmarkHtml}

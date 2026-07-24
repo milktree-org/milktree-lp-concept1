@@ -170,6 +170,7 @@ export function QualificationForm() {
 
   const quizUrl = useMemo(() => {
     const params = new URLSearchParams();
+    if (answers.name.trim()) params.set("name", answers.name.trim());
     if (answers.company.trim()) params.set("company", answers.company.trim());
     if (answers.website.trim()) params.set("website", answers.website.trim());
     if (answers.email.trim()) params.set("email", answers.email.trim());

@@ -51,7 +51,7 @@ const columns = [
     heading: "Get started",
     links: [
       { label: "Start your subscription", href: "/start" },
-      { label: "Free brand report", href: "/brand-report" },
+      { label: "Free brand score", href: "/brand-report" },
       { label: "Brand tips by email", href: "/subscribe" },
       { label: "Client login", href: "/login" },
     ],

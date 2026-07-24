@@ -1,5 +1,6 @@
 import { after } from "next/server";
 import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
+import { sendToFormspree } from "@/lib/server/formspree";
 import { getResend, FROM, addToNurture } from "@/lib/server/resend";
 import { quizReportEmail } from "@/lib/server/emails";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/lib/server/quiz-scoring";
 import {
   QUIZ_QUESTIONS,
+  CATEGORY_LABELS,
   type BenchmarkResult,
   type QuizAnswers,
   type QuizResults,
@@ -54,6 +56,23 @@ export async function POST(request: Request) {
       ? body.sessionId
       : null;
 
+  // Intake context sent by the client so the completion record forwarded to
+  // Formspree is self-contained (works even without a DB session).
+  const str = (v: unknown, max = 200) =>
+    typeof v === "string" ? v.trim().slice(0, max) : "";
+  const intake = {
+    name: str(body.name, 120),
+    jobRole: str(body.jobRole, 120),
+    marketLeader: str(body.marketLeader),
+    company: str(body.company),
+    website: str(body.website),
+    sector: str(body.sector, 80),
+    region: str(body.region, 80),
+    email: str(body.email),
+    consent: body.consent === true,
+    source: str(body.source, 40) || "direct",
+  };
+
   const categoryScores = computeCategoryScores(answers);
   const selfScore = computeSelfScore(categoryScores);
   const weakest = weakestCategories(categoryScores);
@@ -73,22 +92,46 @@ export async function POST(request: Request) {
     const { error } = await supabase
       .from("quiz_sessions")
       .update({
-        answers,
+        // Market leader lives inside the answers blob — no schema change.
+        answers: intake.marketLeader
+          ? { ...answers, market_leader: intake.marketLeader }
+          : answers,
         self_score: selfScore,
         final_score: score,
         completed_at: new Date().toISOString(),
       })
       .eq("id", sessionId);
     if (error) console.error("[quiz] completion update failed:", error.message);
-
-    after(async () => {
-      await sendReportAndTag(sessionId, {
-        categoryScores,
-        selfScore,
-        allActions,
-      });
-    });
   }
+
+  after(async () => {
+    // Give a still-running benchmark one last chance so both the Formspree
+    // record and the emailed report carry the market data.
+    const finalBenchmark =
+      supabase && sessionId
+        ? await waitForBenchmark(sessionId, EMAIL_WAIT_MS)
+        : benchmark;
+    const finalScore = computeFinalScore(
+      selfScore,
+      finalBenchmark?.benchmarkScore ?? null,
+    );
+
+    await sendCompletionToFormspree({
+      intake,
+      answers,
+      score: finalScore,
+      selfScore,
+      benchmark: finalBenchmark,
+    });
+
+    if (supabase && sessionId) {
+      await sendReportAndTag(
+        sessionId,
+        { categoryScores, selfScore, allActions },
+        finalBenchmark,
+      );
+    }
+  });
 
   const results: QuizResults = {
     sessionId: sessionId ?? "local",
@@ -142,6 +185,63 @@ async function waitForBenchmark(
 }
 
 /**
+ * The full completion record for Formspree — the upsell dataset. Every quiz
+ * answer (as its human-readable label), the score, the market leader and the
+ * live benchmark summary, alongside the intake so the row is self-contained.
+ */
+async function sendCompletionToFormspree(data: {
+  intake: {
+    name: string;
+    jobRole: string;
+    marketLeader: string;
+    company: string;
+    website: string;
+    sector: string;
+    region: string;
+    email: string;
+    consent: boolean;
+    source: string;
+  };
+  answers: QuizAnswers;
+  score: number;
+  selfScore: number;
+  benchmark: BenchmarkResult | null;
+}) {
+  const { intake, answers, score, selfScore, benchmark } = data;
+
+  const answerFields: Record<string, string> = {};
+  for (const q of QUIZ_QUESTIONS) {
+    const label = q.options.find((o) => o.value === answers[q.id])?.label;
+    if (label) answerFields[CATEGORY_LABELS[q.id]] = label;
+  }
+
+  await sendToFormspree("brandScore", {
+    _subject: `Brand Score Completed — ${intake.company || "Unknown company"} — ${score}/100`,
+    form: "brand-quiz-completed",
+    name: intake.name,
+    jobRole: intake.jobRole,
+    company: intake.company,
+    website: intake.website,
+    sector: intake.sector,
+    region: intake.region,
+    email: intake.email,
+    consent: intake.consent,
+    source: intake.source,
+    "Brand you admire": intake.marketLeader || "Not answered",
+    "Brand Score": score,
+    "Self-assessment score": selfScore,
+    ...answerFields,
+    "Benchmark score": benchmark?.benchmarkScore ?? "Not available",
+    "Best Google position": benchmark?.userBestPosition ?? "Not found",
+    "Top competitors found":
+      (benchmark?.competitors ?? [])
+        .slice(0, 3)
+        .map((c) => c.name || c.domain)
+        .join(", ") || "None found",
+  });
+}
+
+/**
  * Full report by email (§5.5). Sends regardless of marketing consent — it's
  * the transactional deliverable the user requested. Nurture tagging is
  * consent-gated (UK PECR).
@@ -153,14 +253,11 @@ async function sendReportAndTag(
     selfScore: number;
     allActions: string[];
   },
+  benchmark: BenchmarkResult | null,
 ) {
   const supabase = getSupabase();
   const resend = getResend();
   if (!supabase) return;
-
-  // Give a still-running benchmark a last chance so the email is as rich as
-  // possible, then send with whatever exists.
-  const benchmark = await waitForBenchmark(sessionId, EMAIL_WAIT_MS);
 
   const { data: session } = await supabase
     .from("quiz_sessions")

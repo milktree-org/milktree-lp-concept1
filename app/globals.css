@@ -581,7 +581,9 @@ body:has([data-hide-chrome]) .site-footer {
     flex: 1;
     justify-content: center;
     min-height: 0;
-    padding: max(72px, env(safe-area-inset-top, 0px) + 56px) 16px 12px;
+    /* Header is fixed and 64px tall — keep real breathing room below it
+       (env() is 0 without viewport-fit=cover, so the floor does the work). */
+    padding: max(112px, env(safe-area-inset-top, 0px) + 96px) 16px 12px;
     gap: 24px;
   }
 

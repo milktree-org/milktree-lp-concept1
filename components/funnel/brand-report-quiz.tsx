@@ -11,6 +11,7 @@ import {
   Share2,
   Globe,
   Search,
+  Crown,
   ArrowRight,
   Check,
 } from "lucide-react";
@@ -57,9 +58,15 @@ const QUESTION_ICONS: Record<QuizCategory, React.ComponentType<{ className?: str
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const TOTAL_STEPS = QUIZ_QUESTIONS.length + 1;
+/* who-you-are + basics + six questions + market-leader = 9 steps */
+const BASICS_STEP = 1;
+const FIRST_QUESTION_STEP = 2;
+const LEADER_STEP = QUIZ_QUESTIONS.length + 2;
+const TOTAL_STEPS = QUIZ_QUESTIONS.length + 3;
 
 type Intake = {
+  name: string;
+  jobRole: string;
   company: string;
   website: string;
   sector: string;
@@ -75,6 +82,8 @@ export function BrandReportQuiz() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [intake, setIntake] = useState<Intake>({
+    name: params.get("name") ?? "",
+    jobRole: "",
     company: params.get("company") ?? "",
     website: params.get("website") ?? "",
     sector: "",
@@ -83,6 +92,8 @@ export function BrandReportQuiz() {
     consent: false,
   });
   const [answers, setAnswers] = useState<QuizAnswers>({});
+  const [marketLeader, setMarketLeader] = useState("");
+  const [captured, setCaptured] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -98,6 +109,7 @@ export function BrandReportQuiz() {
   const start = useCallback(async () => {
     if (busy) return;
     setError(null);
+    if (!intake.name.trim()) return setError("Add your name.");
     if (!intake.company.trim()) return setError("Add your company name.");
     if (!intake.sector) return setError("Pick the sector closest to what you do.");
     if (!EMAIL_RE.test(intake.email.trim()))
@@ -109,6 +121,8 @@ export function BrandReportQuiz() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: intake.name.trim(),
+          jobRole: intake.jobRole.trim(),
           company: intake.company.trim(),
           website: intake.website.trim(),
           sector: intake.sector,
@@ -131,7 +145,7 @@ export function BrandReportQuiz() {
       setSessionId(data.sessionId ?? null);
       trackCustom("BrandQuizStart");
       setBusy(false);
-      goTo(1, 1);
+      goTo(FIRST_QUESTION_STEP, 1);
     } catch {
       setError("We couldn't reach the server. Please try again.");
       setBusy(false);
@@ -146,7 +160,22 @@ export function BrandReportQuiz() {
         const res = await fetch("/api/quiz/complete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, answers: finalAnswers }),
+          // Intake fields ride along so the completion record (Formspree) is
+          // self-contained even when no DB session exists.
+          body: JSON.stringify({
+            sessionId,
+            answers: finalAnswers,
+            marketLeader: marketLeader.trim(),
+            name: intake.name.trim(),
+            jobRole: intake.jobRole.trim(),
+            company: intake.company.trim(),
+            website: intake.website.trim(),
+            sector: intake.sector,
+            region: intake.region.trim(),
+            email: intake.email.trim(),
+            consent: intake.consent,
+            source: params.get("src") === "form" ? "start-form" : "direct",
+          }),
         });
         const data = (await res.json().catch(() => ({}))) as
           | QuizResults
@@ -169,23 +198,16 @@ export function BrandReportQuiz() {
         setBusy(false);
       }
     },
-    [sessionId],
+    [sessionId, marketLeader, intake, params],
   );
 
-  /* Question steps — auto-advance; final answer submits. */
+  /* Question steps — auto-advance; the market-leader step submits. */
   const answer = useCallback(
     (category: QuizCategory, value: string, index: number) => {
-      const next = { ...answers, [category]: value };
-      setAnswers(next);
-      window.setTimeout(() => {
-        if (index + 1 < QUIZ_QUESTIONS.length) {
-          goTo(index + 2, 1);
-        } else {
-          void complete(next);
-        }
-      }, 180);
+      setAnswers((prev) => ({ ...prev, [category]: value }));
+      window.setTimeout(() => goTo(FIRST_QUESTION_STEP + index + 1, 1), 180);
     },
-    [answers, complete, goTo],
+    [goTo],
   );
 
   if (results) {
@@ -205,6 +227,43 @@ export function BrandReportQuiz() {
     }
   };
 
+  const goToBasics = async () => {
+    if (!intake.name.trim()) {
+      setError("Add your name.");
+      return;
+    }
+    if (!EMAIL_RE.test(intake.email.trim())) {
+      setError("A valid email is needed. It's where your Brand Score goes.");
+      return;
+    }
+    setError(null);
+    if (!captured) {
+      // Save the contact the moment we have it, so a drop-off before the
+      // rest of the form still leaves us a lead. Non-blocking: never gate
+      // the user on this.
+      setCaptured(true);
+      void fetch("/api/quiz/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: intake.name.trim(),
+          jobRole: intake.jobRole.trim(),
+          email: intake.email.trim(),
+          consent: intake.consent,
+          source: params.get("src") === "form" ? "start-form" : "direct",
+        }),
+      }).catch(() => {});
+    }
+    goTo(BASICS_STEP, 1);
+  };
+
+  const onEnterName = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void goToBasics();
+    }
+  };
+
   return (
     <div className="mx-auto w-full max-w-xl">
       <div className="mb-3 flex items-center justify-between">
@@ -218,9 +277,59 @@ export function BrandReportQuiz() {
       <div className="mt-10 min-h-[440px]">
         <AnimatePresence mode="wait" custom={reduce ? 0 : direction}>
           {step === 0 && (
-            <StepPanel key="intake" stepKey="intake" direction={direction}>
+            <StepPanel key="who" stepKey="who" direction={direction}>
               <StepHeading
-                title="First, the basics."
+                title="First, who are we helping?"
+                sub="So we know who to send the report to and how to address it."
+              />
+              <div className="grid gap-4">
+                <FunnelInput
+                  label="Your name"
+                  placeholder="Jane Smith"
+                  autoComplete="name"
+                  value={intake.name}
+                  onChange={(e) => setIntake((s) => ({ ...s, name: e.target.value }))}
+                  onKeyDown={onEnterName}
+                />
+                <FunnelInput
+                  label="Job role"
+                  optional
+                  placeholder="e.g. Marketing Manager"
+                  autoComplete="organization-title"
+                  value={intake.jobRole}
+                  onChange={(e) => setIntake((s) => ({ ...s, jobRole: e.target.value }))}
+                  onKeyDown={onEnterName}
+                />
+                <FunnelInput
+                  label="Email"
+                  placeholder="you@acme.co.uk"
+                  type="email"
+                  autoComplete="email"
+                  value={intake.email}
+                  onChange={(e) => setIntake((s) => ({ ...s, email: e.target.value }))}
+                  onKeyDown={onEnterName}
+                />
+                <ConsentCheckbox
+                  checked={intake.consent}
+                  onChange={(v) => setIntake((s) => ({ ...s, consent: v }))}
+                  label="Send me my Brand Score and occasional brand tips from Milktree."
+                />
+              </div>
+              {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+              <PrimaryButton
+                className="mt-7 w-full sm:w-auto"
+                onClick={() => void goToBasics()}
+              >
+                Continue
+                <ArrowRight className="size-4" />
+              </PrimaryButton>
+            </StepPanel>
+          )}
+
+          {step === BASICS_STEP && (
+            <StepPanel key="basics" stepKey="basics" direction={direction}>
+              <StepHeading
+                title="Now, the basics."
                 sub="Real search data needs real details. Your report lands in your inbox."
               />
               <div className="grid gap-4">
@@ -265,20 +374,6 @@ export function BrandReportQuiz() {
                   onChange={(e) => setIntake((s) => ({ ...s, region: e.target.value }))}
                   onKeyDown={onEnter}
                 />
-                <FunnelInput
-                  label="Email"
-                  placeholder="you@acme.co.uk"
-                  type="email"
-                  autoComplete="email"
-                  value={intake.email}
-                  onChange={(e) => setIntake((s) => ({ ...s, email: e.target.value }))}
-                  onKeyDown={onEnter}
-                />
-                <ConsentCheckbox
-                  checked={intake.consent}
-                  onChange={(v) => setIntake((s) => ({ ...s, consent: v }))}
-                  label="Send me my report and occasional brand tips from Milktree."
-                />
               </div>
               {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
               <PrimaryButton
@@ -293,10 +388,10 @@ export function BrandReportQuiz() {
             </StepPanel>
           )}
 
-          {step >= 1 &&
-            step <= QUIZ_QUESTIONS.length &&
+          {step >= FIRST_QUESTION_STEP &&
+            step < LEADER_STEP &&
             (() => {
-              const index = step - 1;
+              const index = step - FIRST_QUESTION_STEP;
               const q = QUIZ_QUESTIONS[index];
               const Icon = QUESTION_ICONS[q.id];
               return (
@@ -315,15 +410,50 @@ export function BrandReportQuiz() {
                       />
                     ))}
                   </div>
-                  {busy && index === QUIZ_QUESTIONS.length - 1 && (
-                    <p className="mt-6 text-sm text-faint">
-                      Checking live search results for your market…
-                    </p>
-                  )}
                   {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
                 </StepPanel>
               );
             })()}
+
+          {step === LEADER_STEP && (
+            <StepPanel key="market-leader" stepKey="market-leader" direction={direction}>
+              <span className="mb-5 grid size-11 place-items-center rounded-xl bg-white/5 text-brand">
+                <Crown className="size-5" />
+              </span>
+              <StepHeading
+                title="Which brand in your space do you look up to most?"
+                sub="The competitor you'd love your brand to stand next to. Your best guess is fine."
+              />
+              <FunnelInput
+                label="Brand you admire"
+                optional
+                placeholder="e.g. a competitor's name or website"
+                value={marketLeader}
+                onChange={(e) => setMarketLeader(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void complete(answers);
+                  }
+                }}
+              />
+              {busy && (
+                <p className="mt-6 text-sm text-faint">
+                  Checking live search results for your market…
+                </p>
+              )}
+              {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+              <PrimaryButton
+                className="mt-7 w-full sm:w-auto"
+                loading={busy}
+                disabled={busy}
+                onClick={() => void complete(answers)}
+              >
+                See my results
+                <ArrowRight className="size-4" />
+              </PrimaryButton>
+            </StepPanel>
+          )}
         </AnimatePresence>
       </div>
     </div>
