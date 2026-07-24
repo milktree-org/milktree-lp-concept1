@@ -4,18 +4,32 @@ import "server-only";
  * GoHighLevel inbound webhooks — optional second sink alongside Formspree.
  * "newsletter" uses GHL_NEWSLETTER_WEBHOOK_URL; "contact" uses
  * GHL_CONTACT_WEBHOOK_URL, falling back to the newsletter URL so a single
- * GHL workflow can route by tags. Failures are logged and never thrown.
+ * GHL workflow can route by tags. "brandScore" fires when a lead completes
+ * the Brand Score quiz (Workflow 1: tag + internal review notification);
+ * "brandScoreDoc" fires when the finished PDF is published (Workflow 2:
+ * delivery email with the download button). Failures are logged, never
+ * thrown.
  */
-export type GhlWebhook = "newsletter" | "contact";
+export type GhlWebhook =
+  | "newsletter"
+  | "contact"
+  | "brandScore"
+  | "brandScoreDoc";
 
 function webhookUrl(webhook: GhlWebhook): string | undefined {
-  if (webhook === "contact") {
-    return (
-      process.env.GHL_CONTACT_WEBHOOK_URL ??
-      process.env.GHL_NEWSLETTER_WEBHOOK_URL
-    );
+  switch (webhook) {
+    case "contact":
+      return (
+        process.env.GHL_CONTACT_WEBHOOK_URL ??
+        process.env.GHL_NEWSLETTER_WEBHOOK_URL
+      );
+    case "brandScore":
+      return process.env.GHL_BRANDSCORE_WEBHOOK_URL;
+    case "brandScoreDoc":
+      return process.env.GHL_BRANDSCORE_DOC_WEBHOOK_URL;
+    default:
+      return process.env.GHL_NEWSLETTER_WEBHOOK_URL;
   }
-  return process.env.GHL_NEWSLETTER_WEBHOOK_URL;
 }
 
 export async function sendToGhlWebhook(

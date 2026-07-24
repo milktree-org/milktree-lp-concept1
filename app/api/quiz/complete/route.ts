@@ -1,8 +1,10 @@
 import { after } from "next/server";
 import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
 import { sendToFormspree } from "@/lib/server/formspree";
+import { sendToGhlWebhook } from "@/lib/server/ghl";
 import { getResend, FROM, addToNurture } from "@/lib/server/resend";
 import { quizReportEmail } from "@/lib/server/emails";
+import { SITE_URL } from "@/lib/seo";
 import {
   computeCategoryScores,
   computeSelfScore,
@@ -92,10 +94,10 @@ export async function POST(request: Request) {
     const { error } = await supabase
       .from("quiz_sessions")
       .update({
-        // Market leader lives inside the answers blob — no schema change.
-        answers: intake.marketLeader
-          ? { ...answers, market_leader: intake.marketLeader }
-          : answers,
+        answers,
+        market_leader: intake.marketLeader || null,
+        name: intake.name || null,
+        job_role: intake.jobRole || null,
         self_score: selfScore,
         final_score: score,
         completed_at: new Date().toISOString(),
@@ -116,12 +118,35 @@ export async function POST(request: Request) {
       finalBenchmark?.benchmarkScore ?? null,
     );
 
+    // Internal review link for the Brand Score document (the 3-hour clock).
+    const reviewLink = sessionId ? docReviewLink(sessionId) : null;
+
     await sendCompletionToFormspree({
       intake,
       answers,
       score: finalScore,
       selfScore,
       benchmark: finalBenchmark,
+      reviewLink,
+    });
+
+    // GHL Workflow 1: upsert the contact, tag brand-score, notify the team
+    // with the review link so the document gets built and published.
+    await sendToGhlWebhook("brandScore", {
+      type: "brand-score-completed",
+      session_id: sessionId ?? "local",
+      name: intake.name,
+      job_role: intake.jobRole,
+      email: intake.email,
+      company: intake.company,
+      website: intake.website,
+      sector: intake.sector,
+      region: intake.region,
+      market_leader: intake.marketLeader,
+      consent: intake.consent,
+      source: intake.source,
+      score: finalScore,
+      review_link: reviewLink ?? "",
     });
 
     if (supabase && sessionId) {
@@ -206,8 +231,9 @@ async function sendCompletionToFormspree(data: {
   score: number;
   selfScore: number;
   benchmark: BenchmarkResult | null;
+  reviewLink: string | null;
 }) {
-  const { intake, answers, score, selfScore, benchmark } = data;
+  const { intake, answers, score, selfScore, benchmark, reviewLink } = data;
 
   const answerFields: Record<string, string> = {};
   for (const q of QUIZ_QUESTIONS) {
@@ -238,7 +264,15 @@ async function sendCompletionToFormspree(data: {
         .slice(0, 3)
         .map((c) => c.name || c.domain)
         .join(", ") || "None found",
+    "Brand Score document (internal review link)":
+      reviewLink ?? "Not available (no database session)",
   });
+}
+
+/** Gated internal link to review + publish the lead's Brand Score document. */
+function docReviewLink(sessionId: string): string {
+  const key = process.env.DOC_REVIEW_KEY;
+  return `${SITE_URL}/brand-score-doc/${sessionId}${key ? `?k=${encodeURIComponent(key)}` : ""}`;
 }
 
 /**

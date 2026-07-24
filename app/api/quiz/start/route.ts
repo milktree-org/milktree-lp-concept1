@@ -35,6 +35,8 @@ export async function POST(request: Request) {
   const str = (v: unknown, max = 200) =>
     typeof v === "string" ? v.trim().slice(0, max) : "";
 
+  const name = str(body.name, 120);
+  const jobRole = str(body.jobRole, 120);
   const company = str(body.company);
   const website = str(body.website);
   const sector = str(body.sector);
@@ -62,6 +64,8 @@ export async function POST(request: Request) {
     .from("quiz_sessions")
     .insert({
       lead_id: leadId,
+      name: name || null,
+      job_role: jobRole || null,
       company,
       website: website || null,
       sector,

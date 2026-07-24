@@ -61,8 +61,40 @@ Other routes in `CLAUDE.md` §6 are deferred — nav links resolve to on-page se
 | `FORMSPREE_NEWSLETTER_ENDPOINT` | Formspree form URL for `/subscribe` (e.g. `https://formspree.io/f/xxxxx`) |
 | `GHL_NEWSLETTER_WEBHOOK_URL` | Optional — GoHighLevel inbound webhook for newsletter subs |
 | `GHL_CONTACT_WEBHOOK_URL` | Optional — GoHighLevel inbound webhook for `/contact` messages (falls back to `GHL_NEWSLETTER_WEBHOOK_URL`) |
+| `DOC_REVIEW_KEY` | Secret gating the internal Brand Score document review page + publish API (required in production) |
+| `GHL_BRANDSCORE_WEBHOOK_URL` | GHL inbound webhook — fires on quiz completion with the internal review link |
+| `GHL_BRANDSCORE_DOC_WEBHOOK_URL` | Optional — GHL inbound webhook fired when the PDF is published (record-keeping: saves `pdf_url` on the contact) |
 
 All integrations degrade gracefully when unset: without Supabase the funnel still works (leads logged to the server console only); without Apify/Firecrawl the quiz falls back to self-assessment-only scoring.
+
+## Brand Score document pipeline
+
+Every completed Brand Score quiz can be turned into a branded 10-page PDF, custom to the lead's business and industry, and delivered automatically through GHL. The pieces:
+
+- **Content engine** — `lib/brand-score-doc.ts`: 14 sector playbooks, 6 category insights and the 90-day roadmap, merged with the lead's real quiz answers, score and live competitor benchmark. No AI dependency.
+- **Review page** — `/brand-score-doc/{sessionId}?k=<DOC_REVIEW_KEY>`: renders the 10 A4 pages ready for print. `/brand-score-doc/preview` shows sample data. `noindex`, 404s without the key in production.
+- **Publish API** — `POST /api/doc/publish`: uploads the PDF to the public `brand-score-docs` Supabase Storage bucket at `{sessionId}.pdf`, stamps `quiz_sessions.doc_url`, **emails the lead the download link via Resend** (template: `brandScoreDocEmail` in `lib/server/emails.ts` — yellow download button + Get Started CTA), and fires the optional GHL doc-ready webhook for record-keeping.
+
+### The 3-hour operator loop
+
+1. Lead completes the quiz → Formspree record + GHL webhook both carry the **internal review link**.
+2. Open the link, sanity-check the 10 pages (everything is pre-filled from their data).
+3. Toolbar button 1 — **Save as PDF** (the print dialog; destination "Save as PDF", margins "None", background graphics on).
+4. Toolbar button 2 — **Publish PDF**: drop the file you just saved. Storage upload + the delivery email to the lead happen automatically; the toolbar confirms the email went out.
+
+### GHL setup (one-off)
+
+**Workflow — "Brand Score completed"** (trigger: Inbound Webhook → copy the URL into `GHL_BRANDSCORE_WEBHOOK_URL`). Payload includes `type`, `name`, `email`, `company`, `sector`, `region`, `market_leader`, `score`, `review_link`.
+
+1. Create/Update Contact (map name, email, company).
+2. Add tag `brand-score`.
+3. Internal notification (email/SMS/Slack) with `{{inboundWebhookRequest.review_link}}` — this starts your 3-hour clock.
+
+The doc-ready event (`type: brand-score-doc-ready`, includes `pdf_url` and `email_sent`) goes to `GHL_BRANDSCORE_DOC_WEBHOOK_URL`. The delivery email is already sent by the site via Resend, so in GHL this event is just for record-keeping: if both env vars point at the same webhook, add an If/Else on `type` and, in the doc-ready branch, save `{{inboundWebhookRequest.pdf_url}}` to a custom field (e.g. `brand_score_pdf_url`) for future campaigns.
+
+### Production env checklist
+
+`SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `RESEND_API_KEY` · `DOC_REVIEW_KEY` · `GHL_BRANDSCORE_WEBHOOK_URL` · (`GHL_BRANDSCORE_DOC_WEBHOOK_URL` optional · `APIFY_API_TOKEN` + `FIRECRAWL_API_KEY` for the live market benchmark)
 
 ## Swapping in real assets
 

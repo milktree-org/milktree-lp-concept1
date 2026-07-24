@@ -10,7 +10,7 @@ import Player from "@vimeo/player";
  * forces muted looping autoplay. Official embed includes the privacy hash.
  */
 const VIMEO_SRC =
-  "https://player.vimeo.com/video/1212678355?h=fc6230e8b1&background=1&autopause=0&app_id=58479";
+  "https://player.vimeo.com/video/1212735848?background=1&autopause=0&app_id=58479";
 
 /**
  * Poster matching the reel's opening shot, painted instantly via next/image

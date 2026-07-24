@@ -369,6 +369,60 @@ export function calculatorReportEmail(input: {
   return { subject, html, text };
 }
 
+/* ---------------------- Brand Score document email ------------------------ */
+
+export function brandScoreDocEmail(input: {
+  firstName: string;
+  company: string;
+  score: number | null;
+  pdfUrl: string;
+}): { subject: string; html: string; text: string } {
+  const greeting = input.firstName ? `Hi ${input.firstName},` : "Hi,";
+  const subject = input.firstName
+    ? `${input.firstName}, your Brand Score document is ready`
+    : "Your Brand Score document is ready";
+
+  const html = shell(`
+    ${h("Your Brand Score document is ready.")}
+    ${p(greeting)}
+    ${p(
+      `As promised, here is your full Brand Score document for <strong style="color:#ffffff;">${input.company}</strong> — 10 pages on how your brand really ranks${
+        input.score !== null
+          ? ` (you scored <strong style="color:#ffffff;">${input.score}/100</strong>)`
+          : ""
+      }, who is winning your market right now, and the exact fixes we would make first.`,
+    )}
+    ${button("Download your Brand Score document", input.pdfUrl)}
+    ${p(
+      "Inside you'll find your score breakdown, the brands leading your space side by side, your 10 prioritised fixes and a 90-day roadmap you can run with any team.",
+    )}
+    ${p(
+      `And if you'd rather skip the queue: Milktree is an embedded design team on a flat monthly fee, from <strong style="color:#ffffff;">£1,999/mo</strong>. Closing exactly these gaps is what we do every week.`,
+    )}
+    ${p(`<a href="${SITE_URL}/start" style="color:${YELLOW};font-weight:700;">Get started &rarr;</a>`)}
+    ${p("— The Milktree team")}
+  `);
+
+  const text = [
+    greeting,
+    "",
+    `As promised, here is your full Brand Score document for ${input.company} — 10 pages on how your brand really ranks${
+      input.score !== null ? ` (you scored ${input.score}/100)` : ""
+    }, who is winning your market right now, and the exact fixes we would make first.`,
+    "",
+    `Download your Brand Score document: ${input.pdfUrl}`,
+    "",
+    "Inside you'll find your score breakdown, the brands leading your space side by side, your 10 prioritised fixes and a 90-day roadmap you can run with any team.",
+    "",
+    "And if you'd rather skip the queue: Milktree is an embedded design team on a flat monthly fee, from £1,999/mo. Closing exactly these gaps is what we do every week.",
+    `Get started: ${SITE_URL}/start`,
+    "",
+    "— The Milktree team",
+  ].join("\n");
+
+  return { subject, html, text };
+}
+
 /* --------------------------- Quiz report email ---------------------------- */
 
 import type { BenchmarkResult, QuizCategory } from "@/lib/quiz";
