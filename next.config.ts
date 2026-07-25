@@ -7,6 +7,15 @@ const nextConfig: NextConfig = {
   // sharp ships native binaries; keep it out of the server bundle so the
   // Brand Score logo analysis (lib/server/logo.ts) works in production.
   serverExternalPackages: ["sharp"],
+  // sharp's platform binary dlopens libvips from a sibling package at runtime,
+  // which file tracing can't see, so the deployment shipped the binary without
+  // its library and every logo read failed. Include it explicitly for the
+  // routes that reach the benchmark.
+  outputFileTracingIncludes: {
+    "/api/quiz/start": ["./node_modules/@img/sharp-libvips-linux-x64/**"],
+    "/api/audit/start": ["./node_modules/@img/sharp-libvips-linux-x64/**"],
+    "/api/doc/rebenchmark": ["./node_modules/@img/sharp-libvips-linux-x64/**"],
+  },
   async redirects() {
     return [
       // Live Meta ads point at /audit on the production domain. The new site's
