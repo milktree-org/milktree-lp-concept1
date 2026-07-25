@@ -590,7 +590,7 @@ function ResultsScreen({
 
       {/* Soft CTA */}
       <div className="mt-16 rounded-[2rem] border border-border bg-card p-8 text-center md:p-10">
-        <h3 className="mx-auto max-w-[22ch] text-balance text-2xl font-bold tracking-tight">
+        <h3 className="mx-auto max-w-[22ch] text-balance text-2xl font-bold uppercase tracking-tight">
           Want a team to do all of this for you?
         </h3>
         <p className="text-body mx-auto mt-3 max-w-md text-[0.95rem]">

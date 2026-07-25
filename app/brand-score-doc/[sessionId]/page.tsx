@@ -176,6 +176,36 @@ function previewData(): PageData {
     userBestPosition: 24,
     userBestTerm: "office refurbishment london",
     benchmarkScore: 31,
+    userBrand: {
+      domain: "harlandinteriors.example.co.uk",
+      name: "Harland & Co Interiors",
+      headline: "Harland & Co — Commercial interiors, fit-out and refurbishment",
+      description:
+        "Family-run commercial interior specialists working across London and the South East since 1998.",
+      colors: ["#2F4858", "#C7452F", "#E8B33A", "#FFFFFF", "#767676"],
+      colorRoles: [
+        { role: "primary", hex: "#2F4858" },
+        { role: "secondary", hex: "#C7452F" },
+        { role: "accent", hex: "#E8B33A" },
+        { role: "background", hex: "#FFFFFF" },
+        { role: "textPrimary", hex: "#767676" },
+      ],
+      fonts: ["Open Sans", "Georgia"],
+      fontRoles: [
+        { family: "Open Sans", role: "body" },
+        { family: "Georgia", role: "heading" },
+      ],
+      typeScale: { h1: "38px", h2: "32px", body: "16px" },
+      radius: "6px",
+      button: {
+        label: "Request a quote",
+        background: "#C7452F",
+        textColor: "#FFFFFF",
+        radius: "0px",
+      },
+      colorScheme: "light",
+      tone: "traditional",
+    },
   };
   const selfScore = computeSelfScore(categoryScores);
 

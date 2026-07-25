@@ -3,7 +3,7 @@ import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
 import { sendToFormspree } from "@/lib/server/formspree";
 import { sendToGhlWebhook } from "@/lib/server/ghl";
 import { getResend, FROM, addToNurture } from "@/lib/server/resend";
-import { quizReportEmail } from "@/lib/server/emails";
+import { composeReportEmail } from "@/lib/server/quiz-report";
 import { SITE_URL } from "@/lib/seo";
 import {
   computeCategoryScores,
@@ -28,6 +28,14 @@ const COMPLETE_WAIT_MS = 8_000;
 /** How much longer the report email waits before sending with what exists. */
 const EMAIL_WAIT_MS = 20_000;
 const POLL_INTERVAL_MS = 1_500;
+/**
+ * Report email delivery delay — scheduled via Resend, not sent instantly.
+ * Override with REPORT_DELAY_MINUTES (set 0 to send immediately, e.g. tests).
+ */
+const REPORT_DELAY_MS =
+  process.env.REPORT_DELAY_MINUTES !== undefined
+    ? Math.max(0, Number(process.env.REPORT_DELAY_MINUTES) || 0) * 60 * 1000
+    : 45 * 60 * 1000;
 
 /**
  * POST /api/quiz/complete — score the self-assessment, merge any benchmark
@@ -150,11 +158,7 @@ export async function POST(request: Request) {
     });
 
     if (supabase && sessionId) {
-      await sendReportAndTag(
-        sessionId,
-        { categoryScores, selfScore, allActions },
-        finalBenchmark,
-      );
+      await sendReportAndTag(sessionId, answers, finalBenchmark);
     }
   });
 
@@ -282,11 +286,7 @@ function docReviewLink(sessionId: string): string {
  */
 async function sendReportAndTag(
   sessionId: string,
-  computed: {
-    categoryScores: QuizResults["categoryScores"];
-    selfScore: number;
-    allActions: string[];
-  },
+  answers: QuizAnswers,
   benchmark: BenchmarkResult | null,
 ) {
   const supabase = getSupabase();
@@ -300,36 +300,38 @@ async function sendReportAndTag(
     .maybeSingle();
   if (!session?.email || session.report_sent_at) return;
 
-  const score = computeFinalScore(
-    computed.selfScore,
-    benchmark?.benchmarkScore ?? null,
-  );
-  if (score !== session.final_score) {
+  const email = composeReportEmail({
+    id: sessionId,
+    company: session.company as string | null,
+    answers,
+    benchmark,
+  });
+  if (email.score !== session.final_score) {
     await supabase
       .from("quiz_sessions")
-      .update({ final_score: score })
+      .update({ final_score: email.score })
       .eq("id", sessionId);
   }
 
   if (resend) {
     try {
-      const email = quizReportEmail({
-        company: session.company ?? "Your brand",
-        score,
-        categoryScores: computed.categoryScores,
-        actions: computed.allActions,
-        benchmark,
-      });
-      await resend.emails.send({
+      // Content is computed now (benchmark fresh); delivery is deferred so
+      // the report lands 45 minutes after they finish the quiz, not the
+      // second they close the tab. With a zero delay, send immediately.
+      const deliverAt = new Date(Date.now() + REPORT_DELAY_MS).toISOString();
+      const { data: sent } = await resend.emails.send({
         from: FROM,
         to: session.email,
         subject: email.subject,
         html: email.html,
         text: email.text,
+        ...(REPORT_DELAY_MS > 0 ? { scheduledAt: deliverAt } : {}),
       });
+      // Keep the Resend id: publishing the document cancels this scheduled
+      // send and delivers it early rather than emailing the lead twice.
       await supabase
         .from("quiz_sessions")
-        .update({ report_sent_at: new Date().toISOString() })
+        .update({ report_sent_at: deliverAt, report_email_id: sent?.id ?? null })
         .eq("id", sessionId);
     } catch (e) {
       console.error("[quiz] report email failed:", e);

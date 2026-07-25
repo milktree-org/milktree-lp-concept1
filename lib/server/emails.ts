@@ -9,6 +9,22 @@ const SITE_URL = "https://www.milktreeagency.com";
 const YELLOW = "#FFEE02";
 const FONT = "'Satoshi', Helvetica, Arial, sans-serif";
 
+/**
+ * The wordmark as a PNG (email clients don't render our SVG), served from the
+ * same CDN as the newsletter template so every Milktree email uses one asset.
+ * Source is 1920x600 with padding; 150px wide matches the newsletter.
+ */
+const LOGO_URL =
+  process.env.EMAIL_LOGO_URL ??
+  "https://assets.cdn.filesafe.space/igKHuWSittZeJWvwNFZ4/media/6a62842af7d31b0eb4400104.png";
+const LOGO_WIDTH = 150;
+const LOGO_HEIGHT = 47;
+
+/** The lead-facing document link. Resolves to the PDF once it's published. */
+export function docDownloadUrl(sessionId: string): string {
+  return `${SITE_URL}/brand-score-doc/${sessionId}/download`;
+}
+
 function shell(content: string): string {
   return `<!doctype html>
 <html>
@@ -19,7 +35,11 @@ function shell(content: string): string {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0A0A0A;border:1px solid #1A1A1A;border-radius:24px;">
             <tr>
               <td style="padding:36px 36px 28px;">
-                <p style="margin:0 0 28px;font-family:${FONT};font-size:22px;font-weight:800;color:${YELLOW};letter-spacing:-0.02em;">milktree</p>
+                <p style="margin:0 0 28px;">
+                  <a href="${SITE_URL}" style="text-decoration:none;">
+                    <img src="${LOGO_URL}" width="${LOGO_WIDTH}" height="${LOGO_HEIGHT}" alt="Milktree" style="display:block;width:${LOGO_WIDTH}px;height:${LOGO_HEIGHT}px;border:0;outline:none;font-family:${FONT};font-size:22px;font-weight:800;color:${YELLOW};letter-spacing:-0.02em;text-decoration:none;" />
+                  </a>
+                </p>
                 ${content}
               </td>
             </tr>
@@ -386,15 +406,15 @@ export function brandScoreDocEmail(input: {
     ${h("Your Brand Score document is ready.")}
     ${p(greeting)}
     ${p(
-      `As promised, here is your full Brand Score document for <strong style="color:#ffffff;">${input.company}</strong> — 10 pages on how your brand really ranks${
+      `As promised, here is your full Brand Score document for <strong style="color:#ffffff;">${input.company}</strong>: how your brand really ranks${
         input.score !== null
           ? ` (you scored <strong style="color:#ffffff;">${input.score}/100</strong>)`
           : ""
-      }, who is winning your market right now, and the exact fixes we would make first.`,
+      }, your identity as your buyers meet it, who is winning your market right now, and the exact fixes we would make first.`,
     )}
     ${button("Download your Brand Score document", input.pdfUrl)}
     ${p(
-      "Inside you'll find your score breakdown, the brands leading your space side by side, your 10 prioritised fixes and a 90-day roadmap you can run with any team.",
+      "Inside you'll find your score breakdown, a one-page read-out of your own brand pulled live from your site, the brands leading your space side by side, your 10 prioritised fixes and a 90-day roadmap you can run with any team.",
     )}
     ${p(
       `And if you'd rather skip the queue: Milktree is an embedded design team on a flat monthly fee, from <strong style="color:#ffffff;">£1,999/mo</strong>. Closing exactly these gaps is what we do every week.`,
@@ -406,13 +426,13 @@ export function brandScoreDocEmail(input: {
   const text = [
     greeting,
     "",
-    `As promised, here is your full Brand Score document for ${input.company} — 10 pages on how your brand really ranks${
+    `As promised, here is your full Brand Score document for ${input.company}: how your brand really ranks${
       input.score !== null ? ` (you scored ${input.score}/100)` : ""
-    }, who is winning your market right now, and the exact fixes we would make first.`,
+    }, your identity as your buyers meet it, who is winning your market right now, and the exact fixes we would make first.`,
     "",
     `Download your Brand Score document: ${input.pdfUrl}`,
     "",
-    "Inside you'll find your score breakdown, the brands leading your space side by side, your 10 prioritised fixes and a 90-day roadmap you can run with any team.",
+    "Inside you'll find your score breakdown, a one-page read-out of your own brand pulled live from your site, the brands leading your space side by side, your 10 prioritised fixes and a 90-day roadmap you can run with any team.",
     "",
     "And if you'd rather skip the queue: Milktree is an embedded design team on a flat monthly fee, from £1,999/mo. Closing exactly these gaps is what we do every week.",
     `Get started: ${SITE_URL}/start`,
@@ -434,6 +454,8 @@ export function quizReportEmail(input: {
   categoryScores: Record<QuizCategory, number>;
   actions: string[];
   benchmark: BenchmarkResult | null;
+  /** Stable document link; the email's primary call to action when present. */
+  docUrl?: string;
 }): { subject: string; html: string; text: string } {
   const subject = `Your Brand Score — ${input.company} scored ${input.score}/100`;
 
@@ -464,10 +486,21 @@ export function quizReportEmail(input: {
         </tr>`,
       )
       .join("");
-    const positionLine =
-      bm.userBestPosition !== null
-        ? `You rank <strong style="color:#ffffff;">#${bm.userBestPosition}</strong> for “${bm.userBestTerm}” — these three own page 1.`
-        : `You don't appear in the top 20 results for the terms your customers type — these three own page 1.`;
+    // Leads who already rank well must not be told they're invisible; the
+    // line has to match the position we actually found.
+    const rivals = "these three";
+    const positionText =
+      bm.userBestPosition === null
+        ? `You don't appear in the top 20 results for the terms your customers type. Right now ${rivals} own page 1.`
+        : bm.userBestPosition <= 3
+          ? `You rank #${bm.userBestPosition} for “${bm.userBestTerm}”, which puts you ahead of your market. ${rivals[0].toUpperCase()}${rivals.slice(1)} are the names closest behind you, so the job now is holding the position.`
+          : bm.userBestPosition <= 10
+            ? `You rank #${bm.userBestPosition} for “${bm.userBestTerm}”. You're on page 1, but ${rivals} are the names your buyers see first.`
+            : `Your best position is #${bm.userBestPosition} for “${bm.userBestTerm}”, past where most buyers stop looking. ${rivals[0].toUpperCase()}${rivals.slice(1)} own page 1.`;
+    const positionLine = positionText.replace(
+      /#(\d+)/,
+      `<strong style="color:#ffffff;">#$1</strong>`,
+    );
     benchmarkHtml = `
       ${p(`<strong style="color:#ffffff;">You vs the top 3 in your market.</strong> Positions are live Google results for: ${bm.terms.map((t) => `“${t}”`).join(", ")}.`)}
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 12px;">${compRows}</table>
@@ -475,10 +508,8 @@ export function quizReportEmail(input: {
     `;
     benchmarkText = [
       "You vs the top 3 in your market:",
-      ...bm.competitors.map((c) => `  ${c.name || c.domain} (${c.domain}) — best position #${c.bestPosition}`),
-      bm.userBestPosition !== null
-        ? `You rank #${bm.userBestPosition} for "${bm.userBestTerm}".`
-        : "You don't appear in the top 20 for your key terms.",
+      ...bm.competitors.map((c) => `  ${c.name || c.domain} (${c.domain}): best position #${c.bestPosition}`),
+      positionText,
       "",
     ].join("\n");
 
@@ -524,11 +555,22 @@ export function quizReportEmail(input: {
     )
     .join("");
 
+  // The designed document is the better read, so it gets the primary CTA
+  // high in the email, above the inline summary for skimmers.
+  const docBlock = input.docUrl
+    ? `
+    ${p(
+      `<strong style="color:#ffffff;">Your designed Brand Score document is ready to read.</strong> Your own brand identity pulled live from your site, the brands winning your market side by side, your fixes in priority order and a 90-day plan.`,
+    )}
+    ${button("Open your Brand Score document", input.docUrl)}`
+    : "";
+
   const html = shell(`
     ${h(`${input.company} — Brand Score <span style="color:${YELLOW};">${input.score}/100</span>`)}
-    ${p("Here's your full Brand Score — score breakdown, how you stack up against the players dominating your market's search results, and the 10 fixes that will move the needle fastest.")}
+    ${p("Here's your full Brand Score: score breakdown, how you stack up against the players dominating your market's search results, and the 10 fixes that will move the needle fastest.")}
     <p style="margin:0 0 10px;font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);">Score breakdown</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">${scoreRows}</table>
+    ${docBlock}
     ${benchmarkHtml}
     <p style="margin:20px 0 10px;font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);">Your 10 fixes</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">${actionsHtml}</table>
@@ -546,6 +588,13 @@ export function quizReportEmail(input: {
       ([c, s]) => `  ${CATEGORY_LABELS[c]}: ${s}/10`,
     ),
     "",
+    ...(input.docUrl
+      ? [
+          "Your designed Brand Score document is ready to read: your own brand identity pulled live from your site, the brands winning your market side by side, your fixes in priority order and a 90-day plan.",
+          input.docUrl,
+          "",
+        ]
+      : []),
     benchmarkText,
     "Your 10 fixes:",
     ...input.actions.map((a, i) => `  ${i + 1}. ${a}`),

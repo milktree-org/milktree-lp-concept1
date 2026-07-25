@@ -175,6 +175,29 @@ export type BrandExtract = {
   fonts?: string[];
   headline?: string;
   description?: string;
+  /** Named colour roles as the live site uses them (primary, accent, link…). */
+  colorRoles?: { role: string; hex: string }[];
+  /** Typefaces with the job each one does on the site. */
+  fontRoles?: { family: string; role?: string }[];
+  /** Rendered type sizes — the evidence for hierarchy judgements. */
+  typeScale?: { h1?: string; h2?: string; body?: string };
+  /** Logo as served from the site. */
+  logo?: string;
+  /** Mean luminance (0–1) of the logo's ink, for picking a legible backdrop. */
+  logoLuminance?: number | null;
+  /** Corner radius the site actually renders. */
+  radius?: string;
+  /** The primary call to action, exactly as styled on the site. */
+  button?: {
+    label?: string;
+    background?: string;
+    textColor?: string;
+    radius?: string;
+  };
+  /** "light" | "dark" — how the site presents itself. */
+  colorScheme?: string;
+  tone?: string;
+  audience?: string;
 };
 
 export type CompetitorResult = {

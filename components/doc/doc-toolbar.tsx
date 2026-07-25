@@ -2,11 +2,27 @@
 
 import { useRef, useState } from "react";
 
+type Delivery =
+  | "report-sent-early"
+  | "report-still-queued"
+  | "doc-ready-email"
+  | "none";
+
+const DELIVERY_NOTE: Record<Delivery, string> = {
+  "report-sent-early":
+    "Published inside the 45-minute window, so their Brand Score email has just gone out with the document link in it — one email, not two. Re-publish replaces the hosted PDF at the same link.",
+  "report-still-queued":
+    "PDF is hosted and their Brand Score email is still queued, so it will arrive as scheduled with a working document link. Nothing else to do.",
+  "doc-ready-email":
+    "Their Brand Score email had already gone out, so we've sent a short follow-up with the document link. Re-publish replaces the hosted PDF at the same link.",
+  none: "PDF is hosted, but no email reached the lead (check RESEND_API_KEY / server logs). The GHL webhook still fired.",
+};
+
 /**
  * Internal review toolbar for the Brand Score document. Hidden in print.
- * Workflow: review the 10 pages → Save as PDF (browser print) → drop the PDF
- * on Publish, which uploads it to Supabase Storage and fires the GHL
- * doc-ready webhook so the delivery email goes out automatically.
+ * Workflow: review the pages → Save as PDF (browser print) → drop the PDF on
+ * Publish, which hosts it, gets the document link to the lead and fires the GHL
+ * doc-ready webhook.
  */
 export function DocToolbar({
   sessionId,
@@ -20,11 +36,11 @@ export function DocToolbar({
   const fileInput = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<
     | { state: "idle" | "uploading" }
-    | { state: "done"; url: string; emailSent: boolean | null }
+    | { state: "done"; url: string; delivery: Delivery | null }
     | { state: "error"; message: string }
   >(
     publishedUrl
-      ? { state: "done", url: publishedUrl, emailSent: null }
+      ? { state: "done", url: publishedUrl, delivery: null }
       : { state: "idle" },
   );
 
@@ -44,14 +60,14 @@ export function DocToolbar({
       });
       const json = (await res.json()) as {
         url?: string;
-        emailSent?: boolean;
+        delivery?: Delivery;
         error?: string;
       };
       if (!res.ok || !json.url) {
         setStatus({ state: "error", message: json.error ?? "Upload failed." });
         return;
       }
-      setStatus({ state: "done", url: json.url, emailSent: json.emailSent ?? false });
+      setStatus({ state: "done", url: json.url, delivery: json.delivery ?? "none" });
     } catch {
       setStatus({ state: "error", message: "Upload failed. Check the connection and retry." });
     }
@@ -107,11 +123,9 @@ export function DocToolbar({
         {status.state === "error" && (
           <p className="w-full text-xs font-medium text-red-400">{status.message}</p>
         )}
-        {status.state === "done" && (
+        {status.state === "done" && status.delivery && (
           <p className="w-full text-xs font-medium text-white/50">
-            {status.emailSent === false
-              ? "PDF is hosted, but the delivery email did not send (check RESEND_API_KEY / server logs). The GHL webhook still fired."
-              : "Delivery email sent to the lead with the download link. Re-publish replaces the hosted PDF at the same link."}
+            {DELIVERY_NOTE[status.delivery]}
           </p>
         )}
       </div>

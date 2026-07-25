@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   images: {
     qualities: [75, 80],
   },
+  // sharp ships native binaries; keep it out of the server bundle so the
+  // Brand Score logo analysis (lib/server/logo.ts) works in production.
+  serverExternalPackages: ["sharp"],
   async redirects() {
     return [
       // Live Meta ads point at /audit on the production domain. The new site's

@@ -8,7 +8,7 @@
  * exclamation marks, no fabricated statistics.
  */
 
-import type { QuizCategory, SectorValue } from "@/lib/quiz";
+import type { BrandExtract, QuizCategory, SectorValue } from "@/lib/quiz";
 
 /* --------------------------------- Types ---------------------------------- */
 
@@ -783,4 +783,170 @@ export function categoryVerdict(score: number): string {
   if (score >= 6) return "Competitive";
   if (score >= 4) return "Lagging";
   return "Critical";
+}
+
+/* ---------------------------- Identity read-out ---------------------------- */
+
+export type IdentityNote = {
+  title: string;
+  detail: string;
+  /** Positive notes are marked so the page isn't a wall of criticism. */
+  good?: boolean;
+};
+
+/**
+ * Observations on a scraped identity. Every note is derived from a value we
+ * actually measured on the site — never asserted. Ordered by how much it costs
+ * the business, capped at three so the page stays a design piece, not a list.
+ */
+export function identityNotes(brand: BrandExtract): IdentityNote[] {
+  const notes: IdentityNote[] = [];
+
+  const roles = brand.colorRoles ?? [];
+  const chromatic = roles.filter((c) => isChromatic(c.hex));
+  if (chromatic.length >= 3) {
+    notes.push({
+      title: `${chromatic.length} colours competing for attention`,
+      detail: `${chromatic
+        .map((c) => c.hex)
+        .join(", ")} all fight for the eye. Leaders hold one accent and point it at the single thing they want clicked.`,
+    });
+  } else if (chromatic.length === 1) {
+    notes.push({
+      good: true,
+      title: "One accent colour, used with discipline",
+      detail: `${chromatic[0].hex} does all the pointing. That restraint is what makes a palette feel owned rather than assembled.`,
+    });
+  }
+
+  const h1 = parsePx(brand.typeScale?.h1);
+  const h2 = parsePx(brand.typeScale?.h2);
+  const body = parsePx(brand.typeScale?.body);
+  if (h1 && h2 && h1 / h2 < 1.3) {
+    notes.push({
+      title: "Your headline hierarchy is flat",
+      detail: `Your h1 renders at ${h1}px, your h2 at ${h2}px. Nothing tells a scanning reader which line is the promise and which is the detail.`,
+    });
+  } else if (h1 && body && h1 / body >= 3) {
+    notes.push({
+      good: true,
+      title: "Confident type scale",
+      detail: `${h1}px headlines against ${body}px body copy is a real hierarchy. It tells people where to look first.`,
+    });
+  }
+
+  const siteRadius = parsePx(brand.radius);
+  const buttonRadius = parsePx(brand.button?.radius);
+  if (
+    siteRadius != null &&
+    buttonRadius != null &&
+    Math.abs(siteRadius - buttonRadius) > 4 &&
+    !(siteRadius > 100 && buttonRadius > 100)
+  ) {
+    notes.push({
+      title: "Your shapes disagree with each other",
+      detail: `Panels round at ${describeRadius(brand.radius)}, your primary button at ${describeRadius(
+        brand.button?.radius,
+      )}. Mismatched geometry is what makes a site read as assembled rather than designed.`,
+    });
+  }
+
+  const families = (brand.fontRoles ?? []).map((f) => f.family);
+  if (families.length === 1) {
+    notes.push({
+      title: "One typeface carrying the whole brand",
+      detail: `${families[0]} handles headlines and body copy. That works only when weight and scale do the differentiating.`,
+    });
+  } else if (families.length >= 3) {
+    notes.push({
+      title: `${families.length} typefaces on one site`,
+      detail: `${families.join(
+        ", ",
+      )} are all in play. Each extra face costs consistency and load time, and buys nothing a weight change would not.`,
+    });
+  }
+
+  const text = roles.find((c) => /text/i.test(c.role));
+  if (text && isMidGrey(text.hex)) {
+    notes.push({
+      title: "Your words are whispering",
+      detail: `Body copy sits at ${text.hex}: mid grey, not near-black. It softens every claim you make.`,
+    });
+  }
+
+  if (!brand.headline) {
+    notes.push({
+      title: "No clear headline for us to read",
+      detail:
+        "We could not find one primary statement on your site. If an automated read cannot tell what you do, a distracted buyer will not either.",
+    });
+  } else if (brand.headline.length > 65) {
+    notes.push({
+      title: "Your headline is a paragraph",
+      detail: `${brand.headline.length} characters of it. The line that has to land in two seconds should be short enough to remember.`,
+    });
+  }
+
+  return notes.slice(0, 3);
+}
+
+/** "45px" → 45. Tolerates rem and unitless values; null when unparseable. */
+function parsePx(value?: string): number | null {
+  if (!value) return null;
+  const match = value.match(/-?\d+(\.\d+)?/);
+  if (!match) return null;
+  const n = Number(match[0]);
+  return Number.isFinite(n) ? Math.round(n) : null;
+}
+
+/** Radii above ~100px are pill shapes, not measurements worth quoting. */
+export function describeRadius(value?: string): string {
+  const px = parsePx(value);
+  if (px == null) return "—";
+  if (px === 0) return "hard corners";
+  if (px > 100) return "full pill";
+  return `${px}px`;
+}
+
+function rgb(hex: string): [number, number, number] | null {
+  const clean = hex.replace("#", "").trim();
+  const full =
+    clean.length === 3
+      ? clean
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : clean;
+  if (full.length !== 6 || /[^0-9a-f]/i.test(full)) return null;
+  return [
+    parseInt(full.slice(0, 2), 16),
+    parseInt(full.slice(2, 4), 16),
+    parseInt(full.slice(4, 6), 16),
+  ];
+}
+
+/** A colour with actual hue — greys, white and black don't count as accents. */
+function isChromatic(hex: string): boolean {
+  const parsed = rgb(hex);
+  if (!parsed) return false;
+  const [r, g, b] = parsed;
+  return Math.max(r, g, b) - Math.min(r, g, b) > 24;
+}
+
+function isMidGrey(hex: string): boolean {
+  const parsed = rgb(hex);
+  if (!parsed) return false;
+  const [r, g, b] = parsed;
+  if (Math.max(r, g, b) - Math.min(r, g, b) > 20) return false;
+  const luma = (r + g + b) / 3;
+  return luma > 70 && luma < 180;
+}
+
+/** Text colour that stays legible on an arbitrary scraped background. */
+export function inkOn(hex: string): string {
+  const parsed = rgb(hex);
+  if (!parsed) return "#000000";
+  const [r, g, b] = parsed;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#000000" : "#FFFFFF";
 }

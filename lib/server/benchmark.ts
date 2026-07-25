@@ -30,6 +30,14 @@ export async function runBenchmark(input: {
   region?: string | null;
   company?: string | null;
   website?: string | null;
+  /**
+   * Override the sector's default search terms. Used when re-running a
+   * benchmark for a lead whose business doesn't match the sector template
+   * (e.g. a design studio filed under professional services).
+   */
+  terms?: string[];
+  /** SERP lookup budget. Longer for internal re-runs, where latency is free. */
+  serpTimeoutMs?: number;
 }): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) return;
@@ -41,13 +49,37 @@ export async function runBenchmark(input: {
       .eq("id", input.sessionId);
   };
 
+  /**
+   * Failure must never destroy market data we already hold — a re-run that
+   * times out leaves the previous successful benchmark in place.
+   */
+  const markFailed = async (placeholder: BenchmarkResult) => {
+    const { data } = await supabase
+      .from("quiz_sessions")
+      .select("benchmark")
+      .eq("id", input.sessionId)
+      .maybeSingle();
+    const existing = data?.benchmark as BenchmarkResult | null | undefined;
+    const keepExisting = existing && existing.tier !== "none";
+    await mark("failed", keepExisting ? undefined : placeholder);
+  };
+
   try {
     await mark("running");
 
-    const terms = buildSearchTerms(input);
-    const serp = await getSerpResults(input.sector, input.region ?? null, terms);
+    const terms =
+      input.terms && input.terms.length > 0
+        ? input.terms.slice(0, 3)
+        : buildSearchTerms(input);
+    const serp = await getSerpResults(
+      input.sector,
+      input.region ?? null,
+      terms,
+      Boolean(input.terms && input.terms.length > 0),
+      input.serpTimeoutMs ?? SERP_TIMEOUT_MS,
+    );
     if (!serp || serp.length === 0) {
-      await mark("failed", {
+      await markFailed({
         tier: "none",
         terms,
         competitors: [],
@@ -111,11 +143,15 @@ async function getSerpResults(
   sector: string,
   region: string | null,
   terms: string[],
+  customTerms = false,
+  timeoutMs = SERP_TIMEOUT_MS,
 ): Promise<SerpEntry[] | null> {
   const supabase = getSupabase();
+  // Custom terms bypass the sector+region cache entirely so they neither read
+  // nor overwrite the shared sector results.
   const cacheKey = `serp:${sector}:${(region || "uk").toLowerCase()}`;
 
-  if (supabase) {
+  if (supabase && !customTerms) {
     const { data } = await supabase
       .from("serp_cache")
       .select("created_at, data")
@@ -126,8 +162,8 @@ async function getSerpResults(
     }
   }
 
-  const fresh = await runGoogleSearch(terms, SERP_TIMEOUT_MS);
-  if (fresh && supabase) {
+  const fresh = await runGoogleSearch(terms, timeoutMs);
+  if (fresh && supabase && !customTerms) {
     await supabase
       .from("serp_cache")
       .upsert({ key: cacheKey, created_at: new Date().toISOString(), data: fresh });
@@ -178,7 +214,7 @@ function analyseSerp(
     .slice(0, 3)
     .map(([domain, info]) => ({
       domain,
-      name: cleanTitle(info.title) || domain,
+      name: competitorName(domain, info.title),
       bestPosition: info.position,
       bestTerm: info.term,
       brand: null,
@@ -187,9 +223,35 @@ function analyseSerp(
   return { competitors, userBestPosition, userBestTerm };
 }
 
-/** "Acme Roofing | Hampshire's #1 ..." → "Acme Roofing" */
+/**
+ * "Acme Roofing | Hampshire's #1 ..." → "Acme Roofing".
+ * Also trims trailing tagline sentences ("Ragged Edge. A global branding
+ * agency...") so competitor cards carry a brand name, not a meta title.
+ */
 function cleanTitle(title: string): string {
-  return title.split(/[|–—•·:-]/)[0].trim().slice(0, 60);
+  const head = title.split(/[|–—•·:]|\s-\s/)[0].trim();
+  const sentence = head.split(/\.\s+/)[0].trim();
+  return (sentence || head).replace(/\.$/, "").slice(0, 40);
+}
+
+/**
+ * A competitor's display name. SERP titles are unreliable (sitelinks, keyword
+ * stuffing), so the cleaned title is only trusted when it corroborates the
+ * domain; otherwise the domain label wins. Naming a real business wrongly
+ * would sink the document's credibility.
+ */
+function competitorName(domain: string, title: string): string {
+  const label = domain.replace(
+    /\.(co\.uk|com|org\.uk|org|net|studio|design|agency|energy|services|solutions|group|london|homes|build|shop|store|tech|io|dev|ai|uk)$/i,
+    "",
+  );
+  const cleaned = cleanTitle(title);
+  const key = cleaned.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const domainKey = domain.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (key.length >= 3 && (domainKey.includes(key) || key.includes(label.replace(/[^a-z0-9]/gi, "").toLowerCase()))) {
+    return cleaned;
+  }
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 /* ---------------------------- Brand extraction ---------------------------- */

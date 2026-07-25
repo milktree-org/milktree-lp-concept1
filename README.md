@@ -51,6 +51,8 @@ Other routes in `CLAUDE.md` §6 are deferred — nav links resolve to on-page se
 | `SUPABASE_URL` | Supabase project URL (`milktree-dashboard` project) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service-role key — lead/quiz persistence (server-only) |
 | `RESEND_API_KEY` | Transactional email (qualified offer, quiz report, team notify) |
+| `RESEND_FROM` | Sending identity, e.g. `Milktree <hello@updates.milktreeagency.com>`. **Must be on a domain verified in Resend** or every send fails |
+| `EMAIL_LOGO_URL` | Optional — overrides the wordmark PNG in transactional emails (default: the GHL CDN copy, the same asset the newsletter template uses) |
 | `RESEND_NURTURE_AUDIENCE_ID` | Resend Audience id for the `nurture` list |
 | `SLACK_WEBHOOK_URL` | Optional — team lead notifications (falls back to email) |
 | `NOTIFY_EMAIL` | Team notify recipient (default `hello@milktreeagency.com`) |
@@ -69,18 +71,31 @@ All integrations degrade gracefully when unset: without Supabase the funnel stil
 
 ## Brand Score document pipeline
 
-Every completed Brand Score quiz can be turned into a branded 10-page PDF, custom to the lead's business and industry, and delivered automatically through GHL. The pieces:
+Every completed Brand Score quiz can be turned into a branded PDF (11 A4 pages, 10 when we can't read the lead's site), custom to the lead's business and industry, and delivered automatically through GHL. The pieces:
 
 - **Content engine** — `lib/brand-score-doc.ts`: 14 sector playbooks, 6 category insights and the 90-day roadmap, merged with the lead's real quiz answers, score and live competitor benchmark. No AI dependency.
-- **Review page** — `/brand-score-doc/{sessionId}?k=<DOC_REVIEW_KEY>`: renders the 10 A4 pages ready for print. `/brand-score-doc/preview` shows sample data. `noindex`, 404s without the key in production.
-- **Publish API** — `POST /api/doc/publish`: uploads the PDF to the public `brand-score-docs` Supabase Storage bucket at `{sessionId}.pdf`, stamps `quiz_sessions.doc_url`, **emails the lead the download link via Resend** (template: `brandScoreDocEmail` in `lib/server/emails.ts` — yellow download button + Get Started CTA), and fires the optional GHL doc-ready webhook for record-keeping.
+- **Identity sheet (page 3)** — a one-page read-out of the lead's *own* brand, assembled from the live Firecrawl scrape of their site: logo on their own background, palette with roles, typefaces, their type scale shown to proportion, and their primary button rendered exactly as they style it. `identityNotes()` then adds up to three observations, each derived from a measured value (competing accent colours, flat headline hierarchy, mismatched corner radii, mid-grey body copy). This page only renders when `benchmark.userBrand` exists, so page numbers are computed from the composed list, never hard-coded.
+- **Review page** — `/brand-score-doc/{sessionId}?k=<DOC_REVIEW_KEY>`: renders the A4 pages ready for print. `/brand-score-doc/preview` shows sample data. `noindex`, 404s without the key in production.
+- **Design review** — `SESSION=<uuid> KEY=<DOC_REVIEW_KEY> node scripts/capture-doc.mjs` screenshots every page to `.screenshots/doc/` (add `PAGES=3,4` to narrow it).
+- **Headless PDF** — `SESSION=<uuid> KEY=<DOC_REVIEW_KEY> node scripts/render-doc-pdf.mjs` writes the same PDF the print dialog would, so the operator loop can be tested (or later automated) without a browser.
+- **Publish API** — `POST /api/doc/publish`: uploads the PDF to the public `brand-score-docs` Supabase Storage bucket at `{sessionId}.pdf`, stamps `quiz_sessions.doc_url`, gets the document link to the lead (see below), and fires the optional GHL doc-ready webhook for record-keeping.
+- **Lead-facing link** — `/brand-score-doc/{sessionId}/download` (no key; the session id is the secret). Redirects to the published PDF, and shows an on-brand "being finalised" holding page before then. Emails link here rather than to storage directly, so the report email can carry the document CTA before the PDF exists, and re-hosting the PDF never breaks a link already sitting in an inbox.
+
+### One email per lead
+
+The lead's Brand Score email (`composeReportEmail` in `lib/server/quiz-report.ts`) is composed at quiz completion, carries the document CTA, and is scheduled 45 minutes out via Resend — `quiz_sessions.report_email_id` keeps the send id. Publishing the PDF then does one of two things:
+
+- **Inside the 45 minutes** (the normal case): cancels the queued send and sends that same email immediately, now that the link resolves. The lead gets **one** email with their score and their document. Cancel-and-send rather than reschedule — a scheduled time seconds away can elapse before Resend processes the change, which fails the send.
+- **After it has already gone out**: sends the short `brandScoreDocEmail` follow-up instead. This is the *only* case where a lead gets two emails, and it exists so a late document still reaches them.
+
+If the cancel itself fails, publishing sends nothing: the queued email is already carrying a link that now works, which beats risking a duplicate. The toolbar states which of these happened after every publish.
 
 ### The 3-hour operator loop
 
-1. Lead completes the quiz → Formspree record + GHL webhook both carry the **internal review link**.
-2. Open the link, sanity-check the 10 pages (everything is pre-filled from their data).
+1. Lead completes the quiz → Formspree record + GHL webhook both carry the **internal review link**. Their score email is queued for 45 minutes later, so publishing inside that window keeps it to a single email.
+2. Open the link, sanity-check the pages (everything is pre-filled from their data).
 3. Toolbar button 1 — **Save as PDF** (the print dialog; destination "Save as PDF", margins "None", background graphics on).
-4. Toolbar button 2 — **Publish PDF**: drop the file you just saved. Storage upload + the delivery email to the lead happen automatically; the toolbar confirms the email went out.
+4. Toolbar button 2 — **Publish PDF**: drop the file you just saved. Storage upload and the lead's email happen automatically; the toolbar says exactly which email went and why.
 
 ### GHL setup (one-off)
 
@@ -90,11 +105,13 @@ Every completed Brand Score quiz can be turned into a branded 10-page PDF, custo
 2. Add tag `brand-score`.
 3. Internal notification (email/SMS/Slack) with `{{inboundWebhookRequest.review_link}}` — this starts your 3-hour clock.
 
-The doc-ready event (`type: brand-score-doc-ready`, includes `pdf_url` and `email_sent`) goes to `GHL_BRANDSCORE_DOC_WEBHOOK_URL`. The delivery email is already sent by the site via Resend, so in GHL this event is just for record-keeping: if both env vars point at the same webhook, add an If/Else on `type` and, in the doc-ready branch, save `{{inboundWebhookRequest.pdf_url}}` to a custom field (e.g. `brand_score_pdf_url`) for future campaigns.
+The doc-ready event (`type: brand-score-doc-ready`, includes `pdf_url` and `email_sent`) goes to `GHL_BRANDSCORE_DOC_WEBHOOK_URL`. The lead's email is already handled by the site via Resend, so in GHL this event is just for record-keeping — **don't add an email step here or the lead gets a duplicate**: if both env vars point at the same webhook, add an If/Else on `type` and, in the doc-ready branch, save `{{inboundWebhookRequest.pdf_url}}` to a custom field (e.g. `brand_score_pdf_url`) for future campaigns.
 
 ### Production env checklist
 
-`SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `RESEND_API_KEY` · `DOC_REVIEW_KEY` · `GHL_BRANDSCORE_WEBHOOK_URL` · (`GHL_BRANDSCORE_DOC_WEBHOOK_URL` optional · `APIFY_API_TOKEN` + `FIRECRAWL_API_KEY` for the live market benchmark)
+`SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `RESEND_API_KEY` · `RESEND_FROM` · `DOC_REVIEW_KEY` · `GHL_BRANDSCORE_WEBHOOK_URL` · (`GHL_BRANDSCORE_DOC_WEBHOOK_URL` optional · `APIFY_API_TOKEN` + `FIRECRAWL_API_KEY` for the live market benchmark)
+
+**Email will not send until a domain is verified in Resend.** Add the sending domain (a subdomain such as `updates.milktreeagency.com` is the usual choice), publish the DNS records Resend gives you, wait for status `verified`, then set `RESEND_FROM` to an address on it. Until then every quiz report and document delivery fails with "domain is not verified" — the lead gets nothing.
 
 ## Swapping in real assets
 

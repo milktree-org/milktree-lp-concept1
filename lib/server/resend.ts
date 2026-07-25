@@ -17,7 +17,13 @@ export function getResend(): Resend | null {
   return client;
 }
 
-export const FROM = "Milktree <hello@milktreeagency.com>";
+/**
+ * Sending identity. Must be on a domain verified in Resend, which is why it's
+ * an env var: the verified sender is usually a subdomain (updates.…) rather
+ * than the root domain the brand replies from.
+ */
+export const FROM =
+  process.env.RESEND_FROM ?? "Milktree <hello@milktreeagency.com>";
 export const NOTIFY_TO = process.env.NOTIFY_EMAIL ?? "hello@milktreeagency.com";
 
 /**

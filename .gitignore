@@ -21,6 +21,7 @@
 /build
 
 .ad-render/
+.screenshots/
 *.pem
 
 # Video masters — host on Cloudflare R2 (npm run upload:media)

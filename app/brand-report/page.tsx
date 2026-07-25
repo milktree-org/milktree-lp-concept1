@@ -31,7 +31,7 @@ export default function BrandReportPage() {
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">
             Free Brand Score
           </p>
-          <h1 className="mt-4 text-balance text-[clamp(2.2rem,5.5vw,4rem)] font-bold leading-[1.02] tracking-[-0.03em]">
+          <h1 className="mt-4 text-balance text-[clamp(2.2rem,5.5vw,4rem)] font-bold uppercase leading-[1.02] tracking-[-0.02em]">
             How does your brand really rank?
           </h1>
           <p className="text-body mx-auto mt-5 max-w-lg">
