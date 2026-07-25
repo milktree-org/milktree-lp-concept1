@@ -5,7 +5,14 @@ import {
 } from "@/lib/server/qualification";
 import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
 import { sendToFormspree } from "@/lib/server/formspree";
-import { getResend, FROM, NOTIFY_TO, addToNurture, notifySlack } from "@/lib/server/resend";
+import {
+  getResend,
+  FROM,
+  REPLY_TO,
+  NOTIFY_TO,
+  addToNurture,
+  notifySlack,
+} from "@/lib/server/resend";
 import { qualifiedOfferEmail, teamNotifyEmail } from "@/lib/server/emails";
 import {
   NEED_OPTIONS,
@@ -145,6 +152,7 @@ async function sendQualifiedEmail(lead: LeadSubmission, leadId: string | null) {
     });
     await resend.emails.send({
       from: FROM,
+      replyTo: REPLY_TO,
       to: lead.email,
       subject: email.subject,
       html: email.html,

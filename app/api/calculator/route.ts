@@ -3,6 +3,7 @@ import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
 import {
   getResend,
   FROM,
+  REPLY_TO,
   addToNurture,
   notifySlack,
 } from "@/lib/server/resend";
@@ -145,6 +146,7 @@ async function sendReport(
     });
     await resend.emails.send({
       from: FROM,
+      replyTo: REPLY_TO,
       to: email,
       subject: report.subject,
       html: report.html,

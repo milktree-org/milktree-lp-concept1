@@ -18,13 +18,20 @@ export function getResend(): Resend | null {
 }
 
 /**
- * Sending identity. Must be on a domain verified in Resend, which is why it's
- * an env var: the verified sender is usually a subdomain (updates.…) rather
- * than the root domain the brand replies from.
+ * Sending identity. Must be on a domain verified in Resend — sending from the
+ * apex is rejected outright, and Resend reports that per-send rather than at
+ * boot, so an unverified sender looks like working code that quietly delivers
+ * nothing. `updates.` is the verified subdomain; keeping transactional mail off
+ * the apex also protects its reputation.
  */
 export const FROM =
-  process.env.RESEND_FROM ?? "Milktree <hello@milktreeagency.com>";
+  process.env.RESEND_FROM ?? "Milktree <hello@updates.milktreeagency.com>";
 export const NOTIFY_TO = process.env.NOTIFY_EMAIL ?? "hello@milktreeagency.com";
+/**
+ * Where replies land. The sending subdomain has no inbound mail, and our
+ * footers invite people to reply, so every lead-facing send points here.
+ */
+export const REPLY_TO = process.env.RESEND_REPLY_TO ?? "hello@milktreeagency.com";
 
 /**
  * Add a contact to the `nurture` audience. Consent-gated by the caller —

@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
-import { getResend, FROM, addToNurture } from "@/lib/server/resend";
+import { getResend, FROM, REPLY_TO, addToNurture } from "@/lib/server/resend";
 import { auditReportEmail } from "@/lib/server/emails";
 import { generateFindings } from "@/lib/server/audit-findings";
 import type { BenchmarkResult } from "@/lib/quiz";
@@ -123,6 +123,7 @@ async function sendAuditEmail(
     });
     await resend.emails.send({
       from: FROM,
+      replyTo: REPLY_TO,
       to,
       subject: email.subject,
       html: email.html,

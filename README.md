@@ -51,7 +51,8 @@ Other routes in `CLAUDE.md` §6 are deferred — nav links resolve to on-page se
 | `SUPABASE_URL` | Supabase project URL (`milktree-dashboard` project) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service-role key — lead/quiz persistence (server-only) |
 | `RESEND_API_KEY` | Transactional email (qualified offer, quiz report, team notify) |
-| `RESEND_FROM` | Sending identity, e.g. `Milktree <hello@updates.milktreeagency.com>`. **Must be on a domain verified in Resend** or every send fails |
+| `RESEND_FROM` | Optional — overrides the sending identity (default: `Milktree <hello@updates.milktreeagency.com>`, the verified subdomain). **Any override must be on a domain verified in Resend** or every send fails, and Resend only reports that per-send, so it looks like working code that delivers nothing |
+| `RESEND_REPLY_TO` | Optional — where replies land (default `hello@milktreeagency.com`). The sending subdomain takes no inbound mail, so this needs to be a real inbox |
 | `EMAIL_LOGO_URL` | Optional — overrides the wordmark PNG in transactional emails (default: the GHL CDN copy, the same asset the newsletter template uses) |
 | `RESEND_NURTURE_AUDIENCE_ID` | Resend Audience id for the `nurture` list |
 | `SLACK_WEBHOOK_URL` | Optional — team lead notifications (falls back to email) |

@@ -2,7 +2,7 @@ import { after } from "next/server";
 import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
 import { sendToFormspree } from "@/lib/server/formspree";
 import { sendToGhlWebhook } from "@/lib/server/ghl";
-import { getResend, FROM, addToNurture } from "@/lib/server/resend";
+import { getResend, FROM, REPLY_TO, addToNurture } from "@/lib/server/resend";
 import { composeReportEmail } from "@/lib/server/quiz-report";
 import { SITE_URL } from "@/lib/seo";
 import {
@@ -321,6 +321,7 @@ async function sendReportAndTag(
       const deliverAt = new Date(Date.now() + REPORT_DELAY_MS).toISOString();
       const { data: sent } = await resend.emails.send({
         from: FROM,
+        replyTo: REPLY_TO,
         to: session.email,
         subject: email.subject,
         html: email.html,

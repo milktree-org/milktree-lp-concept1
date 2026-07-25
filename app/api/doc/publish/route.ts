@@ -1,6 +1,6 @@
 import { getSupabase } from "@/lib/server/supabase";
 import { sendToGhlWebhook } from "@/lib/server/ghl";
-import { getResend, FROM } from "@/lib/server/resend";
+import { getResend, FROM, REPLY_TO } from "@/lib/server/resend";
 import { brandScoreDocEmail, docDownloadUrl } from "@/lib/server/emails";
 import { composeReportEmail } from "@/lib/server/quiz-report";
 import type { BenchmarkResult, QuizAnswers } from "@/lib/quiz";
@@ -206,6 +206,7 @@ async function send(
   try {
     const { error } = await resend.emails.send({
       from: FROM,
+      replyTo: REPLY_TO,
       to,
       subject: email.subject,
       html: email.html,
