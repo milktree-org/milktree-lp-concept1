@@ -1,6 +1,29 @@
 import "server-only";
 
-import sharp from "sharp";
+type Sharp = (typeof import("sharp"))["default"];
+let cached: Sharp | null | undefined;
+
+/**
+ * sharp is loaded on demand, and its absence is survivable. It ships native
+ * binaries, so a platform without them would otherwise throw at import time and
+ * take the whole benchmark chain (and the lead's quiz) down with it — too high a
+ * price for one cosmetic detail on the identity page.
+ */
+async function loadSharp(): Promise<Sharp | null> {
+  if (cached !== undefined) return cached;
+  try {
+    // sharp is CJS, so the callable sits on `default` under Node's ESM interop.
+    const mod: unknown = await import("sharp");
+    cached = (mod as { default?: Sharp }).default ?? (mod as Sharp);
+  } catch (e) {
+    console.error(
+      "[logo] sharp unavailable, skipping luminance:",
+      e instanceof Error ? e.message : e,
+    );
+    cached = null;
+  }
+  return cached;
+}
 
 /**
  * Mean luminance (0–1) of a logo's visible ink, used to pick a background the
@@ -16,6 +39,9 @@ export async function logoLuminance(
   timeoutMs = 8000,
 ): Promise<number | null> {
   try {
+    const sharp = await loadSharp();
+    if (!sharp) return null;
+
     const buffer = await loadImage(url, timeoutMs);
     if (!buffer) return null;
 
