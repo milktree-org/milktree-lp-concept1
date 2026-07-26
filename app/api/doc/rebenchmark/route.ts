@@ -1,6 +1,11 @@
 import { getSupabase } from "@/lib/server/supabase";
 import { runBenchmark } from "@/lib/server/benchmark";
-import type { SectorValue } from "@/lib/quiz";
+import {
+  computeCategoryScores,
+  computeFinalScore,
+  computeSelfScore,
+} from "@/lib/server/quiz-scoring";
+import type { BenchmarkResult, QuizAnswers, SectorValue } from "@/lib/quiz";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -61,12 +66,50 @@ export async function POST(request: Request) {
 
   const { data: updated } = await supabase
     .from("quiz_sessions")
-    .select("benchmark_status, benchmark")
+    .select("benchmark_status, benchmark, answers, self_score, final_score")
     .eq("id", sessionId)
     .maybeSingle();
 
+  // Corrected market data wins: recompute the Brand Score from the fresh
+  // benchmark so the document, the email and the stored score all agree.
+  // (The on-screen number the lead saw was provisional by design.)
+  let finalScore = numeric(updated?.final_score);
+  const benchmark = (updated?.benchmark as BenchmarkResult | null) ?? null;
+  const answers = (updated?.answers ?? null) as QuizAnswers | null;
+  if (benchmark && answers && Object.keys(answers).length > 0) {
+    const selfScore =
+      numeric(updated?.self_score) ??
+      computeSelfScore(computeCategoryScores(answers));
+    const recomputed = computeFinalScore(
+      selfScore,
+      benchmark.benchmarkScore ?? null,
+    );
+    if (recomputed !== finalScore) {
+      const { error } = await supabase
+        .from("quiz_sessions")
+        .update({ final_score: recomputed })
+        .eq("id", sessionId);
+      if (error) {
+        console.error("[rebenchmark] final_score update failed:", error.message);
+      } else {
+        finalScore = recomputed;
+      }
+    }
+  }
+
   return Response.json({
     status: updated?.benchmark_status ?? "unknown",
-    benchmark: updated?.benchmark ?? null,
+    benchmark,
+    finalScore,
   });
+}
+
+/** Postgres numerics can surface as strings depending on the driver. */
+function numeric(value: unknown): number | null {
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
 }

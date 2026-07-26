@@ -1,5 +1,6 @@
 import { after } from "next/server";
 import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
+import { corroborateWithMarketLeader } from "@/lib/server/benchmark";
 import { sendToFormspree } from "@/lib/server/formspree";
 import { sendToGhlWebhook } from "@/lib/server/ghl";
 import { getResend, FROM, REPLY_TO, addToNurture } from "@/lib/server/resend";
@@ -117,10 +118,27 @@ export async function POST(request: Request) {
   after(async () => {
     // Give a still-running benchmark one last chance so both the Formspree
     // record and the emailed report carry the market data.
-    const finalBenchmark =
+    let finalBenchmark =
       supabase && sessionId
         ? await waitForBenchmark(sessionId, EMAIL_WAIT_MS)
         : benchmark;
+
+    // The named market leader only arrives now. If the benchmark stayed on
+    // sector defaults despite discovery reading a (weak) category off the
+    // lead's own site, the leader can settle it — ranking for the derived
+    // terms and not the defaults means the derived terms are the real market.
+    if (supabase && sessionId && intake.marketLeader) {
+      const corrected = await corroborateWithMarketLeader({
+        sessionId,
+        marketLeader: intake.marketLeader,
+      }).catch((e) => {
+        console.error("[quiz] leader corroboration failed:", e);
+        return false;
+      });
+      if (corrected) {
+        finalBenchmark = await waitForBenchmark(sessionId, EMAIL_WAIT_MS);
+      }
+    }
     const finalScore = computeFinalScore(
       selfScore,
       finalBenchmark?.benchmarkScore ?? null,

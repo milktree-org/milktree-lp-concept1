@@ -12,7 +12,12 @@ import {
   computeSelfScore,
   selectActions,
 } from "@/lib/server/quiz-scoring";
-import type { BenchmarkResult, QuizAnswers, SectorValue } from "@/lib/quiz";
+import {
+  SECTORS,
+  type BenchmarkResult,
+  type QuizAnswers,
+  type SectorValue,
+} from "@/lib/quiz";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +61,7 @@ export default async function BrandScoreDocPage({
         reviewKey={k ?? ""}
         publishedUrl={data.publishedUrl}
       />
+      <TermProvenance benchmark={data.doc.benchmark} sector={data.doc.sector} />
       <div className="pt-10 print:pt-0">
         <BrandScoreDocument data={data.doc} />
       </div>
@@ -68,6 +74,63 @@ type PageData = {
   publishedUrl: string | null;
   doc: BrandScoreDocData;
 };
+
+/**
+ * Internal-only provenance strip: how the market search terms were chosen,
+ * and whether the business's inferred category disagrees with the sector the
+ * lead picked (which drives the document's advice playbook). Hidden in print,
+ * so it can never leak into the published PDF.
+ */
+function TermProvenance({
+  benchmark,
+  sector,
+}: {
+  benchmark: BenchmarkResult | null;
+  sector: SectorValue;
+}) {
+  if (!benchmark?.termSource) return null;
+
+  const sourceLabel: Record<string, string> = {
+    inferred: `Terms inferred from the business's own site${
+      benchmark.inferredCategory ? ` — ${benchmark.inferredCategory}` : ""
+    }`,
+    "sector-default": "Terms from the sector template",
+    manual: "Terms set manually via rebenchmark",
+  };
+  const pickedLabel =
+    SECTORS.find((s) => s.value === sector)?.label ?? sector;
+  const inferredLabel = benchmark.inferredSector
+    ? (SECTORS.find((s) => s.value === benchmark.inferredSector)?.label ??
+      benchmark.inferredSector)
+    : null;
+
+  return (
+    <div className="border-b border-white/10 bg-black/60 print:hidden">
+      <div className="mx-auto flex max-w-[210mm] flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-[11px] font-medium text-white/50">
+        <span>
+          {sourceLabel[benchmark.termSource] ?? benchmark.termSource}:{" "}
+          <span className="text-white/75">
+            {benchmark.terms.map((t) => `“${t}”`).join(" · ")}
+          </span>
+        </span>
+        {benchmark.termSource === "sector-default" &&
+          benchmark.inferredCategory && (
+            <span>
+              Site reads as{" "}
+              <span className="text-white/75">{benchmark.inferredCategory}</span>{" "}
+              (weak signal — defaults kept)
+            </span>
+          )}
+        {inferredLabel && (
+          <span className="font-bold text-brand">
+            Sector mismatch: picked {pickedLabel}, business reads as{" "}
+            {inferredLabel} — check the playbook advice before publishing
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 async function loadSession(sessionId: string): Promise<PageData | null> {
   if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return null;

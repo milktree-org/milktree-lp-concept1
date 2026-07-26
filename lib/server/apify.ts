@@ -7,7 +7,7 @@ import "server-only";
 
 export type SerpEntry = {
   term: string;
-  results: { url: string; title: string; position: number }[];
+  results: { url: string; title: string; description?: string; position: number }[];
 };
 
 const ACTOR_URL =
@@ -59,6 +59,11 @@ export async function runGoogleSearch(
         .map((r, i) => ({
           url: typeof r.url === "string" ? r.url : "",
           title: typeof r.title === "string" ? r.title : "",
+          // The result's meta description — business-aware term discovery
+          // reads what a company sells from its own snippet.
+          ...(typeof r.description === "string" && r.description
+            ? { description: r.description }
+            : {}),
           position: typeof r.position === "number" ? r.position : i + 1,
         }))
         .filter((r) => r.url);

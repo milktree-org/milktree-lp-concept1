@@ -4,22 +4,44 @@ import { getSupabase } from "@/lib/server/supabase";
 import { runGoogleSearch, type SerpEntry } from "@/lib/server/apify";
 import { extractBrand } from "@/lib/server/firecrawl";
 import {
+  SERVICE_CATEGORIES,
+  buildCategoryTerms,
   buildSearchTerms,
+  classifyBusiness,
   isBlockedDomain,
   normaliseDomain,
+  type BusinessClassification,
 } from "@/lib/server/benchmark-terms";
-import type { BenchmarkResult, BrandExtract, CompetitorResult, SectorValue } from "@/lib/quiz";
+import type {
+  BenchmarkResult,
+  BrandExtract,
+  CompetitorResult,
+  SectorValue,
+  TermSource,
+} from "@/lib/quiz";
 
 /**
  * Benchmark orchestrator (§5.3). Kicked off asynchronously at quiz start via
  * after(); results land in quiz_sessions.benchmark. Degradation is tiered:
  * full (SERP + brand extraction) → serp-only → none (self-assessment-only).
  *
- * Caching keeps costs near zero: SERP per sector+region for 7 days,
- * Firecrawl brand extractions per domain for 30 days.
+ * Search terms are derived from what the business actually does, not just the
+ * sector it picked in the form: one discovery search for the company's own
+ * domain returns its title and meta description, which a controlled keyword
+ * vocabulary classifies into a service category with real buyer-intent terms
+ * (a heating firm filed under Construction gets "boiler installation London",
+ * not "builders London"). No classification → the sector template, unchanged.
+ *
+ * Caching keeps costs near zero: SERP per normalised term list for 7 days
+ * (never per sector — two businesses in one sector can have different terms),
+ * discovery per domain for 30 days, Firecrawl brand extractions per domain
+ * for 30 days. On a cold run the discovery query is batched into the same
+ * Apify call as the sector-default terms, so the happy path stays one
+ * round trip; only a term mismatch costs a second call.
  */
 
 const SERP_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const DISCOVERY_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const BRAND_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const SERP_TIMEOUT_MS = 20_000;
 const BRAND_TIMEOUT_MS = 15_000;
@@ -31,11 +53,15 @@ export async function runBenchmark(input: {
   company?: string | null;
   website?: string | null;
   /**
-   * Override the sector's default search terms. Used when re-running a
-   * benchmark for a lead whose business doesn't match the sector template
-   * (e.g. a design studio filed under professional services).
+   * Override the derived/sector search terms. Used by the operator escape
+   * hatch (/api/doc/rebenchmark) and by market-leader corroboration.
    */
   terms?: string[];
+  /** How overridden terms were chosen. Defaults to "manual". */
+  termSource?: TermSource;
+  /** Carried through on corroboration re-runs so the audit trail survives. */
+  inferredCategory?: string | null;
+  inferredCategoryId?: string | null;
   /** SERP lookup budget. Longer for internal re-runs, where latency is free. */
   serpTimeoutMs?: number;
 }): Promise<void> {
@@ -67,17 +93,40 @@ export async function runBenchmark(input: {
   try {
     await mark("running");
 
-    const terms =
-      input.terms && input.terms.length > 0
-        ? input.terms.slice(0, 3)
-        : buildSearchTerms(input);
-    const serp = await getSerpResults(
-      input.sector,
-      input.region ?? null,
-      terms,
-      Boolean(input.terms && input.terms.length > 0),
-      input.serpTimeoutMs ?? SERP_TIMEOUT_MS,
-    );
+    const timeoutMs = input.serpTimeoutMs ?? SERP_TIMEOUT_MS;
+    let terms: string[];
+    let termSource: TermSource;
+    let inferred: InferredCategory | null;
+    let serp: SerpEntry[] | null;
+
+    if (input.terms && input.terms.length > 0) {
+      terms = input.terms.slice(0, 3);
+      termSource = input.termSource ?? "manual";
+      inferred = input.inferredCategoryId
+        ? {
+            categoryId: input.inferredCategoryId,
+            label: input.inferredCategory ?? input.inferredCategoryId,
+          }
+        : null;
+      serp = await getSerpResults(terms, timeoutMs);
+    } else {
+      const resolved = await resolveBusinessSerp({
+        domain: normaliseDomain(input.website ?? ""),
+        sector: input.sector,
+        region: input.region ?? null,
+        company: input.company ?? null,
+        timeoutMs,
+      });
+      ({ serp, terms, termSource, inferred } = resolved);
+    }
+
+    const audit = {
+      termSource,
+      inferredCategory: inferred?.label ?? null,
+      inferredCategoryId: inferred?.categoryId ?? null,
+      inferredSector: inferredSectorFor(inferred?.categoryId, input.sector),
+    };
+
     if (!serp || serp.length === 0) {
       await markFailed({
         tier: "none",
@@ -87,6 +136,7 @@ export async function runBenchmark(input: {
         userBestTerm: null,
         benchmarkScore: null,
         note: "Search lookup unavailable — score based on self-assessment only.",
+        ...audit,
       });
       return;
     }
@@ -130,6 +180,7 @@ export async function runBenchmark(input: {
       userBestTerm,
       userBrand,
       benchmarkScore,
+      ...audit,
     });
   } catch (e) {
     console.error("[benchmark] failed:", e instanceof Error ? e.message : e);
@@ -137,39 +188,335 @@ export async function runBenchmark(input: {
   }
 }
 
-/* ------------------------------- SERP layer ------------------------------- */
+/* --------------------- Business-aware term resolution ---------------------- */
 
-async function getSerpResults(
-  sector: string,
-  region: string | null,
-  terms: string[],
-  customTerms = false,
-  timeoutMs = SERP_TIMEOUT_MS,
-): Promise<SerpEntry[] | null> {
-  const supabase = getSupabase();
-  // Custom terms bypass the sector+region cache entirely so they neither read
-  // nor overwrite the shared sector results.
-  const cacheKey = `serp:${sector}:${(region || "uk").toLowerCase()}`;
+type InferredCategory = { categoryId: string; label: string };
 
-  if (supabase && !customTerms) {
-    const { data } = await supabase
-      .from("serp_cache")
-      .select("created_at, data")
-      .eq("key", cacheKey)
-      .maybeSingle();
-    if (data && Date.now() - new Date(data.created_at).getTime() < SERP_TTL_MS) {
-      return data.data as SerpEntry[];
+type ResolvedSerp = {
+  serp: SerpEntry[] | null;
+  terms: string[];
+  termSource: TermSource;
+  inferred: InferredCategory | null;
+};
+
+/**
+ * Decide what to search from what the business actually does, and fetch it.
+ *
+ * 1. Discovery: one search for the company's own domain returns its title and
+ *    meta description (cached 30 days per domain). On a cold run this query
+ *    rides in the same Apify call as the sector defaults, so the common case
+ *    costs no extra round trip.
+ * 2. Classification: deterministic keyword matching against the controlled
+ *    vocabulary. High confidence → the category's buyer-intent terms replace
+ *    the sector template. Low confidence → defaults, with the category
+ *    recorded so market-leader corroboration can revisit the call.
+ * 3. Fallback: no website, no classification, or a failed derived lookup →
+ *    the sector template, exactly as before.
+ */
+async function resolveBusinessSerp(input: {
+  domain: string | null;
+  sector: SectorValue;
+  region: string | null;
+  company: string | null;
+  timeoutMs: number;
+}): Promise<ResolvedSerp> {
+  const defaults = buildSearchTerms(input);
+  const fallback = async (
+    serp: SerpEntry[] | null,
+    inferred: InferredCategory | null,
+  ): Promise<ResolvedSerp> => ({
+    serp: serp ?? (await getSerpResults(defaults, input.timeoutMs)),
+    terms: defaults,
+    termSource: "sector-default",
+    inferred,
+  });
+
+  if (!input.domain) return fallback(null, null);
+
+  let discovery = await readDiscoveryCache(input.domain);
+  let defaultSerp: SerpEntry[] | null = null;
+
+  if (!discovery) {
+    const cachedDefaults = await readSerpCache(defaults);
+    if (cachedDefaults) {
+      // Defaults already cached — the discovery query runs alone.
+      const solo = await runGoogleSearch([input.domain], input.timeoutMs);
+      if (solo) {
+        discovery = extractDiscovery(solo, input.domain);
+        await writeDiscoveryCache(input.domain, discovery);
+      }
+      defaultSerp = cachedDefaults;
+    } else {
+      // Cold run: discovery and sector defaults share one Apify call.
+      const batch = await runGoogleSearch(
+        [input.domain, ...defaults],
+        input.timeoutMs,
+      );
+      if (batch) {
+        const domainKey = input.domain.toLowerCase();
+        const discoveryEntries = batch.filter(
+          (e) => e.term.trim().toLowerCase() === domainKey,
+        );
+        const defaultEntries = batch.filter(
+          (e) => e.term.trim().toLowerCase() !== domainKey,
+        );
+        discovery = extractDiscovery(discoveryEntries, input.domain);
+        await writeDiscoveryCache(input.domain, discovery);
+        if (defaultEntries.length > 0) {
+          await writeSerpCache(defaults, defaultEntries);
+          defaultSerp = defaultEntries;
+        }
+      }
     }
   }
 
-  const fresh = await runGoogleSearch(terms, timeoutMs);
-  if (fresh && supabase && !customTerms) {
-    await supabase
-      .from("serp_cache")
-      .upsert({ key: cacheKey, created_at: new Date().toISOString(), data: fresh });
+  const classification: BusinessClassification | null = discovery
+    ? classifyBusiness(discovery)
+    : null;
+  const inferred: InferredCategory | null = classification
+    ? { categoryId: classification.categoryId, label: classification.label }
+    : null;
+  const derived = classification
+    ? buildCategoryTerms(classification.categoryId, input.region)
+    : null;
+
+  const useDerived =
+    classification?.confidence === "high" &&
+    derived !== null &&
+    !sameTerms(derived, defaults);
+  if (!useDerived) return fallback(defaultSerp, inferred);
+
+  const serp = await getSerpResults(derived, input.timeoutMs);
+  if (serp && serp.length > 0) {
+    return { serp, terms: derived, termSource: "inferred", inferred };
   }
+  // Derived lookup failed — fall back to the default data we already hold.
+  return fallback(defaultSerp, inferred);
+}
+
+/**
+ * The inferred category's best-fit sector, only when it confidently disagrees
+ * with what the lead picked. Never applied automatically — the review page
+ * flags it so an operator decides.
+ */
+function inferredSectorFor(
+  categoryId: string | null | undefined,
+  picked: SectorValue,
+): SectorValue | null {
+  if (!categoryId) return null;
+  const category = SERVICE_CATEGORIES.find((c) => c.id === categoryId);
+  if (!category || category.sector === "other" || category.sector === picked) {
+    return null;
+  }
+  return category.sector;
+}
+
+function sameTerms(a: string[], b: string[]): boolean {
+  return serpCacheKey(a) === serpCacheKey(b);
+}
+
+/* ---------------------- Market-leader corroboration ------------------------ */
+
+/**
+ * The lead names their market leader at quiz completion — after the benchmark
+ * has already run. When discovery classified a category but the signal was
+ * too weak to switch terms on its own, the named leader settles it: if the
+ * leader ranks for the derived terms and not for the sector defaults, the
+ * derived terms describe the lead's real market, and the benchmark re-runs
+ * with them. Returns true when the benchmark was re-run.
+ */
+export async function corroborateWithMarketLeader(input: {
+  sessionId: string;
+  marketLeader: string;
+}): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+
+  const leaderKey = alphanumeric(input.marketLeader);
+  if (leaderKey.length < 4) return false;
+
+  const { data: session } = await supabase
+    .from("quiz_sessions")
+    .select("company, website, sector, region, benchmark_status, benchmark")
+    .eq("id", input.sessionId)
+    .maybeSingle();
+  if (!session || session.benchmark_status !== "complete") return false;
+
+  const benchmark = session.benchmark as BenchmarkResult | null;
+  if (
+    !benchmark ||
+    benchmark.termSource !== "sector-default" ||
+    !benchmark.inferredCategoryId
+  ) {
+    return false;
+  }
+
+  const derived = buildCategoryTerms(
+    benchmark.inferredCategoryId,
+    session.region as string | null,
+  );
+  if (!derived || sameTerms(derived, benchmark.terms)) return false;
+
+  const derivedSerp = await getSerpResults(derived, SERP_TIMEOUT_MS);
+  if (!derivedSerp || derivedSerp.length === 0) return false;
+  if (!serpMentionsLeader(derivedSerp, leaderKey)) return false;
+
+  // The leader ranking for the defaults too would mean the sector template
+  // already covers their market — leave it alone.
+  const defaultSerp = await readSerpCache(benchmark.terms);
+  const inDefaults = defaultSerp
+    ? serpMentionsLeader(defaultSerp, leaderKey)
+    : benchmark.competitors.some(
+        (c) =>
+          alphanumeric(c.domain).includes(leaderKey) ||
+          alphanumeric(c.name ?? "").includes(leaderKey),
+      );
+  if (inDefaults) return false;
+
+  await runBenchmark({
+    sessionId: input.sessionId,
+    sector: (session.sector as SectorValue) ?? "other",
+    region: session.region as string | null,
+    company: session.company as string | null,
+    website: session.website as string | null,
+    terms: derived,
+    termSource: "inferred",
+    inferredCategory: benchmark.inferredCategory,
+    inferredCategoryId: benchmark.inferredCategoryId,
+  });
+  return true;
+}
+
+function serpMentionsLeader(serp: SerpEntry[], leaderKey: string): boolean {
+  return serp.some((entry) =>
+    entry.results.some(
+      (r) =>
+        alphanumeric(normaliseDomain(r.url) ?? "").includes(leaderKey) ||
+        alphanumeric(r.title).includes(leaderKey),
+    ),
+  );
+}
+
+function alphanumeric(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/* ------------------------------- SERP layer ------------------------------- */
+
+/**
+ * Cache keyed on the normalised term list, so identical searches are free for
+ * 7 days whoever triggers them, and no two businesses can poison each other's
+ * results just by sharing a sector.
+ */
+function serpCacheKey(terms: string[]): string {
+  const normalised = terms
+    .map((t) => t.toLowerCase().replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .sort();
+  return `serp:v2:${normalised.join("|")}`;
+}
+
+async function readSerpCache(terms: string[]): Promise<SerpEntry[] | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data } = await supabase
+    .from("serp_cache")
+    .select("created_at, data")
+    .eq("key", serpCacheKey(terms))
+    .maybeSingle();
+  if (data && Date.now() - new Date(data.created_at).getTime() < SERP_TTL_MS) {
+    return data.data as SerpEntry[];
+  }
+  return null;
+}
+
+async function writeSerpCache(terms: string[], entries: SerpEntry[]) {
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.from("serp_cache").upsert({
+    key: serpCacheKey(terms),
+    created_at: new Date().toISOString(),
+    data: entries,
+  });
+}
+
+async function getSerpResults(
+  terms: string[],
+  timeoutMs = SERP_TIMEOUT_MS,
+): Promise<SerpEntry[] | null> {
+  const cached = await readSerpCache(terms);
+  if (cached) return cached;
+
+  const fresh = await runGoogleSearch(terms, timeoutMs);
+  if (fresh) await writeSerpCache(terms, fresh);
   return fresh;
 }
+
+/* ----------------------------- Discovery layer ----------------------------- */
+
+/** What the business's own SERP snippet says it does. */
+type Discovery = { title: string; description: string };
+
+const DISCOVERY_KEY_PREFIX = "discovery:v1:";
+
+/**
+ * Pull the business's own result out of the discovery entry — the lowest
+ * position on their own domain. An empty Discovery is cached too, so a domain
+ * Google returns nothing useful for isn't re-queried on every run.
+ */
+function extractDiscovery(
+  entries: SerpEntry[] | null,
+  domain: string,
+): Discovery {
+  let best: { position: number; title: string; description: string } | null =
+    null;
+  for (const entry of entries ?? []) {
+    for (const result of entry.results) {
+      const resultDomain = normaliseDomain(result.url);
+      if (!resultDomain) continue;
+      if (resultDomain !== domain && !resultDomain.endsWith(`.${domain}`)) {
+        continue;
+      }
+      if (!best || result.position < best.position) {
+        best = {
+          position: result.position,
+          title: result.title,
+          description: result.description ?? "",
+        };
+      }
+    }
+  }
+  return { title: best?.title ?? "", description: best?.description ?? "" };
+}
+
+async function readDiscoveryCache(domain: string): Promise<Discovery | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data } = await supabase
+    .from("serp_cache")
+    .select("created_at, data")
+    .eq("key", `${DISCOVERY_KEY_PREFIX}${domain}`)
+    .maybeSingle();
+  if (
+    data &&
+    Date.now() - new Date(data.created_at).getTime() < DISCOVERY_TTL_MS
+  ) {
+    return data.data as Discovery;
+  }
+  return null;
+}
+
+async function writeDiscoveryCache(domain: string, discovery: Discovery) {
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.from("serp_cache").upsert({
+    key: `${DISCOVERY_KEY_PREFIX}${domain}`,
+    created_at: new Date().toISOString(),
+    data: discovery,
+  });
+}
+
+/* ------------------------------ SERP analysis ------------------------------ */
 
 function analyseSerp(
   serp: SerpEntry[],

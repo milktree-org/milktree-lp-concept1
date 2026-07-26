@@ -208,6 +208,9 @@ export type CompetitorResult = {
   brand?: BrandExtract | null;
 };
 
+/** How the market search terms were chosen — recorded for operator review. */
+export type TermSource = "inferred" | "sector-default" | "manual";
+
 export type BenchmarkResult = {
   tier: "full" | "serp-only" | "none";
   terms: string[];
@@ -217,6 +220,18 @@ export type BenchmarkResult = {
   userBrand?: BrandExtract | null;
   benchmarkScore: number | null;
   note?: string;
+  /** How the search terms were chosen (absent on pre-existing benchmarks). */
+  termSource?: TermSource;
+  /** Human label of the service category read off the business's own site. */
+  inferredCategory?: string | null;
+  /** Vocabulary id of that category, so terms can be re-derived later. */
+  inferredCategoryId?: string | null;
+  /**
+   * Set when the inferred category belongs to a different sector than the one
+   * the lead picked — flagged on the internal review page, never silently
+   * applied to the document's playbook.
+   */
+  inferredSector?: SectorValue | null;
 };
 
 export type QuizResults = {
