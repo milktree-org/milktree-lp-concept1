@@ -64,6 +64,8 @@ export async function runBenchmark(input: {
   inferredCategoryId?: string | null;
   /** SERP lookup budget. Longer for internal re-runs, where latency is free. */
   serpTimeoutMs?: number;
+  /** SERP country ("gb" default). Set per-run for non-UK leads. */
+  countryCode?: string;
 }): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) return;
@@ -94,6 +96,7 @@ export async function runBenchmark(input: {
     await mark("running");
 
     const timeoutMs = input.serpTimeoutMs ?? SERP_TIMEOUT_MS;
+    const countryCode = input.countryCode ?? "gb";
     let terms: string[];
     let termSource: TermSource;
     let inferred: InferredCategory | null;
@@ -108,7 +111,7 @@ export async function runBenchmark(input: {
             label: input.inferredCategory ?? input.inferredCategoryId,
           }
         : null;
-      serp = await getSerpResults(terms, timeoutMs);
+      serp = await getSerpResults(terms, timeoutMs, countryCode);
     } else {
       const resolved = await resolveBusinessSerp({
         domain: normaliseDomain(input.website ?? ""),
@@ -116,6 +119,7 @@ export async function runBenchmark(input: {
         region: input.region ?? null,
         company: input.company ?? null,
         timeoutMs,
+        countryCode,
       });
       ({ serp, terms, termSource, inferred } = resolved);
     }
@@ -219,13 +223,15 @@ async function resolveBusinessSerp(input: {
   region: string | null;
   company: string | null;
   timeoutMs: number;
+  countryCode: string;
 }): Promise<ResolvedSerp> {
   const defaults = buildSearchTerms(input);
   const fallback = async (
     serp: SerpEntry[] | null,
     inferred: InferredCategory | null,
   ): Promise<ResolvedSerp> => ({
-    serp: serp ?? (await getSerpResults(defaults, input.timeoutMs)),
+    serp:
+      serp ?? (await getSerpResults(defaults, input.timeoutMs, input.countryCode)),
     terms: defaults,
     termSource: "sector-default",
     inferred,
@@ -237,10 +243,14 @@ async function resolveBusinessSerp(input: {
   let defaultSerp: SerpEntry[] | null = null;
 
   if (!discovery) {
-    const cachedDefaults = await readSerpCache(defaults);
+    const cachedDefaults = await readSerpCache(defaults, input.countryCode);
     if (cachedDefaults) {
       // Defaults already cached — the discovery query runs alone.
-      const solo = await runGoogleSearch([input.domain], input.timeoutMs);
+      const solo = await runGoogleSearch(
+        [input.domain],
+        input.timeoutMs,
+        input.countryCode,
+      );
       if (solo) {
         discovery = extractDiscovery(solo, input.domain);
         await writeDiscoveryCache(input.domain, discovery);
@@ -251,6 +261,7 @@ async function resolveBusinessSerp(input: {
       const batch = await runGoogleSearch(
         [input.domain, ...defaults],
         input.timeoutMs,
+        input.countryCode,
       );
       if (batch) {
         const domainKey = input.domain.toLowerCase();
@@ -263,7 +274,7 @@ async function resolveBusinessSerp(input: {
         discovery = extractDiscovery(discoveryEntries, input.domain);
         await writeDiscoveryCache(input.domain, discovery);
         if (defaultEntries.length > 0) {
-          await writeSerpCache(defaults, defaultEntries);
+          await writeSerpCache(defaults, defaultEntries, input.countryCode);
           defaultSerp = defaultEntries;
         }
       }
@@ -286,7 +297,7 @@ async function resolveBusinessSerp(input: {
     !sameTerms(derived, defaults);
   if (!useDerived) return fallback(defaultSerp, inferred);
 
-  const serp = await getSerpResults(derived, input.timeoutMs);
+  const serp = await getSerpResults(derived, input.timeoutMs, input.countryCode);
   if (serp && serp.length > 0) {
     return { serp, terms: derived, termSource: "inferred", inferred };
   }
@@ -408,21 +419,27 @@ function alphanumeric(value: string): string {
  * 7 days whoever triggers them, and no two businesses can poison each other's
  * results just by sharing a sector.
  */
-function serpCacheKey(terms: string[]): string {
+function serpCacheKey(terms: string[], countryCode = "gb"): string {
   const normalised = terms
     .map((t) => t.toLowerCase().replace(/\s+/g, " ").trim())
     .filter(Boolean)
     .sort();
-  return `serp:v2:${normalised.join("|")}`;
+  // "gb" keeps the original key shape so existing cache rows stay warm.
+  const country = countryCode.toLowerCase();
+  const prefix = country === "gb" ? "serp:v2:" : `serp:v2:${country}:`;
+  return `${prefix}${normalised.join("|")}`;
 }
 
-async function readSerpCache(terms: string[]): Promise<SerpEntry[] | null> {
+async function readSerpCache(
+  terms: string[],
+  countryCode = "gb",
+): Promise<SerpEntry[] | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
   const { data } = await supabase
     .from("serp_cache")
     .select("created_at, data")
-    .eq("key", serpCacheKey(terms))
+    .eq("key", serpCacheKey(terms, countryCode))
     .maybeSingle();
   if (data && Date.now() - new Date(data.created_at).getTime() < SERP_TTL_MS) {
     return data.data as SerpEntry[];
@@ -430,11 +447,15 @@ async function readSerpCache(terms: string[]): Promise<SerpEntry[] | null> {
   return null;
 }
 
-async function writeSerpCache(terms: string[], entries: SerpEntry[]) {
+async function writeSerpCache(
+  terms: string[],
+  entries: SerpEntry[],
+  countryCode = "gb",
+) {
   const supabase = getSupabase();
   if (!supabase) return;
   await supabase.from("serp_cache").upsert({
-    key: serpCacheKey(terms),
+    key: serpCacheKey(terms, countryCode),
     created_at: new Date().toISOString(),
     data: entries,
   });
@@ -443,12 +464,13 @@ async function writeSerpCache(terms: string[], entries: SerpEntry[]) {
 async function getSerpResults(
   terms: string[],
   timeoutMs = SERP_TIMEOUT_MS,
+  countryCode = "gb",
 ): Promise<SerpEntry[] | null> {
-  const cached = await readSerpCache(terms);
+  const cached = await readSerpCache(terms, countryCode);
   if (cached) return cached;
 
-  const fresh = await runGoogleSearch(terms, timeoutMs);
-  if (fresh) await writeSerpCache(terms, fresh);
+  const fresh = await runGoogleSearch(terms, timeoutMs, countryCode);
+  if (fresh) await writeSerpCache(terms, fresh, countryCode);
   return fresh;
 }
 

@@ -16,6 +16,8 @@ const ACTOR_URL =
 export async function runGoogleSearch(
   terms: string[],
   timeoutMs: number,
+  /** ISO country for the SERP ("gb" default; "us" for American leads). */
+  countryCode = "gb",
 ): Promise<SerpEntry[] | null> {
   const token = process.env.APIFY_API_TOKEN;
   if (!token || terms.length === 0) return null;
@@ -28,7 +30,7 @@ export async function runGoogleSearch(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         queries: terms.join("\n"),
-        countryCode: "gb",
+        countryCode,
         languageCode: "en",
         maxPagesPerQuery: 1,
         resultsPerPage: 20,

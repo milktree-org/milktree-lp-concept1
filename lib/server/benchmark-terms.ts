@@ -600,6 +600,7 @@ const BLOCKLIST = [
   "moneysupermarket.com",
   "which.co.uk",
   "gov.uk",
+  "gov",
   "nhs.uk",
   "clutch.co",
   "capterra.com",
@@ -614,6 +615,13 @@ const BLOCKLIST = [
   "hotfrog.co.uk",
   "misterwhat.co.uk",
   "scoot.co.uk",
+  // US sports aggregators — event listings and sanctioning bodies, not clubs.
+  "exposureevents.com",
+  "usamateurbasketball.com",
+  "aausports.org",
+  "playeasy.com",
+  "sportsengine.com",
+  "leagueapps.com",
 ];
 
 export function isBlockedDomain(domain: string): boolean {

@@ -56,8 +56,11 @@ const CATEGORY_ORDER: QuizCategory[] = [
 
 export function BrandScoreDocument({ data }: { data: BrandScoreDocData }) {
   const playbook = SECTOR_PLAYBOOKS[data.sector] ?? SECTOR_PLAYBOOKS.other;
+  // "Something else" is a form option, not something to print on a cover.
   const sectorLabel =
-    SECTORS.find((s) => s.value === data.sector)?.label ?? "Your sector";
+    data.sector === "other"
+      ? "Your market"
+      : (SECTORS.find((s) => s.value === data.sector)?.label ?? "Your sector");
   const band = scoreBand(data.score);
   const weakest = CATEGORY_ORDER.slice()
     .sort((a, b) => data.categoryScores[a] - data.categoryScores[b])

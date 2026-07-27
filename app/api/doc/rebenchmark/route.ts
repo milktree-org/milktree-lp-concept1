@@ -44,6 +44,11 @@ export async function POST(request: Request) {
   const terms = Array.isArray(body.terms)
     ? body.terms.filter((t): t is string => typeof t === "string" && t.trim().length > 0)
     : undefined;
+  // Optional SERP country for non-UK leads, e.g. "us".
+  const countryCode =
+    typeof body.countryCode === "string" && /^[a-z]{2}$/i.test(body.countryCode)
+      ? body.countryCode.toLowerCase()
+      : undefined;
 
   const { data: session } = await supabase
     .from("quiz_sessions")
@@ -61,6 +66,7 @@ export async function POST(request: Request) {
     company: session.company as string | null,
     website: session.website as string | null,
     terms,
+    countryCode,
     serpTimeoutMs: 90_000,
   });
 

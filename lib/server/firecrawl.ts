@@ -97,7 +97,7 @@ export async function extractBrand(
         undefined,
       colors,
       fonts,
-      headline: meta?.ogTitle || meta?.title || undefined,
+      headline: realHeadline(meta?.ogTitle) ?? realHeadline(meta?.title),
       description: meta?.ogDescription || meta?.description || undefined,
       colorRoles,
       fontRoles,
@@ -126,6 +126,22 @@ export async function extractBrand(
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Server boilerplate is not a headline. A broken competitor site must show as
+ * having no headline, not quote "Web Server's Default Page" at the lead.
+ */
+function realHeadline(value?: string): string | undefined {
+  if (!value) return undefined;
+  if (
+    /default page|default web|under construction|coming soon|index of|untitled|placeholder|parked|domain for sale|apache|nginx|iis|plesk|cpanel/i.test(
+      value,
+    )
+  ) {
+    return undefined;
+  }
+  return value;
 }
 
 /** One entry per distinct hex, keeping the first (most senior) role name. */
