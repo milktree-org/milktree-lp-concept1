@@ -9,6 +9,9 @@ import {
   FunnelTextarea,
   PrimaryButton,
 } from "@/components/funnel/ui";
+import { getLeadTrackingFields } from "@/lib/analytics/lead-tracking";
+import { trackCustom } from "@/lib/analytics/meta-tracking";
+import { trackGA } from "@/lib/analytics/ga";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -42,6 +45,7 @@ export function ContactForm() {
           email: email.trim(),
           company: company.trim(),
           message: message.trim(),
+          attribution: getLeadTrackingFields(),
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -50,6 +54,20 @@ export function ContactForm() {
         setError(data.error ?? "Something went wrong. Please try again.");
         return;
       }
+
+      // Deliberately a custom event, not `Lead` — Lead means a booked call.
+      // Carries the email so Meta can match it.
+      const [firstName, ...rest] = name.trim().split(/\s+/).filter(Boolean);
+      trackCustom("ContactFormSubmit", {
+        eventSource: "Contact Page",
+        userData: {
+          email: email.trim(),
+          firstName,
+          lastName: rest.length ? rest.join(" ") : undefined,
+        },
+      });
+      trackGA("generate_lead", { lead_source: "Website — /contact", lead_type: "contact_form" });
+
       setStatus("success");
     } catch {
       setStatus("error");

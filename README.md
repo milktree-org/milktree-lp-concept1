@@ -81,6 +81,26 @@ Other routes in `CLAUDE.md` §6 are deferred — nav links resolve to on-page se
 | `NEXT_PUBLIC_GA_ID` | GA4 measurement ID |
 | `NEXT_PUBLIC_CLARITY_ID` | Microsoft Clarity project ID |
 
+| `GHL_LEAD_WEBHOOK_URL` | Optional — GHL inbound webhook for `/start` qualification submissions (falls back to `GHL_CONTACT_WEBHOOK_URL`, then the newsletter URL). Route on the `start-form` / `start-qualified` tags |
+| `SLACK_WEBHOOK_URL` | Also used for CAPI failure alerts — without it an expired Meta token fails silently until someone opens Events Manager |
+
+### Ad destination URLs
+
+Attribution captures Meta's ad-level parameters, but they only exist if the ad's
+destination URL carries the macros. Append this to every ad URL, or `ad_id` and
+friends stay empty and you can only attribute to campaign level:
+
+```
+?utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_id={{campaign.id}}
+&ad_id={{ad.id}}&adset_id={{adset.id}}&campaign_id={{campaign.id}}
+&ad_name={{ad.name}}&adset_name={{adset.name}}&placement={{placement}}
+&site_source_name={{site_source_name}}
+```
+
+First-touch attribution expires after **90 days** — longer than Meta's 28-day
+click window, so it never truncates a real path, but old campaigns stop stealing
+credit from new ones.
+
 > **Environment gating.** Pixel, GA4, Clarity and the CAPI forwarder are all live **only** when `VERCEL_ENV === "production"`. `VERCEL_ENV` is undefined locally, so `npm run dev` and every preview deployment are inert by design — the `NEXT_PUBLIC_*` fallbacks in `components/analytics/tracking-scripts.tsx` are the real production IDs, so without this gate test traffic would land in the dataset the campaign optimises on.
 
 All integrations degrade gracefully when unset: without Supabase the funnel still works (leads logged to the server console only); without Apify/Firecrawl the quiz falls back to self-assessment-only scoring.

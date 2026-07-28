@@ -30,6 +30,7 @@ const VISITOR_ID_KEY = 'mt_external_id'; // shared with utils/meta-tracking.ts
 const ATTR_PARAMS = [
   // UTM standards
   'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',
+  'utm_id',     // maps to the Meta campaign id when set via {{campaign.id}}
   // Platform click IDs (gold for ad-platform attribution)
   'fbclid',     // Meta
   'gclid',      // Google Ads
@@ -39,7 +40,36 @@ const ATTR_PARAMS = [
   'ttclid',     // TikTok Ads
   'li_fat_id',  // LinkedIn Ads
   'twclid',     // X / Twitter Ads
+  // Meta ad-level parameters. These only ever appear if the ad's destination
+  // URL carries the matching macros, so capturing them here is half the job:
+  //   ad_id={{ad.id}}&adset_id={{adset.id}}&campaign_id={{campaign.id}}
+  //   &ad_name={{ad.name}}&adset_name={{adset.name}}&campaign_name={{campaign.name}}
+  //   &placement={{placement}}&site_source_name={{site_source_name}}
+  // Without them the fields stay empty and nothing breaks; with them you can
+  // attribute a booked call to a specific ad rather than just the campaign.
+  'ad_id', 'adset_id', 'campaign_id',
+  'ad_name', 'adset_name', 'campaign_name',
+  'placement', 'site_source_name',
 ] as const;
+
+/** How long a first touch may claim credit for a conversion.
+ *
+ *  Without a window, `mt_first_touch` is written once and honoured forever —
+ *  so someone who arrived from a campaign eighteen months ago and books today
+ *  is still credited to that campaign, stealing the conversion from whatever
+ *  actually produced it. 90 days is longer than Meta's 28-day click window and
+ *  Google's default 90-day lookback, so it never truncates a real attribution
+ *  path while still expiring stale ones. */
+const FIRST_TOUCH_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
+
+/** True when a stored touch is missing, unparseable, or older than the window.
+ *  An unparseable `seen_at` counts as EXPIRED, not fresh — otherwise a NaN
+ *  comparison silently disables the whole check. */
+function isTouchExpired(t: TouchData | null): boolean {
+  if (!t || !t.seen_at) return true;
+  const age = Date.now() - new Date(t.seen_at).getTime();
+  return !Number.isFinite(age) || age < 0 || age > FIRST_TOUCH_MAX_AGE_MS;
+}
 
 type AttrKey = (typeof ATTR_PARAMS)[number];
 
@@ -49,6 +79,15 @@ interface TouchData {
   utm_campaign?: string;
   utm_content?: string;
   utm_term?: string;
+  utm_id?: string;
+  ad_id?: string;
+  adset_id?: string;
+  campaign_id?: string;
+  ad_name?: string;
+  adset_name?: string;
+  campaign_name?: string;
+  placement?: string;
+  site_source_name?: string;
   fbclid?: string;
   gclid?: string;
   gbraid?: string;
@@ -121,9 +160,11 @@ export function captureLeadTracking(): void {
   const current = readCurrentTouch();
   if (Object.keys(current).length === 0) return;
 
-  // First-touch: write only if missing
+  // First-touch: write if missing, or if the stored one has aged out. Letting
+  // an expired touch be replaced is the point — otherwise the first campaign a
+  // visitor ever saw keeps the credit indefinitely.
   const existingFirst = safeReadJSON<TouchData>(localStorage, FIRST_TOUCH_KEY);
-  if (!existingFirst || Object.keys(existingFirst).length === 0) {
+  if (!existingFirst || Object.keys(existingFirst).length === 0 || isTouchExpired(existingFirst)) {
     safeWriteJSON(localStorage, FIRST_TOUCH_KEY, current);
   }
 
@@ -162,7 +203,11 @@ export function getLeadTrackingFields(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   const out: Record<string, string> = {};
 
-  const first = safeReadJSON<TouchData>(localStorage, FIRST_TOUCH_KEY) || {};
+  // Expired first touches are dropped on READ as well as on write: a visitor
+  // who hasn't returned since the window lapsed would otherwise still submit
+  // the stale campaign with their form.
+  const storedFirst = safeReadJSON<TouchData>(localStorage, FIRST_TOUCH_KEY);
+  const first = isTouchExpired(storedFirst) ? {} : (storedFirst ?? {});
   const last = safeReadJSON<TouchData>(sessionStorage, LAST_TOUCH_KEY) || {};
 
   const addTouch = (prefix: 'first' | 'last', t: TouchData) => {

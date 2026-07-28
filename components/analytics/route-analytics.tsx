@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { trackPageView } from "@/lib/analytics/meta-tracking";
 import { captureLeadTracking } from "@/lib/analytics/lead-tracking";
 import { useConsent } from "@/lib/analytics/use-consent";
+import { isTrackingExcluded } from "@/lib/analytics/excluded-paths";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-9GHX9JVN9S";
 
@@ -55,7 +56,7 @@ export function RouteAnalytics({ enabled = true }: { enabled?: boolean }) {
   const consent = useConsent();
 
   useEffect(() => {
-    if (!enabled || consent !== "granted") return;
+    if (!enabled || consent !== "granted" || isTrackingExcluded(pathname)) return;
 
     // Capture attribution on every navigation (a UTM/click-id link may land on
     // any route, not just the first). First-touch is written once; last-touch

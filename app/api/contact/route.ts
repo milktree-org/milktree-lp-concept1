@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { sendToFormspree } from "@/lib/server/formspree";
-import { sendToGhlWebhook } from "@/lib/server/ghl";
+import { sendToGhlWebhook, ghlAttribution, parseAttribution } from "@/lib/server/ghl";
 import { getResend, FROM, NOTIFY_TO, notifySlack } from "@/lib/server/resend";
 import { rateLimit, requestIp } from "@/lib/server/supabase";
 
@@ -14,6 +14,7 @@ type ContactBody = {
   email?: unknown;
   company?: unknown;
   message?: unknown;
+  attribution?: unknown;
 };
 
 /**
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
     typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const company = typeof body.company === "string" ? body.company.trim() : "";
   const message = typeof body.message === "string" ? body.message.trim() : "";
+  const attribution = parseAttribution(body.attribution);
 
   if (name.length < 2) {
     return Response.json({ error: "Please enter your name." }, { status: 400 });
@@ -83,6 +85,7 @@ export async function POST(request: Request) {
       message,
       source: "website-contact",
       tags: ["contact", "website-contact"],
+      ...ghlAttribution(attribution),
     }),
   ]);
 

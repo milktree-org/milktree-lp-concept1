@@ -1,5 +1,5 @@
 import { sendToFormspree } from "@/lib/server/formspree";
-import { sendToGhlWebhook } from "@/lib/server/ghl";
+import { sendToGhlWebhook, ghlAttribution, parseAttribution } from "@/lib/server/ghl";
 import { rateLimit, requestIp } from "@/lib/server/supabase";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +64,7 @@ export async function POST(request: Request) {
       last_name: lastName,
       source: "website-subscribe",
       tags: ["newsletter", "website-subscribe"],
+      ...ghlAttribution(parseAttribution((body as {attribution?: unknown}).attribution)),
     }),
   ]);
 

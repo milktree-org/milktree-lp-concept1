@@ -5,6 +5,7 @@ import {
 } from "@/lib/server/qualification";
 import { getSupabase, rateLimit, requestIp } from "@/lib/server/supabase";
 import { sendToFormspree } from "@/lib/server/formspree";
+import { sendToGhlWebhook, ghlAttribution } from "@/lib/server/ghl";
 import {
   getResend,
   FROM,
@@ -125,15 +126,43 @@ export async function POST(request: Request) {
     );
   }
 
+  const firstName = lead.name.split(" ")[0];
+  const lastName = lead.name.split(" ").slice(1).join(" ") || undefined;
+
   after(async () => {
     await Promise.allSettled([
       route === "qualified" ? sendQualifiedEmail(lead, leadId) : Promise.resolve(),
       notifyTeam(lead, route),
+      // The /start form is the primary paid conversion, and until now it was
+      // the only funnel that never reached GHL — so a booked call could not be
+      // traced back to the ad that produced it from inside the CRM. Sent with
+      // attribution, and in `after()` so a slow GHL never delays the response.
+      sendToGhlWebhook("lead", {
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone ?? "",
+        firstName,
+        lastName,
+        first_name: firstName,
+        last_name: lastName,
+        company: lead.company,
+        website: lead.website,
+        route,
+        need: optionLabel(NEED_OPTIONS, lead.need),
+        teamSize: optionLabel(TEAM_OPTIONS, lead.teamSize),
+        marketing: optionLabel(MARKETING_OPTIONS, lead.marketing),
+        budget: optionLabel(BUDGET_OPTIONS, lead.budget),
+        consent: lead.consent,
+        leadId,
+        source: "start-form",
+        tags: ["start-form", `start-${route}`],
+        ...ghlAttribution(lead.attribution),
+      }),
       lead.consent
         ? addToNurture({
             email: lead.email,
-            firstName: lead.name.split(" ")[0],
-            lastName: lead.name.split(" ").slice(1).join(" ") || undefined,
+            firstName,
+            lastName,
           }).catch((e) => console.error("[lead] nurture add failed:", e))
         : Promise.resolve(),
     ]);

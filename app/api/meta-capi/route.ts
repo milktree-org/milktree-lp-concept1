@@ -17,6 +17,26 @@
  */
 
 import { rateLimit } from "@/lib/server/supabase";
+import { notifySlack } from "@/lib/server/resend";
+
+/**
+ * Alert the team, at most once an hour per kind.
+ *
+ * A broken CAPI is silent by design — the client fire-and-forgets and the
+ * browser Pixel keeps working — so without this the first sign of an expired
+ * token is a gap in Events Manager noticed days into spend. Throttled through
+ * the existing rate limiter so a sustained outage can't spam the channel.
+ * `rateLimit` fails open when Supabase is unconfigured, which for an alert is
+ * the right direction: better a noisy channel than a silent failure.
+ */
+async function alertOnce(kind: string, message: string): Promise<void> {
+  try {
+    const first = await rateLimit(`capi-alert:${kind}`, 1, 3600);
+    if (first) await notifySlack(`⚠️ ${message}`);
+  } catch {
+    // Alerting must never take the request down with it.
+  }
+}
 
 const PIXEL_ID = process.env.META_PIXEL_ID || "993503079134900";
 const ACCESS_TOKEN = process.env.META_CAPI_ACCESS_TOKEN || "";
@@ -147,6 +167,10 @@ export async function POST(request: Request) {
     console.error(
       "[meta-capi] META_CAPI_ACCESS_TOKEN is not set — ALL server-side events are being dropped.",
     );
+    await alertOnce(
+      "no_token",
+      "Meta CAPI: META_CAPI_ACCESS_TOKEN is not set in production. Every server-side conversion is being dropped.",
+    );
     return Response.json({ ok: true, skipped: true, reason: "no_access_token" });
   }
 
@@ -198,6 +222,10 @@ export async function POST(request: Request) {
 
     if (!metaResponse.ok) {
       console.error("[meta-capi] Meta API error:", JSON.stringify(metaData));
+      await alertOnce(
+        "meta_error",
+        `Meta CAPI rejected an event (${metaResponse.status}). Likely an expired token or a payload change — conversions are not reaching Meta. ${JSON.stringify(metaData).slice(0, 400)}`,
+      );
       return Response.json({ error: "Meta API error", details: metaData }, { status: 502 });
     }
 

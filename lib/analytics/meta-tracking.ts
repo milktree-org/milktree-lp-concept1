@@ -477,6 +477,23 @@ export function trackSchedule(params: BaseEventParams = {}): void {
 }
 
 /**
+ * Any other Meta STANDARD event (e.g. `CompleteRegistration`).
+ *
+ * Standard events go through `fbq('track', ...)` and are optimisable in Ads
+ * Manager; `trackCustom` uses `fbq('trackCustom', ...)` and is not. Use this
+ * when the action maps onto a name Meta already knows.
+ */
+export function trackStandard(
+  eventName: string,
+  params: CustomEventParams = {},
+): void {
+  const customData = { ...(params.customData || {}) } as Record<string, unknown>;
+  if (params.eventSource) customData.event_source = params.eventSource;
+
+  sendMetaEvent(eventName, customData, customData, params.userData, params.eventId);
+}
+
+/**
  * ViewContent — user views a case study or key page.
  */
 export function trackViewContent(params: ViewContentParams = {}): void {

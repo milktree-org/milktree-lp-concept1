@@ -30,6 +30,7 @@ import {
 import { getLeadTrackingFields } from "@/lib/analytics/lead-tracking";
 import { writeFunnelHandoff } from "@/lib/analytics/funnel-handoff";
 import { trackCustom } from "@/lib/analytics/meta-tracking";
+import { trackGA } from "@/lib/analytics/ga";
 import { BookingEmbed } from "@/components/booking/booking-embed";
 import {
   ProgressBar,
@@ -159,6 +160,10 @@ export function QualificationForm() {
         // would report two Leads and £300 for one person and train delivery
         // toward form-fillers instead of bookers.
         const [firstName, ...rest] = answers.name.trim().split(/\s+/).filter(Boolean);
+        trackGA("generate_lead", {
+          lead_source: "Website — /start",
+          lead_type: "qualification_form",
+        });
         trackCustom("QualificationFormQualified", {
           eventSource: "Start Form — Qualified",
           userData: {

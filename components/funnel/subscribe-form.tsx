@@ -9,6 +9,9 @@ import {
   FunnelInput,
   PrimaryButton,
 } from "@/components/funnel/ui";
+import { getLeadTrackingFields } from "@/lib/analytics/lead-tracking";
+import { trackCustom } from "@/lib/analytics/meta-tracking";
+import { trackGA } from "@/lib/analytics/ga";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -39,6 +42,7 @@ export function SubscribeForm() {
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
+          attribution: getLeadTrackingFields(),
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -47,6 +51,18 @@ export function SubscribeForm() {
         setError(data.error ?? "Something went wrong. Please try again.");
         return;
       }
+
+      const [firstName, ...rest] = name.trim().split(/\s+/).filter(Boolean);
+      trackCustom("NewsletterSubscribe", {
+        eventSource: "Subscribe Page",
+        userData: {
+          email: email.trim(),
+          firstName,
+          lastName: rest.length ? rest.join(" ") : undefined,
+        },
+      });
+      trackGA("sign_up", { method: "newsletter" });
+
       setStatus("success");
     } catch {
       setStatus("error");

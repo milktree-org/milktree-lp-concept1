@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { readFunnelHandoff } from "@/lib/analytics/funnel-handoff";
+import { trackGA } from "@/lib/analytics/ga";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Layers,
@@ -25,7 +26,7 @@ import {
   type QuizResults,
   type BenchmarkResult,
 } from "@/lib/quiz";
-import { trackCustom } from "@/lib/analytics/meta-tracking";
+import { trackCustom, trackStandard } from "@/lib/analytics/meta-tracking";
 import { EASE_OUT_EXPO } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
@@ -200,7 +201,14 @@ export function BrandReportQuiz() {
           return;
         }
         trackCustom("BrandQuizComplete", {
+          eventSource: "Brand Quiz",
+          userData: { email: intake.email.trim() },
           customData: { score: data.score },
+        });
+        trackGA("generate_lead", {
+          lead_source: "Website — /brand-report",
+          lead_type: "brand_quiz_complete",
+          value: data.score,
         });
         setResults(data);
         setBusy(false);
@@ -249,6 +257,22 @@ export function BrandReportQuiz() {
     }
     setError(null);
     if (!captured) {
+      // The email gate is the real mid-funnel conversion on this page — until
+      // now it fired nothing, so the drop-off between "started quiz" and "gave
+      // us an email" was invisible. Standard event so it can be optimised for.
+      const [qFirst, ...qRest] = intake.name.trim().split(/\s+/).filter(Boolean);
+      trackStandard("CompleteRegistration", {
+        eventSource: "Brand Quiz — Email Gate",
+        userData: {
+          email: intake.email.trim(),
+          firstName: qFirst,
+          lastName: qRest.length ? qRest.join(" ") : undefined,
+        },
+      });
+      trackGA("generate_lead", {
+        lead_source: "Website — /brand-report",
+        lead_type: "brand_quiz_email",
+      });
       // Save the contact the moment we have it, so a drop-off before the
       // rest of the form still leaves us a lead. Non-blocking: never gate
       // the user on this.

@@ -1,7 +1,9 @@
 "use client";
 
 import Script from "next/script";
+import { usePathname } from "next/navigation";
 import { useConsent } from "@/lib/analytics/use-consent";
+import { isTrackingExcluded } from "@/lib/analytics/excluded-paths";
 
 /**
  * Tags that are not loaded at all until consent is granted.
@@ -34,8 +36,11 @@ export function ConsentedScripts({
   clarityId: string;
 }) {
   const consent = useConsent();
+  const pathname = usePathname();
 
-  if (consent !== "granted") return null;
+  // Internal pages carry a secret in the query string — never load a recorder
+  // there (see lib/analytics/excluded-paths.ts).
+  if (consent !== "granted" || isTrackingExcluded(pathname)) return null;
 
   return (
     <>

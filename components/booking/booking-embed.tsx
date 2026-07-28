@@ -5,9 +5,11 @@ import { CAL_URL } from "@/lib/site";
 import {
   trackLead,
   trackSchedule,
+  trackCustom,
   LEAD_VALUE,
   LEAD_CURRENCY,
 } from "@/lib/analytics/meta-tracking";
+import { trackGA } from "@/lib/analytics/ga";
 import { getCalcomTrackingMetadata } from "@/lib/analytics/lead-tracking";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-9GHX9JVN9S";
@@ -49,6 +51,12 @@ export function BookingEmbed({
   useEffect(() => {
     if (initialised.current) return;
     initialised.current = true;
+
+    // Reaching the calendar was untracked, which made the qualified -> booked
+    // drop-off invisible: we could see who qualified and who booked, but not
+    // how many got as far as seeing available times and left.
+    trackCustom("BookingViewed", { eventSource: source });
+    trackGA("view_item", { item_name: "Intro call booking", lead_source: source });
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
     (function (C: any, A: string, L: string) {
