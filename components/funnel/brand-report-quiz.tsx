@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { readFunnelHandoff } from "@/lib/analytics/funnel-handoff";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Layers,
@@ -81,16 +82,26 @@ export function BrandReportQuiz() {
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [intake, setIntake] = useState<Intake>({
-    name: params.get("name") ?? "",
-    jobRole: "",
-    company: params.get("company") ?? "",
-    website: params.get("website") ?? "",
-    sector: "",
-    region: "",
-    email: params.get("email") ?? "",
-    consent: false,
+  // Prefill from the qualification form. Read lazily on first render rather
+  // than in an effect: this component is inside a Suspense boundary and calls
+  // useSearchParams(), so Next.js skips it during prerender and only ever
+  // renders it on the client — there is no server pass to mismatch against.
+  // The params.get() fallbacks still honour any older PII-bearing link, but new
+  // hand-offs come through sessionStorage so no PII lands in the URL.
+  const [intake, setIntake] = useState<Intake>(() => {
+    const handoff = readFunnelHandoff();
+    return {
+      name: params.get("name") ?? handoff.name ?? "",
+      jobRole: "",
+      company: params.get("company") ?? handoff.company ?? "",
+      website: params.get("website") ?? handoff.website ?? "",
+      sector: "",
+      region: "",
+      email: params.get("email") ?? handoff.email ?? "",
+      consent: false,
+    };
   });
+
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [marketLeader, setMarketLeader] = useState("");
   const [captured, setCaptured] = useState(false);

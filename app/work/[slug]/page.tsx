@@ -10,6 +10,7 @@ import { StartButton } from "@/components/layout/start-button";
 import { getNextWorkProject, getWorkProject, workProjects, type GalleryImage } from "@/lib/work";
 import { site } from "@/lib/site";
 import { JsonLd } from "@/components/seo/json-ld";
+import { ViewContentTracker } from "@/components/analytics/view-content";
 import { workBreadcrumbJsonLd, workCreativeWorkJsonLd } from "@/lib/seo";
 
 type Params = Promise<{ slug: string }>;
@@ -59,6 +60,11 @@ export default async function WorkProjectPage({ params }: { params: Params }) {
   return (
     <article>
       <JsonLd data={[workBreadcrumbJsonLd(project), workCreativeWorkJsonLd(project)]} />
+      <ViewContentTracker
+        contentName={project.title}
+        contentCategory={project.category}
+        contentId={project.slug}
+      />
       {/* Full-bleed hero */}
       <div className="relative h-[62vh] min-h-[420px] w-full overflow-hidden md:h-[78vh]">
         <Image

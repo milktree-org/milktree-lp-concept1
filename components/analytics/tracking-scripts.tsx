@@ -14,7 +14,20 @@ const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "993503079134900";
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-9GHX9JVN9S";
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || "n9qw79cpo8";
 
+/**
+ * Only production writes to the live Pixel / GA4 property / Clarity project.
+ *
+ * The IDs above fall back to the real production values when the env vars are
+ * unset, and Vercel has NEXT_PUBLIC_* scoped to Preview as well as Production —
+ * so without this gate every preview deployment AND every `npm run dev` session
+ * fired real PageViews into the dataset the campaign optimises on. `VERCEL_ENV`
+ * is undefined locally, which is exactly the behaviour we want.
+ */
+export const TRACKING_ENABLED = process.env.VERCEL_ENV === "production";
+
 export function TrackingScripts() {
+  if (!TRACKING_ENABLED) return null;
+
   return (
     <>
       {/* Meta Pixel — base + init only; PageView is fired from RouteAnalytics.

@@ -30,6 +30,10 @@ interface UserData {
 interface BaseEventParams {
   eventSource?: string;   // e.g. 'Navbar CTA', 'Footer CTA', 'Final CTA'
   userData?: Partial<UserData>;
+  /** Override the generated event_id. Pass a value derived from a stable
+   *  server-visible key (e.g. the Cal.com booking uid) when the same event may
+   *  also be sent server-side, so Meta deduplicates the two copies. */
+  eventId?: string;
 }
 
 interface ViewContentParams extends BaseEventParams {
@@ -64,6 +68,49 @@ async function sha256(value: string): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Normalise a phone to digits-only E.164 *without* the leading `+`, which is
+ *  what Meta expects before hashing. `trim().toLowerCase()` alone is not enough:
+ *  "07700 900123", "+44 7700 900123" and "(07700) 900123" are the same number
+ *  but hash to three different values, so `ph` would never match. UK-first:
+ *  strip the IDD prefix, then map a national leading 0 to the 44 country code.
+ *  Returns undefined for anything too short to be a real number. */
+function normalizePhone(raw: string): string | undefined {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  else if (digits.startsWith('0')) digits = `44${digits.slice(1)}`;
+  return digits.length >= 7 ? digits : undefined;
+}
+
+/** Normalise a name for hashing: Meta wants lowercase, trimmed, punctuation-free
+ *  UTF-8. Deliberately does NOT strip diacritics — Meta hashes the accented form,
+ *  so "josé" must stay "josé" or it stops matching. */
+function normalizeName(raw: string): string | undefined {
+  const v = raw.trim().toLowerCase().replace(/[.,'"()]/g, '');
+  return v || undefined;
+}
+
+/**
+ * Current href with PII and secrets stripped, for `event_source_url`.
+ *
+ * Deliberately keeps `fbclid` and the UTMs: when `_fbc` is missing Meta
+ * recovers the click ID from event_source_url, so blanket-stripping the query
+ * string would silently destroy attribution. Only params that must never enter
+ * Meta's event log are removed — `k` is the DOC_REVIEW_KEY on /brand-score-doc,
+ * the rest are legacy funnel hand-off params.
+ */
+const URL_REDACT_PARAMS = ['k', 'name', 'email', 'company', 'website'];
+
+function safeSourceUrl(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const url = new URL(window.location.href);
+    for (const p of URL_REDACT_PARAMS) url.searchParams.delete(p);
+    return url.toString();
+  } catch {
+    return window.location.origin + window.location.pathname;
+  }
 }
 
 /** Read Meta cookies (_fbp, _fbc) for improved match rates */
@@ -181,7 +228,7 @@ async function collectUserData(extra?: Partial<UserData>): Promise<Record<string
 
   // Source URL
   if (typeof window !== 'undefined') {
-    userData.event_source_url = window.location.href;
+    userData.event_source_url = safeSourceUrl();
   }
 
   // External ID — persistent anonymous ID for cross-device matching (EMQ boost)
@@ -190,31 +237,67 @@ async function collectUserData(extra?: Partial<UserData>): Promise<Record<string
     userData.external_id = [await sha256(externalId)];
   }
 
-  // Country (ISO-3166 alpha-2) — UK-targeted campaign. Meta's CAPI country
-  // field is `country`; `ct` is CITY, so 'gb' belongs here, not in ct.
-  userData.country = [await sha256('gb')];
+  // NOTE: `country` is deliberately NOT set here. It used to be hardcoded to
+  // sha256('gb') on every event, which is fabricated data for 100% of traffic
+  // and contradicts client_ip_address for anyone outside GB — it adds no
+  // matching entropy (a constant matches everyone) and can only hurt EMQ.
+  // The server derives the real country from `x-vercel-ip-country` instead
+  // (see app/api/meta-capi/route.ts).
 
   // Hash email if provided
   if (extra?.email) {
     userData.em = [await sha256(extra.email)];
   }
 
-  // Hash phone if provided
+  // Hash phone if provided — normalised to E.164 digits first, or Meta can
+  // never match it against the number the user gave Facebook.
   if (extra?.phone) {
-    userData.ph = [await sha256(extra.phone)];
+    const phone = normalizePhone(extra.phone);
+    if (phone) userData.ph = [await sha256(phone)];
   }
 
   // Hash first name if provided
   if (extra?.firstName) {
-    userData.fn = [await sha256(extra.firstName)];
+    const fn = normalizeName(extra.firstName);
+    if (fn) userData.fn = [await sha256(fn)];
   }
 
   // Hash last name if provided
   if (extra?.lastName) {
-    userData.ln = [await sha256(extra.lastName)];
+    const ln = normalizeName(extra.lastName);
+    if (ln) userData.ln = [await sha256(ln)];
   }
 
   return userData;
+}
+
+/**
+ * Feed RAW (unhashed) identifiers to the browser Pixel for Advanced Matching.
+ * `fbq('set','userData',…)` hashes client-side, so passing the SHA-256 values
+ * from collectUserData would double-hash and match nobody. Values persist for
+ * subsequent fbq calls in the same page session.
+ */
+function applyAdvancedMatching(extra?: Partial<UserData>): void {
+  if (!extra || typeof window === 'undefined' || typeof window.fbq !== 'function') return;
+
+  const am: Record<string, string> = {};
+  if (extra.email) am.em = extra.email.trim().toLowerCase();
+  if (extra.phone) {
+    const phone = normalizePhone(extra.phone);
+    if (phone) am.ph = phone;
+  }
+  if (extra.firstName) {
+    const fn = normalizeName(extra.firstName);
+    if (fn) am.fn = fn;
+  }
+  if (extra.lastName) {
+    const ln = normalizeName(extra.lastName);
+    if (ln) am.ln = ln;
+  }
+
+  if (Object.keys(am).length > 0) {
+    window.fbq('set', 'userData', am);
+  }
 }
 
 // ── Core send function ───────────────────────────────────────────────────────
@@ -227,13 +310,16 @@ async function sendMetaEvent(
   eventName: string,
   pixelCustomData: Record<string, unknown> = {},
   capiCustomData: Record<string, unknown> = {},
-  userData?: Partial<UserData>
+  userData?: Partial<UserData>,
+  overrideEventId?: string
 ): Promise<void> {
-  const eventId = generateEventId();
+  const eventId = overrideEventId || generateEventId();
   const eventTime = Math.floor(Date.now() / 1000);
 
-  // 1. Client-side Pixel (fbq)
+  // 1. Client-side Pixel (fbq). Advanced Matching first so the identifiers are
+  //    attached to this event, not only to whatever fires next.
   if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+    applyAdvancedMatching(userData);
     window.fbq('track', eventName, pixelCustomData, { eventID: eventId });
   }
 
@@ -245,7 +331,7 @@ async function sendMetaEvent(
       event_name: eventName,
       event_id: eventId,
       event_time: eventTime,
-      event_source_url: window?.location?.href || '',
+      event_source_url: safeSourceUrl(),
       action_source: 'website',
       user_data: collectedUserData,
       custom_data: {
@@ -292,7 +378,7 @@ export function trackInitialPageViewCAPI(): void {
         event_name: 'PageView',
         event_id: eventId,
         event_time: Math.floor(Date.now() / 1000),
-        event_source_url: window?.location?.href || '',
+        event_source_url: safeSourceUrl(),
         action_source: 'website',
         user_data: collectedUserData,
         custom_data: {},
@@ -322,7 +408,7 @@ export function trackPageView(): void {
         event_name: 'PageView',
         event_id: eventId,
         event_time: Math.floor(Date.now() / 1000),
-        event_source_url: window?.location?.href || '',
+        event_source_url: safeSourceUrl(),
         action_source: 'website',
         user_data: collectedUserData,
         custom_data: {},
@@ -340,30 +426,39 @@ export function trackContact(params: BaseEventParams = {}): void {
   const customData: Record<string, unknown> = {};
   if (params.eventSource) customData.event_source = params.eventSource;
 
-  sendMetaEvent('Contact', customData, customData, params.userData);
+  sendMetaEvent('Contact', customData, customData, params.userData, params.eventId);
 }
 
 /**
- * Lead / Schedule — user completes a Cal.com booking.
- * This is the highest-value conversion event.
+ * Representative per-booking value, so Meta value-optimisation has signal and
+ * Ads Manager doesn't read £0.00. Shared by Lead, Schedule and the GA4
+ * `generate_lead` event so all three report the same number.
+ */
+export const LEAD_VALUE = 150;
+export const LEAD_CURRENCY = 'GBP';
+
+/**
+ * Lead — the campaign's single optimisation event. Fires ONCE, on a completed
+ * Cal.com booking. Deliberately NOT fired on a qualified /start submission:
+ * one human going form → booking would otherwise report two Leads and £300,
+ * training delivery toward form-fillers rather than bookers.
  */
 export function trackLead(params: BaseEventParams = {}): void {
-  // Representative per-booking value so Meta value-optimization has signal and
-  // Ads Manager doesn't read £0.00. Keep this aligned with the GA generate_lead value.
-  const customData: Record<string, unknown> = { currency: 'GBP', value: 150 };
+  const customData: Record<string, unknown> = { currency: LEAD_CURRENCY, value: LEAD_VALUE };
   if (params.eventSource) customData.event_source = params.eventSource;
 
-  sendMetaEvent('Lead', customData, customData, params.userData);
+  sendMetaEvent('Lead', customData, customData, params.userData, params.eventId);
 }
 
 /**
- * Schedule — fires alongside Lead for additional signal.
+ * Schedule — fires alongside Lead for additional signal. Carries the same value
+ * so it isn't reported at £0.00 in Ads Manager.
  */
 export function trackSchedule(params: BaseEventParams = {}): void {
-  const customData: Record<string, unknown> = {};
+  const customData: Record<string, unknown> = { currency: LEAD_CURRENCY, value: LEAD_VALUE };
   if (params.eventSource) customData.event_source = params.eventSource;
 
-  sendMetaEvent('Schedule', customData, customData, params.userData);
+  sendMetaEvent('Schedule', customData, customData, params.userData, params.eventId);
 }
 
 /**
@@ -375,7 +470,7 @@ export function trackViewContent(params: ViewContentParams = {}): void {
   if (params.contentCategory) customData.content_category = params.contentCategory;
   if (params.contentIds) customData.content_ids = params.contentIds;
 
-  sendMetaEvent('ViewContent', customData, customData, params.userData);
+  sendMetaEvent('ViewContent', customData, customData, params.userData, params.eventId);
 }
 
 /**
@@ -383,12 +478,13 @@ export function trackViewContent(params: ViewContentParams = {}): void {
  * Uses fbq('trackCustom', ...) instead of fbq('track', ...).
  */
 export function trackCustom(eventName: string, params: CustomEventParams = {}): void {
-  const eventId = generateEventId();
+  const eventId = params.eventId || generateEventId();
   const eventTime = Math.floor(Date.now() / 1000);
   const customData = params.customData || {};
 
   // Client-side: custom event
   if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+    applyAdvancedMatching(params.userData);
     window.fbq('trackCustom', eventName, customData, { eventID: eventId });
   }
 
@@ -401,7 +497,7 @@ export function trackCustom(eventName: string, params: CustomEventParams = {}): 
         event_name: eventName,
         event_id: eventId,
         event_time: eventTime,
-        event_source_url: window?.location?.href || '',
+        event_source_url: safeSourceUrl(),
         action_source: 'website',
         user_data: collectedUserData,
         custom_data: customData,

@@ -5,7 +5,7 @@ import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { CustomCursor } from "@/components/motion/custom-cursor";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { TrackingScripts } from "@/components/analytics/tracking-scripts";
+import { TrackingScripts, TRACKING_ENABLED } from "@/components/analytics/tracking-scripts";
 import { RouteAnalytics } from "@/components/analytics/route-analytics";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL, organizationJsonLd, seo, webSiteJsonLd } from "@/lib/seo";
@@ -61,17 +61,22 @@ export default function RootLayout({
       <body className="min-h-dvh bg-background text-foreground">
         <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
         <TrackingScripts />
-        <RouteAnalytics />
-        <noscript>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            alt=""
-            src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_META_PIXEL_ID || "993503079134900"}&ev=PageView&noscript=1`}
-          />
-        </noscript>
+        <RouteAnalytics enabled={TRACKING_ENABLED} />
+        {/* Same production-only gate as TrackingScripts — this <img> fires on
+            HTML parse, so a preview deploy would otherwise still log PageViews
+            into the live pixel even with every script above suppressed. */}
+        {TRACKING_ENABLED && (
+          <noscript>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              height="1"
+              width="1"
+              style={{ display: "none" }}
+              alt=""
+              src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_META_PIXEL_ID || "993503079134900"}&ev=PageView&noscript=1`}
+            />
+          </noscript>
+        )}
         <SmoothScroll>
           <CustomCursor />
           <Header />

@@ -215,6 +215,16 @@ export function getCalcomTrackingMetadata(): Record<string, string> {
   for (const [k, v] of Object.entries(all)) {
     if (!drop.has(k)) out[k] = v;
   }
+
+  // Carry the Meta browser cookies through to the booking record so the
+  // server-side Cal webhook can send a CAPI event with real match keys.
+  // These are read live rather than rebuilt from first_fbclid, which can be
+  // weeks stale by the time someone books.
+  const fbp = readCookie('_fbp');
+  if (fbp) out.fbp = fbp;
+  const fbc = readCookie('_fbc');
+  if (fbc) out.fbc = fbc;
+
   return out;
 }
 

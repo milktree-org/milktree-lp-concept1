@@ -28,7 +28,8 @@ import {
   type LeadRoute,
 } from "@/lib/funnel";
 import { getLeadTrackingFields } from "@/lib/analytics/lead-tracking";
-import { trackCustom, trackLead } from "@/lib/analytics/meta-tracking";
+import { writeFunnelHandoff } from "@/lib/analytics/funnel-handoff";
+import { trackCustom } from "@/lib/analytics/meta-tracking";
 import { BookingEmbed } from "@/components/booking/booking-embed";
 import {
   ProgressBar,
@@ -153,9 +154,19 @@ export function QualificationForm() {
         return;
       }
       if (data.route === "qualified") {
-        trackLead({
+        // NOT `Lead`. Lead is reserved for a completed Cal.com booking — the
+        // calendar is rendered on the very next screen, so firing Lead here too
+        // would report two Leads and £300 for one person and train delivery
+        // toward form-fillers instead of bookers.
+        const [firstName, ...rest] = answers.name.trim().split(/\s+/).filter(Boolean);
+        trackCustom("QualificationFormQualified", {
           eventSource: "Start Form — Qualified",
-          userData: { email: answers.email.trim(), phone: answers.phone.trim() || undefined },
+          userData: {
+            email: answers.email.trim(),
+            phone: answers.phone.trim() || undefined,
+            firstName,
+            lastName: rest.length ? rest.join(" ") : undefined,
+          },
         });
       } else {
         trackCustom("QualificationFormUnqualified");
@@ -169,11 +180,16 @@ export function QualificationForm() {
   }, [answers, submitting]);
 
   const quizUrl = useMemo(() => {
+    // Name/company/website/email are handed over in sessionStorage, NOT the
+    // query string — Clarity records URLs verbatim and Meta receives the full
+    // href as event_source_url. Only non-identifying params travel in the URL.
+    writeFunnelHandoff({
+      name: answers.name,
+      company: answers.company,
+      website: answers.website,
+      email: answers.email,
+    });
     const params = new URLSearchParams();
-    if (answers.name.trim()) params.set("name", answers.name.trim());
-    if (answers.company.trim()) params.set("company", answers.company.trim());
-    if (answers.website.trim()) params.set("website", answers.website.trim());
-    if (answers.email.trim()) params.set("email", answers.email.trim());
     if (result?.leadId) params.set("lead", result.leadId);
     params.set("src", "form");
     return `/brand-report?${params.toString()}`;

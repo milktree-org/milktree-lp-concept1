@@ -68,6 +68,21 @@ Other routes in `CLAUDE.md` §6 are deferred — nav links resolve to on-page se
 | `GHL_BRANDSCORE_WEBHOOK_URL` | GHL inbound webhook — fires on quiz completion with the internal review link |
 | `GHL_BRANDSCORE_DOC_WEBHOOK_URL` | Optional — GHL inbound webhook fired when the PDF is published (record-keeping: saves `pdf_url` on the contact) |
 
+### Tracking / analytics environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `META_CAPI_ACCESS_TOKEN` | **Required for server-side conversions.** System-user token from Events Manager → Settings. Without it `/api/meta-capi` returns `200 {skipped:true}` and every server event is silently dropped — DevTools still shows green, and you only find out by opening Events Manager. Verify with `GET /api/meta-capi` → `configured: true` |
+| `META_PIXEL_ID` | Meta Pixel / dataset ID used server-side (defaults to the Milktree pixel) |
+| `CAL_WEBHOOK_SECRET` | **Required for the booking webhook.** Signing secret from Cal.com → Settings → Developer → Webhooks. `/api/cal-webhook` rejects everything with 503 until this is set |
+| `META_TEST_EVENT_CODE` | Optional — routes server events to Events Manager → Test Events for QA. Leave unset in production |
+| `META_GRAPH_API_VERSION` | Optional — override the Graph API version without a redeploy when one sunsets (default `v21.0`) |
+| `NEXT_PUBLIC_META_PIXEL_ID` | Browser Pixel ID |
+| `NEXT_PUBLIC_GA_ID` | GA4 measurement ID |
+| `NEXT_PUBLIC_CLARITY_ID` | Microsoft Clarity project ID |
+
+> **Environment gating.** Pixel, GA4, Clarity and the CAPI forwarder are all live **only** when `VERCEL_ENV === "production"`. `VERCEL_ENV` is undefined locally, so `npm run dev` and every preview deployment are inert by design — the `NEXT_PUBLIC_*` fallbacks in `components/analytics/tracking-scripts.tsx` are the real production IDs, so without this gate test traffic would land in the dataset the campaign optimises on.
+
 All integrations degrade gracefully when unset: without Supabase the funnel still works (leads logged to the server console only); without Apify/Firecrawl the quiz falls back to self-assessment-only scoring.
 
 ## Brand Score document pipeline
@@ -110,7 +125,7 @@ The doc-ready event (`type: brand-score-doc-ready`, includes `pdf_url` and `emai
 
 ### Production env checklist
 
-`SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `RESEND_API_KEY` · `RESEND_FROM` · `DOC_REVIEW_KEY` · `GHL_BRANDSCORE_WEBHOOK_URL` · (`GHL_BRANDSCORE_DOC_WEBHOOK_URL` optional · `APIFY_API_TOKEN` + `FIRECRAWL_API_KEY` for the live market benchmark)
+`SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `RESEND_API_KEY` · `RESEND_FROM` · `DOC_REVIEW_KEY` · `GHL_BRANDSCORE_WEBHOOK_URL` · `META_CAPI_ACCESS_TOKEN` · `META_PIXEL_ID` · `CAL_WEBHOOK_SECRET` · `NEXT_PUBLIC_META_PIXEL_ID` · `NEXT_PUBLIC_GA_ID` · `NEXT_PUBLIC_CLARITY_ID` · (`GHL_BRANDSCORE_DOC_WEBHOOK_URL` optional · `APIFY_API_TOKEN` + `FIRECRAWL_API_KEY` for the live market benchmark)
 
 **Email will not send until a domain is verified in Resend.** Add the sending domain (a subdomain such as `updates.milktreeagency.com` is the usual choice), publish the DNS records Resend gives you, wait for status `verified`, then set `RESEND_FROM` to an address on it. Until then every quiz report and document delivery fails with "domain is not verified" — the lead gets nothing.
 

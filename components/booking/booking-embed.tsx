@@ -2,7 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { CAL_URL } from "@/lib/site";
-import { trackLead, trackSchedule } from "@/lib/analytics/meta-tracking";
+import {
+  trackLead,
+  trackSchedule,
+  LEAD_VALUE,
+  LEAD_CURRENCY,
+} from "@/lib/analytics/meta-tracking";
 import { getCalcomTrackingMetadata } from "@/lib/analytics/lead-tracking";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-9GHX9JVN9S";
@@ -110,21 +115,68 @@ export function BookingEmbed({
     });
     Cal.ns[CAL_NAMESPACE]("on", {
       action: "bookingSuccessful",
-      callback: () => {
+      callback: (e: any) => {
         if (booked.current) return; // guard double-fire
         booked.current = true;
 
+        // Cal's payload is the only identity source that works everywhere:
+        // app/book/page.tsx renders <BookingEmbed /> with no prefill, so on the
+        // primary CTA destination prefillRef is undefined. Shape has moved
+        // between embed versions, so read every known location before falling
+        // back to whatever the qualification form handed us.
+        const data = e?.detail?.data ?? {};
+        const booking = data.booking ?? data;
+        const attendee = booking?.attendees?.[0] ?? {};
+        const responses = booking?.responses ?? data.responses ?? {};
+        const unwrap = (v: any): string | undefined =>
+          typeof v === "string" ? v : typeof v?.value === "string" ? v.value : undefined;
+
+        const pfNow = prefillRef.current;
+        const email = attendee.email ?? unwrap(responses.email) ?? pfNow?.email;
+        const fullName = attendee.name ?? unwrap(responses.name) ?? pfNow?.name ?? "";
+        const phone =
+          attendee.phoneNumber ??
+          unwrap(responses.attendeePhoneNumber) ??
+          unwrap(responses.phone) ??
+          pfNow?.phone;
+
+        // Split the same way app/api/lead/route.ts does, so the hashes agree.
+        const parts = fullName.trim().split(/\s+/).filter(Boolean);
+        const firstName = parts[0];
+        const lastName = parts.length > 1 ? parts.slice(1).join(" ") : undefined;
+
+        // Deterministic event_id derived from the Cal booking uid so the
+        // server-side webhook copy (app/api/cal-webhook) deduplicates against
+        // this browser event instead of double-counting the booking.
+        const uid = booking?.uid ?? data.uid;
+        const userData = { email, phone, firstName, lastName };
+
         if (typeof window.gtag === "function") {
           window.gtag("event", "generate_lead", {
-            event_category: "Intro Call",
-            event_label: "Website — Cal.com Booking",
-            value: 150,
-            currency: "GBP",
+            // `source` distinguishes /book from the /start qualified screen —
+            // the old hardcoded label collapsed both into one bucket.
+            lead_source: source,
+            value: LEAD_VALUE,
+            currency: LEAD_CURRENCY,
             send_to: GA_ID,
           });
         }
-        trackLead({ eventSource: `${source} Booking` });
-        trackSchedule({ eventSource: "Website — Cal.com Booking" });
+
+        // Let Clarity filter recordings down to people who actually booked.
+        // Safe to call before the tag finishes loading — clarity() queues.
+        window.clarity?.("set", "converted", "true");
+        window.clarity?.("upgrade", "booking");
+
+        trackLead({
+          eventSource: `${source} Booking`,
+          userData,
+          eventId: uid ? `cal-lead-${uid}` : undefined,
+        });
+        trackSchedule({
+          eventSource: `${source} Booking`,
+          userData,
+          eventId: uid ? `cal-schedule-${uid}` : undefined,
+        });
       },
     });
     /* eslint-enable @typescript-eslint/no-explicit-any */
