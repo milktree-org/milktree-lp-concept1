@@ -1,13 +1,21 @@
 import Script from "next/script";
+import { ClarityScript } from "./clarity-script";
 
 /**
  * Third-party analytics loaders — Meta Pixel, GA4, Microsoft Clarity.
  *
- * The Pixel base (fbq stub + init) loads `beforeInteractive` so `window.fbq`
- * exists before the React route-analytics effect runs (no load-order race).
- * The initial + every subsequent PageView is fired from `RouteAnalytics`
- * (Pixel + CAPI with a shared event_id for deduplication), so we set
- * `send_page_view:false` on GA and do NOT fire PageView in the Pixel base here.
+ * Everything here is consent-aware (see lib/analytics/consent.ts):
+ *   - GA4 gets Consent Mode v2 defaults of `denied` pushed to dataLayer BEFORE
+ *     the `config` command. Google then runs cookieless and still models
+ *     conversions, so a decline costs far less measurement than blocking it.
+ *   - The Pixel gets `fbq('consent','revoke')` between the base stub and
+ *     `init`, so it writes no cookies and holds events until consent is given.
+ *   - Clarity is not loaded at all without consent — it has no useful
+ *     cookieless mode and session replay is the highest-risk recorder here.
+ *
+ * PageView is fired from `RouteAnalytics` (Pixel + CAPI with a shared event_id
+ * for deduplication), so GA is configured with `send_page_view:false` and the
+ * Pixel base does not fire PageView itself.
  */
 
 const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "993503079134900";
@@ -31,8 +39,8 @@ export function TrackingScripts() {
   return (
     <>
       {/* Meta Pixel — base + init only; PageView is fired from RouteAnalytics.
-          afterInteractive keeps connect.facebook.net off the LCP path; fbq's
-          queue stub buffers any early calls until the library loads. */}
+          `consent revoke` sits between the stub and init so no cookie is
+          written before a choice; ConsentBanner calls grant on acceptance. */}
       <Script id="meta-pixel-base" strategy="afterInteractive">
         {`!function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -42,26 +50,32 @@ export function TrackingScripts() {
         t.src=v;s=b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t,s)}(window, document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('consent', 'revoke');
         fbq('init', '${PIXEL_ID}');`}
       </Script>
 
-      {/* GA4 — manual page_view (we send it from RouteAnalytics) */}
+      {/* GA4 — Consent Mode v2 defaults, then manual page_view.
+          The defaults must reach dataLayer before the `config` command; because
+          gtag() only pushes to dataLayer, doing both in this one synchronous
+          block guarantees the order regardless of when gtag.js finishes
+          loading. */}
       <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
       <Script id="ga-init" strategy="afterInteractive">
         {`window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
+        gtag('consent', 'default', {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'denied',
+          wait_for_update: 500
+        });
         gtag('js', new Date());
         gtag('config', '${GA_ID}', { send_page_view: false });`}
       </Script>
 
-      {/* Microsoft Clarity */}
-      <Script id="ms-clarity" strategy="afterInteractive">
-        {`(function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "${CLARITY_ID}");`}
-      </Script>
+      {/* Microsoft Clarity — client-gated, only mounts once consent is granted. */}
+      <ClarityScript projectId={CLARITY_ID} />
     </>
   );
 }

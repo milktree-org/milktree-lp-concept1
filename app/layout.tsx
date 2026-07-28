@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { TrackingScripts, TRACKING_ENABLED } from "@/components/analytics/tracking-scripts";
 import { RouteAnalytics } from "@/components/analytics/route-analytics";
+import { ConsentBanner } from "@/components/analytics/consent-banner";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL, organizationJsonLd, seo, webSiteJsonLd } from "@/lib/seo";
 
@@ -62,21 +63,12 @@ export default function RootLayout({
         <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
         <TrackingScripts />
         <RouteAnalytics enabled={TRACKING_ENABLED} />
-        {/* Same production-only gate as TrackingScripts — this <img> fires on
-            HTML parse, so a preview deploy would otherwise still log PageViews
-            into the live pixel even with every script above suppressed. */}
-        {TRACKING_ENABLED && (
-          <noscript>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              height="1"
-              width="1"
-              style={{ display: "none" }}
-              alt=""
-              src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_META_PIXEL_ID || "993503079134900"}&ev=PageView&noscript=1`}
-            />
-          </noscript>
-        )}
+        {TRACKING_ENABLED && <ConsentBanner />}
+        {/* The <noscript> Meta pixel that used to sit here has been removed.
+            It fires on HTML parse, so no JavaScript consent gate can hold it —
+            it would have logged a PageView for every visitor before they were
+            asked. It only ever covered no-JS visitors, who can't use the funnel
+            anyway, so the compliance hole was not worth the coverage. */}
         <SmoothScroll>
           <CustomCursor />
           <Header />

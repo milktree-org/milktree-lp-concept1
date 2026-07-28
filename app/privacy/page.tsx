@@ -47,15 +47,27 @@ export default function PrivacyPage() {
           referred you.
         </li>
         <li>
-          <strong>Technical data shared with advertising platforms</strong> — to measure ad
-          performance we may send a hashed (pseudonymised) version of identifiers such as
-          your IP address and user-agent to Meta via its Conversions API. These are hashed
-          before transmission and used only for conversion matching.
+          <strong>Technical data shared with advertising platforms</strong> — where you have
+          consented, we send conversion data to Meta via its Conversions API. Direct
+          identifiers such as your email address, phone number and name are hashed
+          (SHA-256) before transmission and are used only for conversion matching. Your IP
+          address and user-agent are transmitted in their original form, because Meta
+          requires them unhashed in order to match an event; they are not used by us for
+          any other purpose. Data is transferred to Meta, Google and Microsoft in the United
+          States under the UK Extension to the EU&ndash;US Data Privacy Framework and/or
+          the UK International Data Transfer Addendum.
         </li>
       </ul>
 
       <h2>Cookies &amp; tracking technologies</h2>
-      <p>We use the following third-party tools, each of which may set cookies or use local storage:</p>
+      <p>
+        We ask for your consent before setting any non-essential cookie. Until you accept,
+        Microsoft Clarity is not loaded at all, the Meta Pixel is held in a revoked-consent
+        state that writes no cookies, and Google Analytics runs in a cookieless mode that
+        stores nothing on your device. You can change or withdraw your choice at any time
+        using the cookie button in the bottom-left corner of any page.
+      </p>
+      <p>Subject to your consent, we use the following third-party tools, each of which may set cookies or use local storage:</p>
       <ul>
         <li>
           <strong>Meta Pixel &amp; Conversions API</strong> (Meta Platforms, Inc.) — to

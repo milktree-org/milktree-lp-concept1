@@ -13,6 +13,18 @@
  */
 
 import { STORAGE_KEYS } from './lead-tracking';
+import { readConsent } from './consent';
+
+/**
+ * Nothing here runs without consent. The Pixel is separately held by
+ * `fbq('consent','revoke')`, but the CAPI leg is our own server call that Meta's
+ * consent API knows nothing about — and `collectUserData` also writes the
+ * persistent `mt_external_id` to localStorage. Both are non-essential storage
+ * under UK PECR, so they need the same gate.
+ */
+function hasConsent(): boolean {
+  return readConsent() === 'granted';
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -313,6 +325,7 @@ async function sendMetaEvent(
   userData?: Partial<UserData>,
   overrideEventId?: string
 ): Promise<void> {
+  if (!hasConsent()) return;
   const eventId = overrideEventId || generateEventId();
   const eventTime = Math.floor(Date.now() / 1000);
 
@@ -363,6 +376,7 @@ async function sendMetaEvent(
  * Call this ONCE from AnalyticsTracker on first mount.
  */
 export function trackInitialPageViewCAPI(): void {
+  if (!hasConsent()) return;
   const eventId = typeof window !== 'undefined' ? window.__MT_INIT_PV_ID : undefined;
   if (!eventId) return;
 
@@ -393,6 +407,7 @@ export function trackInitialPageViewCAPI(): void {
  * Fires BOTH pixel and CAPI with matching eventID.
  */
 export function trackPageView(): void {
+  if (!hasConsent()) return;
   const eventId = generateEventId();
 
   if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
@@ -478,6 +493,7 @@ export function trackViewContent(params: ViewContentParams = {}): void {
  * Uses fbq('trackCustom', ...) instead of fbq('track', ...).
  */
 export function trackCustom(eventName: string, params: CustomEventParams = {}): void {
+  if (!hasConsent()) return;
   const eventId = params.eventId || generateEventId();
   const eventTime = Math.floor(Date.now() / 1000);
   const customData = params.customData || {};

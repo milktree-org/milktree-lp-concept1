@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { trackPageView } from "@/lib/analytics/meta-tracking";
 import { captureLeadTracking } from "@/lib/analytics/lead-tracking";
+import { useConsent } from "@/lib/analytics/use-consent";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-9GHX9JVN9S";
 
@@ -36,26 +37,30 @@ function cleanPageLocation(): string {
 /**
  * Fires a PageView (Meta Pixel + CAPI, shared event_id) and a GA4 page_view on
  * first load and on every client-side route change, and captures marketing
- * attribution (UTMs, click IDs) from the URL so any later Lead/Contact/Schedule
- * event carries the full first- and last-touch context.
+ * attribution (UTMs, click IDs) from the URL.
  *
  * Mounted once in the root layout. Renders nothing.
  *
- * `enabled` is false outside production. Attribution capture still runs so the
- * funnel behaves identically in dev and preview — only the third-party sends
- * are suppressed, so test traffic never reaches the live campaign dataset.
+ * Two gates:
+ *   - `enabled` is false outside production, so preview and local traffic never
+ *     reaches the live campaign dataset.
+ *   - Nothing fires and nothing is stored until consent is granted. Because
+ *     `consent` is an effect dependency, accepting on the landing page re-runs
+ *     this immediately — so the fbclid still in the URL is captured and the
+ *     PageView is sent, rather than being lost to the pre-consent window.
  */
 export function RouteAnalytics({ enabled = true }: { enabled?: boolean }) {
   const pathname = usePathname();
   const isFirst = useRef(true);
+  const consent = useConsent();
 
   useEffect(() => {
-    // Capture attribution every navigation (a UTM/click-id link may land on
+    if (!enabled || consent !== "granted") return;
+
+    // Capture attribution on every navigation (a UTM/click-id link may land on
     // any route, not just the first). First-touch is written once; last-touch
     // updates each time. Must run before any conversion event.
     captureLeadTracking();
-
-    if (!enabled) return;
 
     // GA4 page_view (config has send_page_view:false, so we send it manually).
     if (typeof window.gtag === "function") {
@@ -73,7 +78,7 @@ export function RouteAnalytics({ enabled = true }: { enabled?: boolean }) {
     trackPageView();
 
     if (isFirst.current) isFirst.current = false;
-  }, [pathname, enabled]);
+  }, [pathname, enabled, consent]);
 
   return null;
 }
