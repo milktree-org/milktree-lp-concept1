@@ -21,6 +21,8 @@
  * user is implicitly consenting to by submitting the form.
  */
 
+import { safeLocalStorage, safeSessionStorage, safeGet, safeSet } from './safe-storage';
+
 const FIRST_TOUCH_KEY = 'mt_first_touch';
 const LAST_TOUCH_KEY = 'mt_last_touch';
 const VISITOR_ID_KEY = 'mt_external_id'; // shared with utils/meta-tracking.ts
@@ -122,18 +124,18 @@ function readCurrentTouch(): TouchData {
   return data;
 }
 
-function safeReadJSON<T>(storage: Storage, key: string): T | null {
+function safeReadJSON<T>(storage: Storage | null, key: string): T | null {
   try {
-    const raw = storage.getItem(key);
+    const raw = safeGet(storage, key);
     return raw ? (JSON.parse(raw) as T) : null;
   } catch {
     return null;
   }
 }
 
-function safeWriteJSON(storage: Storage, key: string, value: unknown): void {
+function safeWriteJSON(storage: Storage | null, key: string, value: unknown): void {
   try {
-    storage.setItem(key, JSON.stringify(value));
+    safeSet(storage, key, JSON.stringify(value));
   } catch {
     // private browsing / quota — silent
   }
@@ -163,13 +165,13 @@ export function captureLeadTracking(): void {
   // First-touch: write if missing, or if the stored one has aged out. Letting
   // an expired touch be replaced is the point — otherwise the first campaign a
   // visitor ever saw keeps the credit indefinitely.
-  const existingFirst = safeReadJSON<TouchData>(localStorage, FIRST_TOUCH_KEY);
+  const existingFirst = safeReadJSON<TouchData>(safeLocalStorage(), FIRST_TOUCH_KEY);
   if (!existingFirst || Object.keys(existingFirst).length === 0 || isTouchExpired(existingFirst)) {
-    safeWriteJSON(localStorage, FIRST_TOUCH_KEY, current);
+    safeWriteJSON(safeLocalStorage(), FIRST_TOUCH_KEY, current);
   }
 
   // Last-touch: always overwrite with the most recent attribution this session
-  safeWriteJSON(sessionStorage, LAST_TOUCH_KEY, current);
+  safeWriteJSON(safeSessionStorage(), LAST_TOUCH_KEY, current);
 
   // Persist a 90-day first-party _fbc cookie from the fbclid so the click ID
   // survives ITP cookie-capping on return visits (the Pixel's own _fbc is capped
@@ -206,9 +208,9 @@ export function getLeadTrackingFields(): Record<string, string> {
   // Expired first touches are dropped on READ as well as on write: a visitor
   // who hasn't returned since the window lapsed would otherwise still submit
   // the stale campaign with their form.
-  const storedFirst = safeReadJSON<TouchData>(localStorage, FIRST_TOUCH_KEY);
+  const storedFirst = safeReadJSON<TouchData>(safeLocalStorage(), FIRST_TOUCH_KEY);
   const first = isTouchExpired(storedFirst) ? {} : (storedFirst ?? {});
-  const last = safeReadJSON<TouchData>(sessionStorage, LAST_TOUCH_KEY) || {};
+  const last = safeReadJSON<TouchData>(safeSessionStorage(), LAST_TOUCH_KEY) || {};
 
   const addTouch = (prefix: 'first' | 'last', t: TouchData) => {
     for (const [k, v] of Object.entries(t)) {
@@ -235,7 +237,7 @@ export function getLeadTrackingFields(): Record<string, string> {
   // Persistent visitor ID (shared with meta-tracking — ties Formspree
   // submissions to Meta Pixel events for cross-system attribution)
   try {
-    const visitorId = localStorage.getItem(VISITOR_ID_KEY);
+    const visitorId = safeGet(safeLocalStorage(), VISITOR_ID_KEY);
     if (visitorId) out.visitor_id = visitorId;
   } catch { /* private mode */ }
 

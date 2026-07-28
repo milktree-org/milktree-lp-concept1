@@ -54,5 +54,11 @@
     "playwright": "^1.61.0",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "browserslist": [
+    "chrome 111",
+    "edge 111",
+    "firefox 111",
+    "safari 15.4"
+  ]
 }

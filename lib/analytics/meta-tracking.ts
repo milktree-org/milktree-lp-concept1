@@ -14,6 +14,7 @@
 
 import { STORAGE_KEYS } from './lead-tracking';
 import { readConsent } from './consent';
+import { safeLocalStorage, safeSessionStorage, safeGet, safeSet } from './safe-storage';
 
 /**
  * Nothing here runs without consent. The Pixel is separately held by
@@ -141,9 +142,9 @@ function getCookie(name: string): string | undefined {
 // its click time (`seen_at`), so we recover _fbc from there instead of dropping
 // it. Format: fb.{subdomainIndex}.{clickEpochMs}.{fbclid}.
 
-function readStoredTouch(storage: Storage, key: string): { fbclid?: string; seen_at?: string } | null {
+function readStoredTouch(storage: Storage | null, key: string): { fbclid?: string; seen_at?: string } | null {
   try {
-    const raw = storage.getItem(key);
+    const raw = safeGet(storage, key);
     return raw ? (JSON.parse(raw) as { fbclid?: string; seen_at?: string }) : null;
   } catch {
     return null;
@@ -174,7 +175,7 @@ function resolveFbc(): string | undefined {
   const cookie = getCookie('_fbc');
   if (cookie) return cookie;
 
-  const lastTouch = readStoredTouch(sessionStorage, STORAGE_KEYS.LAST_TOUCH);
+  const lastTouch = readStoredTouch(safeSessionStorage(), STORAGE_KEYS.LAST_TOUCH);
 
   // 2) fbclid live in the current URL (landing page). Use the stored click time
   //    if we captured this same fbclid this session, else fall back to now.
@@ -189,7 +190,7 @@ function resolveFbc(): string | undefined {
 
   // 4) Cross-session first-touch — only within Meta's 28-day click attribution
   //    window, so an organic return is never attributed to a stale paid click.
-  const firstTouch = readStoredTouch(localStorage, STORAGE_KEYS.FIRST_TOUCH);
+  const firstTouch = readStoredTouch(safeLocalStorage(), STORAGE_KEYS.FIRST_TOUCH);
   if (firstTouch?.fbclid && firstTouch?.seen_at) {
     const ageMs = Date.now() - new Date(firstTouch.seen_at).getTime();
     if (ageMs >= 0 && ageMs < 28 * 24 * 60 * 60 * 1000) {
@@ -207,10 +208,11 @@ function getOrCreateExternalId(): string {
   if (typeof window === 'undefined') return '';
   const key = 'mt_external_id';
   try {
-    let id = localStorage.getItem(key);
+    const ls = safeLocalStorage();
+    let id = safeGet(ls, key);
     if (!id) {
       id = generateEventId();
-      localStorage.setItem(key, id);
+      safeSet(ls, key, id);
     }
     return id;
   } catch {

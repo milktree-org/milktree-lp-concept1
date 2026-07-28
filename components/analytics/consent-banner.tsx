@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Cookie } from "lucide-react";
 import Link from "next/link";
@@ -30,12 +30,43 @@ export function ConsentBanner() {
   const [reopened, setReopened] = useState(false);
   const reduce = useReducedMotion();
 
+  const barRef = useRef<HTMLElement>(null);
+
   // Re-assert the stored choice on every load: the inline snippet defaults
   // Consent Mode to denied and revokes the Pixel, so a returning visitor who
   // accepted needs the grant pushed again before any tag acts on it.
   useEffect(() => {
     if (consent === "granted" || consent === "denied") applyConsent(consent);
   }, [consent]);
+
+  // Reserve space for the bar so it never sits ON TOP of page content.
+  //
+  // It is position:fixed, so without this it overlays whatever is at the bottom
+  // of the viewport. On a 375x667 iPhone SE that is the third answer on /start
+  // step 1 — the bar covered "Not sure yet" outright, and on the contact step it
+  // covered the submit button. Every cold ad click lands on /start as a
+  // first-time visitor, so that is precisely the audience that hit it.
+  //
+  // Padding the body means the page simply scrolls above the bar instead. The
+  // height is measured rather than hardcoded because the copy wraps differently
+  // across widths, and re-measured on resize / orientation change.
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) {
+      document.body.style.paddingBottom = "";
+      return;
+    }
+    const apply = () => {
+      document.body.style.paddingBottom = `${el.offsetHeight + 32}px`;
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.body.style.paddingBottom = "";
+    };
+  });
 
   const choose = useCallback((state: ConsentState) => {
     if (state === "denied") clearTrackingStorage();
@@ -58,6 +89,7 @@ export function ConsentBanner() {
           instant you choose is also better feedback than one that fades. */}
       {showBar && (
           <motion.aside
+            ref={barRef}
             role="region"
             aria-label="Cookie consent"
             initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}

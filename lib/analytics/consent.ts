@@ -17,6 +17,8 @@
  *               session replay is the highest-risk recorder on the site.
  */
 
+import { safeLocalStorage, safeSessionStorage, safeGet, safeSet, safeRemove } from './safe-storage';
+
 export type ConsentState = 'granted' | 'denied';
 
 export const CONSENT_KEY = 'mt_cookie_consent';
@@ -28,7 +30,7 @@ export const CONSENT_EVENT = 'mt:consent-change';
 export function readConsent(): ConsentState | null {
   if (typeof window === 'undefined') return null;
   try {
-    const v = localStorage.getItem(CONSENT_KEY);
+    const v = safeGet(safeLocalStorage(), CONSENT_KEY);
     return v === 'granted' || v === 'denied' ? v : null;
   } catch {
     return null;
@@ -38,7 +40,7 @@ export function readConsent(): ConsentState | null {
 export function writeConsent(state: ConsentState): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(CONSENT_KEY, state);
+    safeSet(safeLocalStorage(), CONSENT_KEY, state);
   } catch {
     // private browsing — the choice just won't persist past this tab
   }
@@ -72,9 +74,10 @@ export function applyConsent(state: ConsentState): void {
 export function clearTrackingStorage(): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.removeItem('mt_external_id');
-    localStorage.removeItem('mt_first_touch');
-    sessionStorage.removeItem('mt_last_touch');
+    const ls = safeLocalStorage(), ss = safeSessionStorage();
+    safeRemove(ls, 'mt_external_id');
+    safeRemove(ls, 'mt_first_touch');
+    safeRemove(ss, 'mt_last_touch');
   } catch {
     /* nothing we can do */
   }

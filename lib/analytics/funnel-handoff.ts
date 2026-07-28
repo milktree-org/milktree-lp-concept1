@@ -16,6 +16,8 @@
  * `src` stay in the query string.
  */
 
+import { safeSessionStorage, safeGet, safeSet } from './safe-storage';
+
 const HANDOFF_KEY = 'mt_funnel_handoff';
 
 export type FunnelHandoff = {
@@ -34,7 +36,7 @@ export function writeFunnelHandoff(data: FunnelHandoff): void {
   }
   if (Object.keys(clean).length === 0) return;
   try {
-    sessionStorage.setItem(HANDOFF_KEY, JSON.stringify(clean));
+    safeSet(safeSessionStorage(), HANDOFF_KEY, JSON.stringify(clean));
   } catch {
     // private browsing / quota — the next step just starts empty
   }
@@ -44,7 +46,7 @@ export function writeFunnelHandoff(data: FunnelHandoff): void {
 export function readFunnelHandoff(): FunnelHandoff {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = sessionStorage.getItem(HANDOFF_KEY);
+    const raw = safeGet(safeSessionStorage(), HANDOFF_KEY);
     return raw ? (JSON.parse(raw) as FunnelHandoff) : {};
   } catch {
     return {};
