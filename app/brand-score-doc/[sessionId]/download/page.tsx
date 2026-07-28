@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSupabase } from "@/lib/server/supabase";
+import { BrandScoreDocument } from "@/components/doc/brand-score-document";
+import { DocSaveBar } from "@/components/doc/doc-save-bar";
+import { loadBrandScoreDoc } from "@/lib/server/brand-score-doc-data";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +13,17 @@ export const metadata: Metadata = {
 };
 
 /**
- * The lead-facing document link. Stable per session, so it can go into the
- * report email at quiz completion and still work once the PDF is published 45
- * minutes (or a day) later. No key: the session id is the unguessable secret,
- * and it only ever reveals that lead's own document.
+ * The lead-facing document link — stable per session, so it can go into the
+ * report email at quiz completion and always resolve. No key: the session id
+ * is the unguessable secret, and it only ever reveals that lead's own
+ * document.
+ *
+ * Resolution order:
+ * 1. A published, human-reviewed PDF exists → redirect to it.
+ * 2. The quiz is complete → render the designed document as a web page, no
+ *    operator required (this is what keeps the email's "ready to read"
+ *    promise true at ad volume).
+ * 3. Otherwise → holding page.
  */
 export default async function DownloadPage({
   params,
@@ -22,11 +31,22 @@ export default async function DownloadPage({
   params: Promise<{ sessionId: string }>;
 }) {
   const { sessionId } = await params;
-  const url = /^[0-9a-f-]{36}$/i.test(sessionId)
-    ? await documentUrl(sessionId)
+  const data = /^[0-9a-f-]{36}$/i.test(sessionId)
+    ? await loadBrandScoreDoc(sessionId)
     : null;
 
-  if (url) redirect(url);
+  if (data?.publishedUrl) redirect(data.publishedUrl);
+
+  if (data?.completedAt) {
+    return (
+      <div className="min-h-screen bg-[#181818] pb-16 print:min-h-0 print:bg-black print:pb-0">
+        <DocSaveBar />
+        <div className="pt-10 print:pt-0">
+          <BrandScoreDocument data={data.doc} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-2xl flex-col justify-center px-6 py-32">
@@ -58,15 +78,4 @@ export default async function DownloadPage({
       </div>
     </main>
   );
-}
-
-async function documentUrl(sessionId: string): Promise<string | null> {
-  const supabase = getSupabase();
-  if (!supabase) return null;
-  const { data } = await supabase
-    .from("quiz_sessions")
-    .select("doc_url")
-    .eq("id", sessionId)
-    .maybeSingle();
-  return (data?.doc_url as string | null) ?? null;
 }

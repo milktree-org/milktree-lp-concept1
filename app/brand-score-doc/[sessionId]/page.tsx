@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  BrandScoreDocument,
-  type BrandScoreDocData,
-} from "@/components/doc/brand-score-document";
+import { BrandScoreDocument } from "@/components/doc/brand-score-document";
 import { DocToolbar } from "@/components/doc/doc-toolbar";
-import { getSupabase } from "@/lib/server/supabase";
+import {
+  loadBrandScoreDoc,
+  formatDate,
+  type BrandScoreDocPageData,
+} from "@/lib/server/brand-score-doc-data";
 import {
   computeCategoryScores,
   computeFinalScore,
@@ -51,7 +52,7 @@ export default async function BrandScoreDocPage({
   }
 
   const data =
-    sessionId === "preview" ? previewData() : await loadSession(sessionId);
+    sessionId === "preview" ? previewData() : await loadBrandScoreDoc(sessionId);
   if (!data) notFound();
 
   return (
@@ -68,12 +69,6 @@ export default async function BrandScoreDocPage({
     </div>
   );
 }
-
-type PageData = {
-  sessionId: string;
-  publishedUrl: string | null;
-  doc: BrandScoreDocData;
-};
 
 /**
  * Internal-only provenance strip: how the market search terms were chosen,
@@ -132,56 +127,8 @@ function TermProvenance({
   );
 }
 
-async function loadSession(sessionId: string): Promise<PageData | null> {
-  if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return null;
-  const supabase = getSupabase();
-  if (!supabase) return null;
-
-  const { data: session, error } = await supabase
-    .from("quiz_sessions")
-    .select(
-      "id, name, job_role, company, website, sector, region, email, market_leader, answers, self_score, final_score, benchmark, doc_url, completed_at, created_at",
-    )
-    .eq("id", sessionId)
-    .maybeSingle();
-
-  if (error || !session) return null;
-
-  const answers = (session.answers ?? {}) as QuizAnswers;
-  const categoryScores = computeCategoryScores(answers);
-  const selfScore = (session.self_score as number | null) ?? computeSelfScore(categoryScores);
-  const benchmark = (session.benchmark as BenchmarkResult | null) ?? null;
-  const score =
-    (session.final_score as number | null) ??
-    computeFinalScore(selfScore, benchmark?.benchmarkScore ?? null);
-
-  return {
-    sessionId: session.id as string,
-    publishedUrl: (session.doc_url as string | null) ?? null,
-    doc: {
-      sessionId: session.id as string,
-      company: (session.company as string | null) ?? "Your company",
-      contactName: (session.name as string | null) ?? "",
-      jobRole: (session.job_role as string | null) ?? "",
-      email: (session.email as string | null) ?? "",
-      website: (session.website as string | null) ?? "",
-      sector: ((session.sector as string | null) ?? "other") as SectorValue,
-      region: (session.region as string | null) ?? "",
-      marketLeader: (session.market_leader as string | null) ?? "",
-      score,
-      categoryScores,
-      actions: selectActions(categoryScores),
-      benchmark,
-      date: formatDate(
-        (session.completed_at as string | null) ??
-          (session.created_at as string | null),
-      ),
-    },
-  };
-}
-
 /** Sample data for design review without a database session. */
-function previewData(): PageData {
+function previewData(): BrandScoreDocPageData {
   const answers: QuizAnswers = {
     consistency: "patchy",
     freshness: "3-5",
@@ -275,6 +222,7 @@ function previewData(): PageData {
   return {
     sessionId: "preview",
     publishedUrl: null,
+    completedAt: new Date().toISOString(),
     doc: {
       sessionId: "preview",
       company: "Harland & Co Interiors",
@@ -294,11 +242,3 @@ function previewData(): PageData {
   };
 }
 
-function formatDate(iso: string | null): string {
-  const date = iso ? new Date(iso) : new Date();
-  return date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
