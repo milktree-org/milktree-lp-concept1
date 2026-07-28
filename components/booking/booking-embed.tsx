@@ -101,8 +101,31 @@ export function BookingEmbed({
     const config: Record<string, any> = {
       layout: "month_view",
       theme: "dark",
-      metadata: { source, ...trackingMetadata },
     };
+
+    // Attribution must be flattened into `metadata[key]` entries.
+    //
+    // Cal's embed serialises `config` into the iframe's query string, so a
+    // NESTED object does not survive — passing `metadata: {...}` produced a
+    // literal `metadata=%5Bobject+Object%5D` in the URL, silently dropping every
+    // field. That broke app/api/cal-webhook/route.ts, which reads metadata.fbp /
+    // metadata.fbc to attach Meta match keys to the server-side Lead.
+    //
+    // Only the keys the webhook and reporting actually use are sent: a URL has a
+    // practical length ceiling and getCalcomTrackingMetadata() returns ~40 keys.
+    const CAL_METADATA_KEYS = [
+      "fbp", "fbc",
+      "first_utm_source", "first_utm_medium", "first_utm_campaign", "first_utm_content",
+      "first_fbclid", "first_gclid",
+      "first_ad_id", "first_adset_id", "first_campaign_id",
+      "last_utm_source", "last_utm_campaign",
+      "first_landing_url", "visitor_id",
+    ];
+    config["metadata[source]"] = source;
+    for (const key of CAL_METADATA_KEYS) {
+      const v = trackingMetadata[key];
+      if (typeof v === "string" && v.trim()) config[`metadata[${key}]`] = v.slice(0, 300);
+    }
     if (pf?.name) config.name = pf.name;
     if (pf?.email) config.email = pf.email;
     if (pf?.notes) config.notes = pf.notes;
