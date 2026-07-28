@@ -53,17 +53,25 @@ export function ConsentBanner() {
   useEffect(() => {
     const el = barRef.current;
     if (!el) {
+      document.documentElement.style.removeProperty('--consent-bar-h');
       document.body.style.paddingBottom = "";
       return;
     }
     const apply = () => {
-      document.body.style.paddingBottom = `${el.offsetHeight + 32}px`;
+      const h = el.offsetHeight + 32;
+      // Published so vertically-centred full-height sections (notably /start,
+      // which centres inside min-h-[calc(100dvh-5rem)]) can subtract it. Body
+      // padding alone only makes the content *reachable* by scrolling — the
+      // centred panel still rendered underneath the bar at first paint.
+      document.documentElement.style.setProperty('--consent-bar-h', `${h}px`);
+      document.body.style.paddingBottom = `${h}px`;
     };
     apply();
     const ro = new ResizeObserver(apply);
     ro.observe(el);
     return () => {
       ro.disconnect();
+      document.documentElement.style.removeProperty('--consent-bar-h');
       document.body.style.paddingBottom = "";
     };
   });

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function StartPage() {
   return (
-    <section className="relative flex min-h-[calc(100dvh-5rem)] flex-col justify-center py-28 md:py-32">
+    <section className="relative flex min-h-[calc(100dvh-5rem-var(--consent-bar-h,0px))] flex-col justify-center py-28 md:py-32">
       <div className="container-edge">
         <QualificationForm />
       </div>
