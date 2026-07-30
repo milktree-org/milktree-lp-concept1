@@ -43,7 +43,7 @@ export function Hero() {
             >
               <LineMask
                 className="inline-block text-center"
-                lines={["Design shouldn\u2019t be", "your bottleneck."]}
+                lines={["Your creative department.", "On demand."]}
                 startDelay={0.05}
               />
             </motion.h1>
@@ -76,8 +76,18 @@ export function Hero() {
             </motion.div>
 
             <motion.p
-              className="hero__trust"
+              className="hero__cta-note"
               custom={3}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+            >
+              {site.ctaNote}
+            </motion.p>
+
+            <motion.p
+              className="hero__trust"
+              custom={3.5}
               variants={fadeUp}
               initial="hidden"
               animate="visible"
@@ -103,6 +113,8 @@ export function Hero() {
           animate={{ opacity: 1 }}
           transition={{ delay: reduce ? 0 : 0.55, duration: 0.8, ease: EASE_OUT_EXPO }}
         >
+          {/* Frames the (real) client logos as evidence of the 200+ claim */}
+          <p className="hero__marquee-caption">{site.marqueeCaption}</p>
           <LogoMarquee />
         </motion.div>
       </div>

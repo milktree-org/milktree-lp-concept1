@@ -36,6 +36,10 @@ export const site = {
   description:
     "Milktree becomes your embedded brand and design team. Unlimited requests, senior work back in 48 hours, one flat monthly fee.",
   trustLine: "200+ brands built · 6 years as an agency · No contracts · Pause anytime",
+  /** Friction-reducer shown directly under primary CTAs. */
+  ctaNote: "Takes about 2 minutes. No call required.",
+  /** Caption framing the client logo marquee as proof of the 200+ claim. */
+  marqueeCaption: "Some of the 200+ brands we\u2019ve built",
 };
 
 /* ------------------------------- Instagram (social proof) ---------------- */
@@ -151,10 +155,13 @@ export const stepsFootnote = "No proposals. No quotes. The process is the produc
 export function getComparison(currency: CurrencyCode = DEFAULT_CURRENCY) {
   const money = CURRENCIES[currency];
   return {
+    // "Budget subscriptions" heads the column so a low price band isn't the
+    // anchor visitors carry into the Plans section; the figure lives in the
+    // Cost cell where the "shallow" framing does the work.
     columns: [
       "Freelancer",
       "In-house hire",
-      `${money.cheapSubs} subscriptions`,
+      "Budget subscriptions",
       "Milktree",
     ],
     rows: [
@@ -163,7 +170,7 @@ export function getComparison(currency: CurrencyCode = DEFAULT_CURRENCY) {
         values: [
           "Variable day rates",
           `${money.hireCost}/yr + overheads`,
-          "Cheap, but shallow",
+          `${money.cheapSubs}/mo, but shallow`,
           "One flat monthly fee",
         ],
       },
@@ -277,6 +284,9 @@ export const plans: Plan[] = getPlans();
 export const planAnchor =
   "Both plans replace the cost and risk of hiring. No recruitment, no management overhead, no notice periods. Need more firepower?";
 
+/** Risk-reversal microcopy rendered directly under each plan CTA. */
+export const planCtaNote = "No contracts · Pause or cancel anytime";
+
 /** Suffix rendered beside the plan price, e.g. "+VAT". Empty outside the UK. */
 export function getPlanTaxSuffix(currency: CurrencyCode = DEFAULT_CURRENCY) {
   return CURRENCIES[currency].taxSuffix;
@@ -350,8 +360,22 @@ export const caseStudies: CaseStudy[] = [
 ];
 
 /* ----------------------------- Testimonials (§3.9) ------------------------ */
-// [slot] — swap for named, attributed client quotes.
-export const testimonials = [
+export type Testimonial = {
+  quote: string;
+  name: string;
+  role: string;
+  /** Client company name — attribution is what makes the quote credible. */
+  company?: string;
+  /** Headshot path, e.g. "/testimonials/jane.webp" (rendered at 40px). */
+  avatar?: string;
+  /** One verified outcome, e.g. "Replaced a £50k hire" — never invent this. */
+  result?: string;
+};
+
+// [slot] — anonymous placeholders. Before launch, replace with real, named
+// client quotes (name + company minimum; avatar + result where available).
+// Unattributed quotes on a £2k–4k/mo offer read as invented and hurt trust.
+export const testimonials: Testimonial[] = [
   {
     quote:
       "Milktree became our design team overnight. Senior work, on-brand, and faster than anyone we'd hired before.",
@@ -475,19 +499,6 @@ export const heroBadges = [
   "6 years as an agency",
   "50+ experienced designers",
 ] as const;
-
-/* --------------------------- Logo marquee labels -------------------------- */
-// Placeholder wordmarks; swap for monochrome SVGs in /public/logos.
-export const logoWordmarks = [
-  "NORTHWIND",
-  "LUMEN",
-  "CADENCE",
-  "VANTAGE",
-  "HALCYON",
-  "MERIDIAN",
-  "ATLAS",
-  "AURORA",
-];
 
 /* ------------------------------ Who it's for ------------------------------ */
 // Editorial audience rows. `keyword` is the single word (or hyphenated

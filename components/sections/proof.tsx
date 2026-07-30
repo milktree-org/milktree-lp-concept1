@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -51,21 +52,44 @@ export function Proof() {
           </Button>
         </Reveal>
 
-        {/* Testimonials [slot] — swap for named client quotes */}
+        {/* Testimonials [slot] — swap for named client quotes. Attribution
+            fields (company, avatar, result) render automatically once real
+            quotes land in lib/site.ts. */}
         <StaggerGroup className="mt-20 grid gap-5 md:grid-cols-3">
           {testimonials.map((t) => (
             <StaggerItem
               key={t.quote}
               className="flex flex-col justify-between rounded-[2rem] border border-border bg-card p-8"
             >
-              <p className="text-lg font-medium leading-relaxed text-foreground">
-                <span className="text-brand">“</span>
-                {t.quote}
-                <span className="text-brand">”</span>
-              </p>
-              <div className="mt-8">
-                <p className="font-bold text-foreground">{t.name}</p>
-                <p className="text-sm text-faint">{t.role}</p>
+              <div>
+                <p className="text-lg font-medium leading-relaxed text-foreground">
+                  <span className="text-brand">“</span>
+                  {t.quote}
+                  <span className="text-brand">”</span>
+                </p>
+                {t.result && (
+                  <p className="mt-5 text-sm font-bold uppercase tracking-[0.08em] text-brand">
+                    {t.result}
+                  </p>
+                )}
+              </div>
+              <div className="mt-8 flex items-center gap-3">
+                {t.avatar && (
+                  <Image
+                    src={t.avatar}
+                    alt={t.name}
+                    width={40}
+                    height={40}
+                    className="size-10 shrink-0 rounded-full object-cover"
+                  />
+                )}
+                <div>
+                  <p className="font-bold text-foreground">{t.name}</p>
+                  <p className="text-sm text-faint">
+                    {t.role}
+                    {t.company ? ` · ${t.company}` : ""}
+                  </p>
+                </div>
               </div>
             </StaggerItem>
           ))}

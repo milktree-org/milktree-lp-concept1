@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Reveal } from "@/components/motion/reveal";
 import { StartButton } from "@/components/layout/start-button";
 import { AnchorLink } from "@/components/layout/anchor-link";
@@ -45,6 +46,20 @@ export function FinalCTA() {
         <Reveal index={3}>
           <p className="mt-10 max-w-sm px-2 text-sm font-medium text-faint sm:max-w-none">
             {site.trustLine}
+          </p>
+        </Reveal>
+        {/* Soft path for the not-ready majority — captures them as leads
+            (Brand Ranking Report) instead of losing them entirely. */}
+        <Reveal index={4}>
+          <p className="mt-5 text-sm font-medium text-muted-foreground">
+            Not ready yet?{" "}
+            <Link
+              href="/brand-report"
+              data-cursor="hover"
+              className="inline-flex min-h-11 items-center font-bold text-foreground underline underline-offset-4 transition-colors hover:text-brand"
+            >
+              Get your free brand report.
+            </Link>
           </p>
         </Reveal>
       </div>

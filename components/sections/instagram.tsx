@@ -2,35 +2,18 @@ import { ArrowUpRight } from "lucide-react";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/motion/reveal";
 import { CountUp } from "@/components/motion/count-up";
-import { buttonVariants } from "@/components/ui/button";
 import { InstagramGrid } from "@/components/sections/instagram-grid";
 import { getInstagramFeed } from "@/lib/instagram";
 import { instagram } from "@/lib/site";
-import { cn } from "@/lib/utils";
-
-function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      className={className}
-    >
-      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-    </svg>
-  );
-}
 
 /**
  * Instagram social proof — one row of three top-performing posts from the
  * last 30 days (Liquid Death kept as a fixture), synced via
  * `npm run sync:instagram`. Each tile links to the real post.
+ *
+ * Placed after the FAQ, and deliberately without a pill-button CTA: outbound
+ * links compete with the funnel, so the only yellow-adjacent action near this
+ * section stays "Get started". Follows are a byproduct, not the goal.
  */
 export async function InstagramSection() {
   const feed = await getInstagramFeed();
@@ -43,51 +26,35 @@ export async function InstagramSection() {
       className="theme-light scroll-mt-28 bg-background py-24 text-foreground md:py-32"
     >
       <div className="container-edge">
-        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-2xl">
-            <Reveal>
-              <Eyebrow>Instagram</Eyebrow>
-            </Reveal>
-            <Reveal index={1}>
-              <h2 className="text-h2 mt-6 text-balance">
-                {/* highlighter mark — echoes the yellow marks in the posts */}
-                <span className="box-decoration-clone bg-brand px-2 text-brand-ink">
-                  <CountUp value={followers} suffix="+" />
-                </span>
-                <span className="mt-1 block sm:mt-0 sm:inline sm:before:content-['_']">
-                  follow the work.
-                </span>
-              </h2>
-            </Reveal>
-            <Reveal index={2}>
-              <p className="text-body-lg mt-5 max-w-lg">
-                The latest from the studio, brand and design in the open.
-                Follow{" "}
-                <a
-                  href={instagram.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-cursor="hover"
-                  className="inline-flex min-h-11 items-center font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
-                >
-                  @{feed.handle}
-                </a>{" "}
-                for more.
-              </p>
-            </Reveal>
-          </div>
-
-          <Reveal index={2} className="w-full shrink-0 sm:w-auto">
-            <a
-              href={instagram.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-cursor="hover"
-              className={cn(buttonVariants({ variant: "default", size: "pill" }), "w-full sm:w-auto")}
-            >
-              <InstagramIcon />
-              Follow on Instagram
-            </a>
+        <div className="max-w-2xl">
+          <Reveal>
+            <Eyebrow>Instagram</Eyebrow>
+          </Reveal>
+          <Reveal index={1}>
+            <h2 className="text-h2 mt-6 text-balance">
+              {/* highlighter mark — echoes the yellow marks in the posts */}
+              <span className="box-decoration-clone bg-brand px-2 text-brand-ink">
+                <CountUp value={followers} suffix="+" />
+              </span>
+              <span className="mt-1 block sm:mt-0 sm:inline sm:before:content-['_']">
+                follow the work.
+              </span>
+            </h2>
+          </Reveal>
+          <Reveal index={2}>
+            <p className="text-body-lg mt-5 max-w-lg">
+              The latest from the studio, brand and design in the open. Follow{" "}
+              <a
+                href={instagram.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cursor="hover"
+                className="inline-flex min-h-11 items-center font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground"
+              >
+                @{feed.handle}
+              </a>{" "}
+              for more.
+            </p>
           </Reveal>
         </div>
 

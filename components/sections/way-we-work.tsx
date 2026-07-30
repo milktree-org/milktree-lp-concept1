@@ -109,8 +109,10 @@ function PinnedShowcase() {
     setActive(idx);
   });
 
+  // 70vh per step (was 90) — keeps the pinned effect while getting visitors
+  // to Proof and Plans roughly a screen and a half sooner.
   return (
-    <div ref={ref} className="relative" style={{ height: `${STEPS.length * 90}vh` }}>
+    <div ref={ref} className="relative" style={{ height: `${STEPS.length * 70}vh` }}>
       <div className="sticky top-0 flex min-h-screen items-center overflow-hidden border-y border-border bg-surface py-16">
         <div className="container-edge grid w-full items-center gap-12 lg:grid-cols-2 lg:gap-20">
           {/* Left: copy that swaps */}

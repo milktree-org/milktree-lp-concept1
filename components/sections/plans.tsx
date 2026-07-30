@@ -10,7 +10,8 @@ import {
   getPlanTaxSuffix,
   getPlanVatNote,
   planAnchor,
-  CONTACT_EMAIL,
+  planCtaNote,
+  CAL_URL,
 } from "@/lib/site";
 import { useCurrency } from "@/lib/use-currency";
 import { cn } from "@/lib/utils";
@@ -51,7 +52,9 @@ export function Plans() {
             className={cn(
               "relative flex flex-col rounded-[2rem] border p-9 md:p-10",
               plan.featured
-                ? "border-brand/50 bg-brand/[0.05] shadow-[0_50px_140px_-55px_rgba(255,220,4,0.32)] lg:-translate-y-3"
+                ? // order-first: on mobile stacking the flagship renders
+                  // above Essentials so it's seen first, matching the badge.
+                  "order-first border-brand/50 bg-brand/[0.05] shadow-[0_50px_140px_-55px_rgba(255,220,4,0.32)] lg:order-none lg:-translate-y-3"
                 : "border-border bg-card",
             )}
           >
@@ -127,6 +130,10 @@ export function Plans() {
               >
                 {plan.cta}
               </StartButton>
+              {/* Risk reversal at the point of action, not in the footnote */}
+              <p className="mt-3 text-center text-xs font-medium text-faint">
+                {planCtaNote}
+              </p>
             </div>
           </StaggerItem>
         ))}
@@ -135,11 +142,16 @@ export function Plans() {
       <Reveal className="mx-auto mt-16 max-w-3xl text-center">
         <p className="text-body text-[0.95rem]">
           {planAnchor}{" "}
+          {/* Cal.com, not mailto — biggest deals shouldn't hit the highest-
+              friction action on the web (or fail on machines with no mail app) */}
           <a
-            href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("More firepower")}`}
+            href={CAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-cursor="hover"
             className="inline-flex min-h-11 items-center font-bold text-foreground underline underline-offset-4 transition-colors hover:text-brand"
           >
-            Let&apos;s talk.
+            Book a call.
           </a>
         </p>
         <p className="mt-6 text-sm font-medium text-faint">

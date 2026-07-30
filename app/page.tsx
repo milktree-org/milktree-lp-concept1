@@ -19,7 +19,9 @@ import { faqJsonLd, serviceJsonLd } from "@/lib/seo";
  * Homepage flow follows the conversion sequence the category leaders use:
  * hook → problem → reframe → what's included → mechanism → proof → ask →
  * comparison → who it's for → price → objections → close. Proof always
- * lands before price; no non-buyer sections between hero and close.
+ * lands before price; no non-buyer sections between hero and close —
+ * Instagram (outbound links) sits after the FAQ so it can't leak traffic
+ * ahead of the mid-page CTA.
  */
 export default function Home() {
   return (
@@ -32,12 +34,12 @@ export default function Home() {
       <HowItWorks />
       <WayWeWork />
       <Proof />
-      <InstagramSection />
       <CtaBand />
       <WhyMilktree />
       <WhoItsFor />
       <Plans />
       <Faq />
+      <InstagramSection />
       <FinalCTA />
     </>
   );

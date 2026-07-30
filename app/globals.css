@@ -419,12 +419,36 @@ body:has([data-hide-chrome]) .site-footer {
   box-shadow: inset 0 1px 12px rgba(255, 255, 255, 0.24);
 }
 
+/* Friction-reducer directly under the CTA pair — brighter than the trust
+   line so "what happens when I click" is answered before the stats. */
+.hero__cta-note {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 8px;
+}
+
 .hero__trust {
   font-size: 0.8125rem;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.38);
   margin-top: 4px;
   text-wrap: balance;
+}
+
+/* Caption framing the client logo marquee as proof of the 200+ claim */
+.hero__marquee-caption {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  padding: 20px 24px 0;
+}
+
+.hero__marquee-caption + .hero__marquee-wrap {
+  padding-top: 24px;
 }
 
 /* Full-bleed work marquee (§WorkStrip) — mid-page, inside the manifesto band */
