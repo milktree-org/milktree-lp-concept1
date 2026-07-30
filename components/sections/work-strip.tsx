@@ -34,11 +34,12 @@ export function WorkStrip({ className }: { className?: string }) {
             <Image
               src={item.src}
               alt={`${item.title}, ${item.sub}`}
-              width={560}
-              height={400}
-              sizes="(max-width: 640px) 220px, 280px"
+              width={720}
+              height={900}
+              sizes="(max-width: 640px) 220px, (max-width: 1024px) 240px, 280px"
               className="work-strip__img"
               loading="lazy"
+              quality={90}
             />
             <figcaption className="work-strip__caption">
               <span className="work-strip__caption-title">{item.title}</span>

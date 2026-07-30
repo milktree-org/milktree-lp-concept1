@@ -1,18 +1,19 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/motion/reveal";
 import { CountUp } from "@/components/motion/count-up";
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
+import { Button } from "@/components/ui/button";
+import { WorkCard } from "@/components/ui/work-card";
 import { stats, testimonials } from "@/lib/site";
-import { workProjects } from "@/lib/work";
-import { WorkDeckDialog } from "@/components/ui/work-deck-dialog";
+import { featuredWorkProjects } from "@/lib/work";
 import { cn } from "@/lib/utils";
 
 /**
- * Proof (§3.9) — a 3×3 grid of case studies, each opening its own
- * /work/[slug] page, followed by testimonials and the stat bar.
+ * Proof (§3.9) — the six featured case studies, each opening its own
+ * /work/[slug] page, followed by testimonials and the stat bar. The full
+ * twelve live on /work.
  */
 export function Proof() {
   return (
@@ -27,51 +28,26 @@ export function Proof() {
           </Reveal>
         </div>
 
-        {/* 9-project grid */}
+        {/* Featured 6-project grid */}
         <StaggerGroup className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {workProjects.map((project) => (
+          {featuredWorkProjects.map((project) => (
             <StaggerItem key={project.slug}>
-              <Link
-                href={`/work/${project.slug}`}
-                data-cursor="hover"
-                className={cn(
-                  "group relative block overflow-hidden rounded-[2rem] border border-border bg-card",
-                  "transition-[transform,box-shadow,border-color] duration-300 ease-[var(--ease-out-expo)]",
-                  "hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]",
-                  "motion-reduce:transform-none motion-reduce:transition-none",
-                )}
-              >
-                <div className="relative aspect-[4/3] w-full overflow-hidden">
-                  <Image
-                    src={project.poster}
-                    alt={`${project.title} — ${project.category}`}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.03] motion-reduce:transform-none"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-                  <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
-                    <div>
-                      <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-faint">
-                        {project.category}
-                      </p>
-                      <h3 className="mt-1 text-xl font-bold uppercase tracking-tight text-foreground">
-                        {project.title}
-                      </h3>
-                    </div>
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/10 backdrop-blur-sm transition-colors duration-300 group-hover:bg-brand group-hover:text-brand-ink">
-                      <ArrowUpRight className="size-5" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
+              <WorkCard project={project} />
             </StaggerItem>
           ))}
         </StaggerGroup>
 
-        {/* Full portfolio deck in a dialog */}
+        {/* Full 12-case-study index */}
         <Reveal className="mt-10 flex justify-center">
-          <WorkDeckDialog />
+          <Button
+            variant="ghostPill"
+            size="pill-lg"
+            data-cursor="hover"
+            render={<Link href="/work" />}
+          >
+            View all work
+            <ArrowUpRight />
+          </Button>
         </Reveal>
 
         {/* Testimonials [slot] — swap for named client quotes */}

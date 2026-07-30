@@ -29,17 +29,18 @@ const columns = [
   {
     heading: "Selected work",
     links: [
-      { label: "EazyPhone", href: "/work/eazyphone" },
+      { label: "Eazy Phone", href: "/work/eazyphone" },
       { label: "Mint Mortgages", href: "/work/mint-mortgages" },
-      { label: "Alltrad Roofing", href: "/work/alltrad-roofing" },
-      { label: "Baya Vodka Soda", href: "/work/baya-vodka-soda" },
-      { label: "Zillwoods", href: "/work/zillwoods" },
+      { label: "Saints Foundation", href: "/work/saints-foundation" },
+      { label: "Melt", href: "/work/melt" },
+      { label: "AO", href: "/work/ao" },
+      { label: "View all work", href: "/work" },
     ],
   },
   {
     heading: "Company",
     links: [
-      { label: "Our work", href: "#work" },
+      { label: "Our work", href: "/work" },
       { label: "Why Milktree", href: "#why" },
       { label: "Plans", href: "#plans" },
       { label: "FAQ", href: "#faq" },

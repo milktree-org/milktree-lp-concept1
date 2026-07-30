@@ -78,14 +78,14 @@ export default async function WorkProjectPage({ params }: { params: Params }) {
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/35" />
       </div>
 
-      {/* Headline + intro */}
+      {/* Title + case-study copy */}
       <div className="container-edge py-20 md:py-28">
         <Reveal>
           <Eyebrow>{project.category}</Eyebrow>
         </Reveal>
         <Reveal index={1}>
           <h1 className="mt-8 max-w-[18ch] text-[clamp(2.25rem,5.5vw,4.5rem)] font-bold uppercase leading-[1.02] tracking-[-0.02em] text-brand">
-            {project.headline}
+            {project.title}
           </h1>
         </Reveal>
         <div className="mt-12 grid gap-10 md:grid-cols-[1fr_minmax(0,2fr)] md:gap-16">
@@ -101,27 +101,13 @@ export default async function WorkProjectPage({ params }: { params: Params }) {
               ))}
             </ul>
           </Reveal>
-          <Reveal index={3}>
-            <p className="text-body max-w-2xl text-lg leading-relaxed">{project.intro}</p>
+          <Reveal index={3} className="max-w-2xl space-y-6">
+            {project.body.map((paragraph) => (
+              <p key={paragraph} className="text-body text-lg leading-relaxed">
+                {paragraph}
+              </p>
+            ))}
           </Reveal>
-        </div>
-
-        {/* Challenge / Approach / Outcome narrative */}
-        <div className="mt-16 grid gap-12 border-t border-border pt-16 md:mt-20 md:grid-cols-3 md:gap-10 md:pt-20">
-          {(
-            [
-              ["The challenge", project.challenge],
-              ["The approach", project.approach],
-              ["The outcome", project.outcome],
-            ] as const
-          ).map(([label, body], i) => (
-            <Reveal key={label} index={i}>
-              <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-brand">
-                {label}
-              </h2>
-              <p className="text-body mt-4 leading-relaxed">{body}</p>
-            </Reveal>
-          ))}
         </div>
       </div>
 

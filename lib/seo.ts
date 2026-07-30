@@ -117,7 +117,7 @@ export function workBreadcrumbJsonLd(project: WorkProject) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Milktree", item: SITE_URL },
-      { "@type": "ListItem", position: 2, name: "Our work", item: `${SITE_URL}/#work` },
+      { "@type": "ListItem", position: 2, name: "Our work", item: `${SITE_URL}/work` },
       {
         "@type": "ListItem",
         position: 3,
@@ -133,7 +133,7 @@ export function workCreativeWorkJsonLd(project: WorkProject) {
     "@context": "https://schema.org",
     "@type": "CreativeWork",
     name: `${project.title} — ${project.category}`,
-    headline: project.headline,
+    headline: `${project.title} — ${project.category}`,
     description: project.seoDescription,
     url: `${SITE_URL}/work/${project.slug}`,
     image: `${SITE_URL}${project.hero}`,
