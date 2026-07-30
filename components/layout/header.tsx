@@ -15,6 +15,7 @@ import {
   NavigationMenuItem,
   NavigationMenuTrigger,
   NavigationMenuContent,
+  NavigationMenuLink,
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
@@ -76,7 +77,7 @@ export function Header() {
 
         {/* Desktop nav */}
         <nav className="hidden lg:block">
-          <NavigationMenu>
+          <NavigationMenu closeDelay={150}>
             <NavigationMenuList className="gap-0.5">
               {nav.map((item) =>
                 item.children ? (
@@ -88,20 +89,21 @@ export function Header() {
                       <ul className="grid w-[320px] gap-1 p-2">
                         {item.children.map((child) => (
                           <li key={child.label}>
-                            <AnchorLink
+                            <NavigationMenuLink
                               href={child.href}
-                              onNavigate={() => setOpen(false)}
-                              className="block rounded-2xl p-3 transition-colors hover:bg-white/5"
+                              closeOnClick
+                              className="flex flex-col items-stretch gap-0 rounded-2xl p-3 transition-colors hover:bg-white/5 focus:bg-white/5"
+                              render={<AnchorLink href={child.href} />}
                             >
-                              <span className="block text-sm font-semibold text-foreground">
+                              <span className="text-sm font-semibold text-foreground">
                                 {child.label}
                               </span>
                               {child.desc && (
-                                <span className="mt-0.5 block text-xs text-faint">
+                                <span className="mt-0.5 text-xs text-faint">
                                   {child.desc}
                                 </span>
                               )}
-                            </AnchorLink>
+                            </NavigationMenuLink>
                           </li>
                         ))}
                       </ul>
@@ -109,12 +111,14 @@ export function Header() {
                   </NavigationMenuItem>
                 ) : (
                   <NavigationMenuItem key={item.label}>
-                    <AnchorLink
+                    <NavigationMenuLink
                       href={item.href}
-                      className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+                      closeOnClick
+                      className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground focus:bg-white/5 focus:text-foreground"
+                      render={<AnchorLink href={item.href} />}
                     >
                       {item.label}
-                    </AnchorLink>
+                    </NavigationMenuLink>
                   </NavigationMenuItem>
                 ),
               )}

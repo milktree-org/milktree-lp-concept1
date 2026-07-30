@@ -43,6 +43,7 @@ export function Proof() {
             variant="ghostPill"
             size="pill-lg"
             data-cursor="hover"
+            nativeButton={false}
             render={<Link href="/work" />}
           >
             View all work

@@ -21,9 +21,9 @@ const columns = [
     heading: "What's included",
     links: [
       { label: "Brand identity & guidelines", href: "#services" },
-      { label: "AI design", href: "#services" },
       { label: "Ads & email design", href: "#services" },
       { label: "Landing page & web design", href: "#services" },
+      { label: "AI creative systems", href: "#services" },
     ],
   },
   {

@@ -151,16 +151,18 @@ const STUDIES = {
     },
   },
   remigo: {
-    dir: "Remigo",
+    // Source lives in ~/Downloads/remigo-new (not case studies/Remigo).
+    dir: "../remigo-new",
     images: {
-      "Billboard_Mockup_1 1.png": "billboard",
-      "Dirty_Signboard_Mockup 1.png": "signboard",
-      "Laptop Website 1.png": "website-laptop",
-      "Phone 1.png": "app-phone",
-      "Round_Sign_Mockup 1.png": "round-sign",
-      "Metro Banner 1.png": "metro-banner",
-      "Large_Fence_Banner_Mockup 1.png": "fence-banner",
-      "BenditoMockup-Free-Flying_Banner 1.png": "flag-banner",
+      "Remigo - Slide 3.png": "wordmark",
+      "Remigo - Slide 5.png": "fence-banner",
+      "Remigo - Slide 17.png": "business-cards",
+      "STATIONERY, BEAUTY SHOT.png": "round-sign",
+      "STATIONERY, BEAUTY SHOT-1.png": "outdoor-screen",
+      "STATIONERY, BEAUTY SHOT-2.png": "billboard",
+      "STATIONERY, BEAUTY SHOT-4.png": "linkedin-phone",
+      "STATIONERY, BEAUTY SHOT-5.png": "flag-banner",
+      "STATIONERY, BEAUTY SHOT-6.png": "website-laptop",
     },
   },
   "saints-foundation": {

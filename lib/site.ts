@@ -1,4 +1,9 @@
 import type { PortfolioItem } from "@/components/ui/portfolio-card";
+import {
+  CURRENCIES,
+  DEFAULT_CURRENCY,
+  type CurrencyCode,
+} from "@/lib/currency";
 
 /**
  * Cal.com — intro call for qualified leads. Override with NEXT_PUBLIC_CAL_URL
@@ -37,7 +42,7 @@ export const site = {
 export const instagram = {
   handle: "milktreeagency",
   url: "https://www.instagram.com/milktreeagency/",
-  followers: 23000,
+  followers: 25166,
 };
 
 /* ------------------------------- Social profiles -------------------------- */
@@ -62,10 +67,10 @@ export const nav: NavItem[] = [
     href: "#services",
     children: [
       { label: "Brand identity & guidelines", href: "#services", desc: "Logo, system, rules" },
-      { label: "AI design", href: "#services", desc: "On-trend, production-ready" },
       { label: "Social & templates", href: "#services", desc: "Always-on creative" },
       { label: "Ads & email design", href: "#services", desc: "Paid and owned channels" },
       { label: "Decks & sales collateral", href: "#services", desc: "Pitches that close" },
+      { label: "AI creative systems", href: "#services", desc: "Senior-directed, shippable" },
       { label: "Packaging, print & OOH", href: "#services", desc: "Off-screen, on-brand" },
     ],
   },
@@ -76,7 +81,6 @@ export const nav: NavItem[] = [
     children: [
       { label: "How it works", href: "#how", desc: "Subscribe, request, receive" },
       { label: "The approach", href: "#way", desc: "Embedded, senior, fast" },
-      { label: "Results", href: "/work", desc: "200+ brands and counting" },
     ],
   },
   { label: "Plans", href: "#plans" },
@@ -84,32 +88,37 @@ export const nav: NavItem[] = [
 ];
 
 /* ------------------------------- Problem (§3.3) --------------------------- */
-export const problems = [
-  {
-    label: "Freelancers",
-    title: "Ghost when you need them.",
-    body: "Talented, but stretched across five other clients. Inconsistent, hard to brief, and gone the moment your deadline actually matters.",
-  },
-  {
-    label: "Hiring",
-    title: "£50k+ for one skill set.",
-    body: "Months to recruit, then salary, software and management overhead. All for one person who can't cover brand, web, social and ads alone.",
-  },
-  {
-    label: "Agencies",
-    title: "Four-figure quotes, then gone.",
-    body: "A proposal for every small thing, layers of account managers, and radio silence once the project wraps. Great for one job, painful as a partner.",
-  },
-];
+export function getProblems(currency: CurrencyCode = DEFAULT_CURRENCY) {
+  const money = CURRENCIES[currency];
+  return [
+    {
+      label: "Freelancers",
+      title: "Ghost when you need them.",
+      body: "Talented, but stretched across five other clients. Inconsistent, hard to brief, and gone the moment your deadline actually matters.",
+    },
+    {
+      label: "Hiring",
+      title: `${money.hireCost} for one skill set.`,
+      body: "Months to recruit, then salary, software and management overhead. All for one person who can't cover brand, web, social and ads alone.",
+    },
+    {
+      label: "Agencies",
+      title: "Four-figure quotes, then gone.",
+      body: "A proposal for every small thing, layers of account managers, and radio silence once the project wraps. Great for one job, painful as a partner.",
+    },
+  ];
+}
+
+export const problems = getProblems();
 
 /* ---------------------------- What's included (§3.6) ---------------------- */
 export const included = [
   { id: "brand", title: "Brand identity & guidelines", body: "Logos, systems and rules that hold up everywhere." },
-  { id: "ai", title: "AI design", body: "AI-native creative: systems, assets and workflows your team can actually ship." },
   { id: "social", title: "Social & templates", body: "Always-on creative that keeps your feed sharp." },
   { id: "ads", title: "Ads & email design", body: "Static and motion ads, plus campaigns and flows that convert." },
   { id: "decks", title: "Decks & sales collateral", body: "Pitch decks and sales material that close." },
   { id: "web", title: "Landing page & web design", body: "Design, not build. Pages engineered to convert." },
+  { id: "ai", title: "AI creative systems", body: "Senior-directed systems, assets and workflows your team can actually ship." },
   { id: "print", title: "Packaging & print", body: "Physical brand moments, done properly." },
   { id: "ooh", title: "Presentations & OOH", body: "From boardroom screens to billboards." },
 ];
@@ -139,56 +148,66 @@ export const steps = [
 export const stepsFootnote = "No proposals. No quotes. The process is the product.";
 
 /* ------------------------------ Comparison (§3.8) ------------------------- */
-export const comparison = {
-  columns: ["Freelancer", "In-house hire", "£500–950 subscriptions", "Milktree"],
-  rows: [
-    {
-      label: "Cost",
-      values: [
-        "Variable day rates",
-        "£50k+/yr + overheads",
-        "Cheap, but shallow",
-        "One flat monthly fee",
-      ],
-    },
-    {
-      label: "Coverage",
-      values: [
-        "One specialism",
-        "One skill set",
-        "One generalist working a queue. Production, not brand",
-        "Senior team across every discipline",
-      ],
-    },
-    {
-      label: "Consistency",
-      values: [
-        "Drifts over time",
-        "Strong, until they leave",
-        "No creative direction",
-        "On-brand, every time",
-      ],
-    },
-    {
-      label: "Speed",
-      values: [
-        "Depends on their week",
-        "Limited capacity",
-        "Days per ticket",
-        "~48h turnaround",
-      ],
-    },
-    {
-      label: "Risk",
-      values: [
-        "Can vanish mid-project",
-        "Hiring & notice periods",
-        "Easy in, little accountability",
-        "Pause or cancel anytime",
-      ],
-    },
-  ],
-};
+export function getComparison(currency: CurrencyCode = DEFAULT_CURRENCY) {
+  const money = CURRENCIES[currency];
+  return {
+    columns: [
+      "Freelancer",
+      "In-house hire",
+      `${money.cheapSubs} subscriptions`,
+      "Milktree",
+    ],
+    rows: [
+      {
+        label: "Cost",
+        values: [
+          "Variable day rates",
+          `${money.hireCost}/yr + overheads`,
+          "Cheap, but shallow",
+          "One flat monthly fee",
+        ],
+      },
+      {
+        label: "Coverage",
+        values: [
+          "One specialism",
+          "One skill set",
+          "One generalist working a queue. Production, not brand",
+          "Senior team across every discipline",
+        ],
+      },
+      {
+        label: "Consistency",
+        values: [
+          "Drifts over time",
+          "Strong, until they leave",
+          "No creative direction",
+          "On-brand, every time",
+        ],
+      },
+      {
+        label: "Speed",
+        values: [
+          "Depends on their week",
+          "Limited capacity",
+          "Days per ticket",
+          "~48h turnaround",
+        ],
+      },
+      {
+        label: "Risk",
+        values: [
+          "Can vanish mid-project",
+          "Hiring & notice periods",
+          "Easy in, little accountability",
+          "Pause or cancel anytime",
+        ],
+      },
+    ],
+  };
+}
+
+export const comparison = getComparison();
 
 /* ------------------------------- Plans (§3.7) ------------------------------ */
 export type Plan = {
@@ -206,55 +225,68 @@ export type Plan = {
   cta: string;
 };
 
-export const plans: Plan[] = [
-  {
-    name: "Essentials",
-    kicker: "Ongoing design support",
-    price: "£1,999",
-    cadence: "/mo",
-    summary: "Your design queue, handled. One request at a time.",
-    anchor:
-      "Unlimited requests, worked one at a time by vetted designers from our bench of 50+, quality-checked by a creative director before it ships. Pause whenever things go quiet and unused time banks.",
-    features: [
-      "Unlimited requests, one at a time",
-      "~48h average turnaround",
-      "Vetted designers, quality-checked by a creative director",
-      "One revision round per request",
-      "Pause anytime, unused time banks",
-      "Cancel any month",
-    ],
-    featured: false,
-    cta: "Get started",
-  },
-  {
-    name: "Design Lead",
-    kicker: "The flagship",
-    price: "£3,999",
-    cadence: "/mo",
-    summary:
-      "Two requests at a time, with your own dedicated design lead, reachable on Slack.",
-    anchor:
-      "A design lead costs £65k+ a year in the UK before National Insurance, holiday cover and recruitment, and buys one skill set. Design Lead is £48k a year, senior across every discipline, cancel any month.",
-    features: [
-      "Unlimited requests, two at a time",
-      "Your own dedicated senior designer, the same person every time",
-      "Direct Slack access to your design lead",
-      "Creative direction on every piece",
-      "Full brand builds, typically 4–6 weeks",
-      "~48h average turnaround",
-      "Pause or cancel anytime",
-    ],
-    featured: true,
-    note: "Most teams choose Design Lead",
-    banner: `First 10 Design Lead clients lock £3,500/mo for life. ${foundingSpotsRemaining} spots left.`,
-    cta: "Get started",
-  },
-];
+export function getPlans(currency: CurrencyCode = DEFAULT_CURRENCY): Plan[] {
+  const money = CURRENCIES[currency];
+  return [
+    {
+      name: "Essentials",
+      kicker: "Ongoing design support",
+      price: money.essentialsMonthly,
+      cadence: "/mo",
+      summary: "Your design queue, handled. One request at a time.",
+      anchor:
+        "Unlimited requests, worked one at a time by vetted designers from our bench of 50+, quality-checked by a creative director before it ships. Pause whenever things go quiet and unused time banks.",
+      features: [
+        "Unlimited requests, one at a time",
+        "~48h average turnaround",
+        "Vetted designers, quality-checked by a creative director",
+        "One revision round per request",
+        "Pause anytime, unused time banks",
+        "Cancel any month",
+      ],
+      featured: false,
+      cta: "Get started",
+    },
+    {
+      name: "Design Lead",
+      kicker: "The flagship",
+      price: money.designLeadMonthly,
+      cadence: "/mo",
+      summary:
+        "Two requests at a time, with your own dedicated design lead, reachable on Slack.",
+      anchor: `A design lead costs ${money.hireAnchor} ${money.hireOverheads}, and buys one skill set. Design Lead is ${money.designLeadAnnual} a year, senior across every discipline, cancel any month.`,
+      features: [
+        "Unlimited requests, two at a time",
+        "Your own dedicated senior designer, the same person every time",
+        "Direct Slack access to your design lead",
+        "Creative direction on every piece",
+        "Full brand builds, typically 4–6 weeks",
+        "~48h average turnaround",
+        "Pause or cancel anytime",
+      ],
+      featured: true,
+      note: "Most teams choose Design Lead",
+      banner: `First 10 Design Lead clients lock ${money.foundingMonthly}/mo for life. ${foundingSpotsRemaining} spots left.`,
+      cta: "Get started",
+    },
+  ];
+}
+
+export const plans: Plan[] = getPlans();
 
 export const planAnchor =
   "Both plans replace the cost and risk of hiring. No recruitment, no management overhead, no notice periods. Need more firepower?";
 
-export const planVatNote = "All prices exclude VAT.";
+/** Suffix rendered beside the plan price, e.g. "+VAT". Empty outside the UK. */
+export function getPlanTaxSuffix(currency: CurrencyCode = DEFAULT_CURRENCY) {
+  return CURRENCIES[currency].taxSuffix;
+}
+
+export function getPlanVatNote(currency: CurrencyCode = DEFAULT_CURRENCY) {
+  return CURRENCIES[currency].vatNote;
+}
+
+export const planVatNote = getPlanVatNote();
 
 /* -------------------------------- Stats ----------------------------------- */
 export const stats = [
@@ -358,7 +390,9 @@ export const portfolio: PortfolioItem[] = [
 ];
 
 /* -------------------------------- FAQ (§3.10) ------------------------------ */
-export const faqs = [
+export function getFaqs(currency: CurrencyCode = DEFAULT_CURRENCY) {
+  const money = CURRENCIES[currency];
+  return [
   {
     q: "What is a design subscription?",
     a: "A design subscription replaces project quotes and retainers with one flat monthly fee. You subscribe, add unlimited design requests to your queue, and senior work comes back in around 48 hours. It works like an in-house creative department, without the headcount, the recruitment or the notice periods.",
@@ -380,12 +414,12 @@ export const faqs = [
     a: "Billing is monthly with no contracts. Pause whenever things go quiet; unused time banks and picks up where you left off. Cancel any month with a click, and everything we've made is yours to keep.",
   },
   {
-    q: "How is Milktree different from cheaper £500–950 design subscriptions?",
+    q: `How is Milktree different from cheaper ${money.cheapSubs} design subscriptions?`,
     a: "Those services put one generalist on a ticket queue. That's production, not brand. Milktree is a senior team with creative direction on every piece, covering brand identity, campaigns, packaging, web and everything between. It's an unlimited design service run like a creative department, not a help desk.",
   },
   {
     q: "Is Milktree a UK design agency?",
-    a: "Yes. Milktree is a UK-based design agency working on subscription. Six years as an agency, 200+ brands built, and clients scaling across the UK and beyond. Prices are in GBP, and there are no contracts: pause or cancel any month.",
+    a: `Yes. Milktree is a UK-based design agency working on subscription. Six years as an agency, 200+ brands built, and clients scaling across the UK and beyond. ${money.faqPricesLine}, and there are no contracts: pause or cancel any month.`,
   },
   {
     q: "Who's actually doing the design?",
@@ -403,7 +437,10 @@ export const faqs = [
     q: "Do prices include VAT?",
     a: "No, all prices exclude VAT. UK VAT is added at the prevailing rate on your invoice where applicable.",
   },
-];
+  ];
+}
+
+export const faqs = getFaqs();
 
 /* ----------------------- Work showcase strip (full-bleed) ----------------- */
 export type WorkShowcaseItem = {

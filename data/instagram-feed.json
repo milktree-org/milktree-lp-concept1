@@ -1,89 +1,40 @@
 {
-  "syncedAt": "2026-07-17T23:49:30.631Z",
+  "syncedAt": "2026-07-30T17:14:57.126Z",
   "handle": "milktreeagency",
-  "followers": 23506,
-  "scannedPosts": 12,
+  "followers": 25166,
+  "scannedPosts": 20,
   "source": "public-api",
+  "selection": "top-engagement-30d-keep-liquid-death",
   "posts": [
-    {
-      "shortcode": "Da6JoQhNojP",
-      "timestamp": "2026-07-17T21:14:41.000Z",
-      "likes": 1,
-      "comments": 0,
-      "engagement": 1,
-      "image": "/instagram/Da6JoQhNojP.webp",
-      "permalink": "https://www.instagram.com/p/Da6JoQhNojP/",
-      "caption": "POV: it’s 2am and you said you’d be up before midnight 🤥 Which one of your friends is this? 👇"
-    },
-    {
-      "shortcode": "Da5GdZrlFKM",
-      "timestamp": "2026-07-17T11:24:06.000Z",
-      "likes": 59,
-      "comments": 8,
-      "engagement": 67,
-      "image": "/instagram/Da5GdZrlFKM.webp",
-      "permalink": "https://www.instagram.com/p/Da5GdZrlFKM/",
-      "caption": "DJI's marketing team posted an AI-generated ad to sell cameras. To photographers.\n\nLast week, DJI published a TikTok ad featuring an AI avatar — a fake person, "
-    },
-    {
-      "shortcode": "Da24iielNEV",
-      "timestamp": "2026-07-16T14:43:59.000Z",
-      "likes": 18,
-      "comments": 1,
-      "engagement": 19,
-      "image": "/instagram/Da24iielNEV.webp",
-      "permalink": "https://www.instagram.com/p/Da24iielNEV/",
-      "caption": "Anthropic just spent millions running an ad that made Sam Altman — the guy building a competing AI — say publicly: \"I thought this was satire.\"\n\nThe ad showed b"
-    },
     {
       "shortcode": "Da0OnjUlB1Q",
       "timestamp": "2026-07-15T13:59:11.000Z",
-      "likes": 1325,
-      "comments": 266,
-      "engagement": 1591,
+      "likes": 5112,
+      "comments": 752,
+      "engagement": 5864,
       "image": "/instagram/Da0OnjUlB1Q.webp",
       "permalink": "https://www.instagram.com/p/Da0OnjUlB1Q/",
       "caption": "Liquid Death sells water. Their VP of Creative used to make TV comedy. Their ads feature Martha Stewart and a fake cult. They’re valued at $1.4 billion.\n\nThere "
     },
     {
-      "shortcode": "DaxpXD8lLJK",
-      "timestamp": "2026-07-14T13:55:08.000Z",
-      "likes": 53,
-      "comments": 1,
-      "engagement": 54,
-      "image": "/instagram/DaxpXD8lLJK.webp",
-      "permalink": "https://www.instagram.com/p/DaxpXD8lLJK/",
-      "caption": "Patagonia ran a full-page New York Times ad on Black Friday telling people not to buy their jacket.\n\nRevenue increased 30% the following year.\n\nMost brands thin"
+      "shortcode": "DbS0kXdlJV4",
+      "timestamp": "2026-07-27T11:08:01.000Z",
+      "likes": 1371,
+      "comments": 88,
+      "engagement": 1459,
+      "image": "/instagram/DbS0kXdlJV4.webp",
+      "permalink": "https://www.instagram.com/p/DbS0kXdlJV4/",
+      "caption": "Burger King France just launched a \"Kids' Menu for Boomers.\" 80s TV shows. A limited-edition menu. Charmed, Beverly Hills 90210, Saved by the Bell, Knight Rider"
     },
     {
-      "shortcode": "DauvClHFIwn",
-      "timestamp": "2026-07-13T10:47:03.000Z",
-      "likes": 34,
-      "comments": 2,
-      "engagement": 36,
-      "image": "/instagram/DauvClHFIwn.webp",
-      "permalink": "https://www.instagram.com/p/DauvClHFIwn/",
-      "caption": "Aldi has one of the smallest marketing budgets of any major UK supermarket.\n\nThey also have one of the most talked-about brands in the country.\n\nThat's not luck"
-    },
-    {
-      "shortcode": "DanGT7XFJxS",
-      "timestamp": "2026-07-10T11:36:28.000Z",
-      "likes": 59,
-      "comments": 3,
-      "engagement": 62,
-      "image": "/instagram/DanGT7XFJxS.webp",
-      "permalink": "https://www.instagram.com/p/DanGT7XFJxS/",
-      "caption": "Duolingo has 16 million TikTok followers and almost zero paid media budget to show for it.\n\nThey don't run ads. They don't sponsor influencers. They don't put o"
-    },
-    {
-      "shortcode": "DakpKdsSzxj",
-      "timestamp": "2026-07-09T12:43:21.000Z",
-      "likes": 7,
-      "comments": 0,
-      "engagement": 7,
-      "image": "/instagram/DakpKdsSzxj.webp",
-      "permalink": "https://www.instagram.com/p/DakpKdsSzxj/",
-      "caption": "Ryanair is the most hated airline in Europe. They're also one of the most profitable.\n\nThat's not a coincidence. That's brand strategy.\n\nMost businesses try to "
+      "shortcode": "DbF7wJnFKuD",
+      "timestamp": "2026-07-22T11:00:40.000Z",
+      "likes": 364,
+      "comments": 39,
+      "engagement": 403,
+      "image": "/instagram/DbF7wJnFKuD.webp",
+      "permalink": "https://www.instagram.com/p/DbF7wJnFKuD/",
+      "caption": "Coca-Cola just redesigned their brand across 200 markets. And their brief was five words: make Coca-Cola more Coca-Cola.\n\nNo new logo. No pivot to minimalism. N"
     }
   ]
 }

@@ -1,8 +1,11 @@
+"use client";
+
 import { Check } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
 import { StartButton } from "@/components/layout/start-button";
-import { plans, planVatNote } from "@/lib/site";
+import { getPlans, getPlanVatNote } from "@/lib/site";
+import { useCurrency } from "@/lib/use-currency";
 
 /**
  * Plans — Ditto-style flat off-white cards, big black price type, black pill
@@ -10,6 +13,8 @@ import { plans, planVatNote } from "@/lib/site";
  * yellow moment.
  */
 export function C2Plans() {
+  const currency = useCurrency();
+  const plans = getPlans(currency);
   return (
     <section id="plans" className="border-t border-border">
       <div className="container-edge py-24 md:py-36">
@@ -94,7 +99,9 @@ export function C2Plans() {
         </StaggerGroup>
 
         <Reveal className="mt-8 text-center">
-          <p className="text-sm font-medium text-faint">{planVatNote}</p>
+          <p className="text-sm font-medium text-faint">
+            {getPlanVatNote(currency)}
+          </p>
         </Reveal>
       </div>
     </section>

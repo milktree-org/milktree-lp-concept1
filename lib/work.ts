@@ -352,7 +352,7 @@ export const workProjects: WorkProject[] = [
     slug: "remigo",
     title: "Remigo",
     category: "Brand, Web & App",
-    poster: img("remigo", "signboard"),
+    poster: img("remigo", "round-sign"),
     hero: img("remigo", "billboard"),
     body: [
       "We developed a complete brand identity for Remigo, a company specialising in remortgages and protection. The project also included the design of the company’s website and app, creating a consistent visual experience across the business.",
@@ -366,13 +366,13 @@ export const workProjects: WorkProject[] = [
       [
         {
           src: img("remigo", "website-laptop"),
-          alt: "Remigo website shown on a laptop resting on an orange armchair",
+          alt: "Remigo website on a laptop resting on a red velvet chair",
         },
       ],
       [
         {
-          src: img("remigo", "app-phone"),
-          alt: "Remigo mobile app on a phone against tan leather",
+          src: img("remigo", "linkedin-phone"),
+          alt: "Remigo LinkedIn company profile on a phone against tan leather",
         },
         {
           src: img("remigo", "round-sign"),
@@ -382,23 +382,29 @@ export const workProjects: WorkProject[] = [
       [
         {
           src: img("remigo", "fence-banner"),
-          alt: "Remigo campaign creative across a large fence banner",
+          alt: "Remigo campaign creative across a large construction fence banner",
         },
       ],
       [
         {
-          src: img("remigo", "metro-banner"),
-          alt: "Remigo advert inside a metro carriage",
+          src: img("remigo", "outdoor-screen"),
+          alt: "Remigo out-of-home digital screen with the shredder campaign",
         },
         {
           src: img("remigo", "flag-banner"),
-          alt: "Remigo vertical banner hanging from a balcony",
+          alt: "Remigo vertical banner hanging between city buildings",
         },
       ],
       [
         {
-          src: img("remigo", "signboard"),
-          alt: "Remigo lightbox signboard on a building exterior",
+          src: img("remigo", "business-cards"),
+          alt: "Remigo business card front and back on brand red",
+        },
+      ],
+      [
+        {
+          src: img("remigo", "wordmark"),
+          alt: "Remigo wordmark in white with a red dot on black",
         },
       ],
     ],

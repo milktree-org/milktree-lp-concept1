@@ -95,7 +95,10 @@ function NavigationMenuContent({
 function NavigationMenuPositioner({
   className,
   side = "bottom",
-  sideOffset = 8,
+  // Keep flush with the trigger so the panel doesn't close in the gap while
+  // moving the pointer into the submenu. A small invisible bridge covers any
+  // remainder from transforms/shadows.
+  sideOffset = 0,
   align = "start",
   alignOffset = 0,
   ...props
@@ -108,7 +111,7 @@ function NavigationMenuPositioner({
         align={align}
         alignOffset={alignOffset}
         className={cn(
-          "isolate z-50 h-(--positioner-height) w-(--positioner-width) max-w-(--available-width) transition-[top,left,right,bottom] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none data-[side=bottom]:before:top-[-10px] data-[side=bottom]:before:right-0 data-[side=bottom]:before:left-0",
+          "isolate z-50 h-(--positioner-height) w-(--positioner-width) max-w-(--available-width) transition-[top,left,right,bottom] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none data-[side=bottom]:before:absolute data-[side=bottom]:before:inset-x-0 data-[side=bottom]:before:bottom-full data-[side=bottom]:before:h-3 data-[side=bottom]:before:content-['']",
           className
         )}
         {...props}

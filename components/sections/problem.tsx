@@ -1,12 +1,16 @@
+"use client";
+
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/motion/reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
-import { problems } from "@/lib/site";
+import { getProblems } from "@/lib/site";
+import { useCurrency } from "@/lib/use-currency";
 
 /**
  * The problem (§7.3) — the three painful status-quo options, staggered in.
  */
 export function Problem() {
+  const problems = getProblems(useCurrency());
   return (
     <section className="relative z-10 bg-background container-edge py-24 md:py-36">
       <div className="max-w-3xl">

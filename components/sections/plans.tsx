@@ -1,17 +1,29 @@
+"use client";
+
 import { Check } from "lucide-react";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/motion/reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
 import { StartButton } from "@/components/layout/start-button";
-import { plans, planAnchor, planVatNote, CONTACT_EMAIL } from "@/lib/site";
+import {
+  getPlans,
+  getPlanTaxSuffix,
+  getPlanVatNote,
+  planAnchor,
+  CONTACT_EMAIL,
+} from "@/lib/site";
+import { useCurrency } from "@/lib/use-currency";
 import { cn } from "@/lib/utils";
 
 /**
  * Plans (§3.7) — Essentials and Design Lead subscriptions. Design Lead is the
  * flagship, carrying the founding-rate banner. Every CTA routes into the
- * qualification funnel.
+ * qualification funnel. Prices localise to the visitor's currency.
  */
 export function Plans() {
+  const currency = useCurrency();
+  const plans = getPlans(currency);
+  const taxSuffix = getPlanTaxSuffix(currency);
   return (
     <section id="plans" className="container-edge scroll-mt-28 py-28 md:py-40">
       <div className="mx-auto max-w-2xl text-center">
@@ -67,7 +79,11 @@ export function Plans() {
               <span className="text-base font-medium text-faint">
                 {plan.cadence}
               </span>
-              <span className="text-sm font-medium text-faint">+VAT</span>
+              {taxSuffix && (
+                <span className="text-sm font-medium text-faint">
+                  {taxSuffix}
+                </span>
+              )}
             </div>
 
             {plan.banner && (
@@ -127,7 +143,7 @@ export function Plans() {
           </a>
         </p>
         <p className="mt-6 text-sm font-medium text-faint">
-          {planVatNote} · No contracts · Pause anytime
+          {getPlanVatNote(currency)} · No contracts · Pause anytime
         </p>
       </Reveal>
     </section>

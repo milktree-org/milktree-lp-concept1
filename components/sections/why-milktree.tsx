@@ -1,9 +1,14 @@
+"use client";
+
 import { Check } from "lucide-react";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/motion/reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
-import { comparison } from "@/lib/site";
+import { getComparison } from "@/lib/site";
+import { useCurrency } from "@/lib/use-currency";
 import { cn } from "@/lib/utils";
+
+type Comparison = ReturnType<typeof getComparison>;
 
 /**
  * Why Milktree (§3.8) — four-way comparison (freelancer / hire / budget
@@ -13,6 +18,7 @@ import { cn } from "@/lib/utils";
 const GRID = "grid grid-cols-[0.9fr_1fr_1fr_1.15fr_1.15fr]";
 
 export function WhyMilktree() {
+  const comparison = getComparison(useCurrency());
   return (
     <section id="why" className="container-edge scroll-mt-28 py-24 md:py-36">
       <div className="max-w-2xl">
@@ -31,17 +37,17 @@ export function WhyMilktree() {
       </div>
 
       {/* Mobile — one card per row, scrolls vertically */}
-      <ComparisonMobile />
+      <ComparisonMobile comparison={comparison} />
 
       {/* Desktop — full comparison grid */}
       <Reveal index={1} className="relative mt-14 hidden lg:block">
-        <ComparisonTable />
+        <ComparisonTable comparison={comparison} />
       </Reveal>
     </section>
   );
 }
 
-function ComparisonMobile() {
+function ComparisonMobile({ comparison }: { comparison: Comparison }) {
   return (
     <StaggerGroup className="mt-12 space-y-4 lg:hidden">
       {comparison.rows.map((row) => (
@@ -97,7 +103,7 @@ function ComparisonMobile() {
   );
 }
 
-function ComparisonTable() {
+function ComparisonTable({ comparison }: { comparison: Comparison }) {
   return (
     <div>
       <div className={cn(GRID, "items-stretch")}>

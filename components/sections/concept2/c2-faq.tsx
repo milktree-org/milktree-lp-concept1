@@ -1,3 +1,5 @@
+"use client";
+
 import { Reveal } from "@/components/motion/reveal";
 import {
   Accordion,
@@ -5,13 +7,15 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
-import { faqs } from "@/lib/site";
+import { getFaqs } from "@/lib/site";
+import { useCurrency } from "@/lib/use-currency";
 
 /**
  * FAQ — minimal hairline accordion on white, editorial two-column layout
  * with the heading on the left and questions on the right.
  */
 export function C2Faq() {
+  const faqs = getFaqs(useCurrency());
   return (
     <section id="faq" className="border-t border-border">
       <div className="container-edge grid gap-12 py-24 md:grid-cols-12 md:py-36">

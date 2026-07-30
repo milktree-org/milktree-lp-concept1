@@ -1,3 +1,5 @@
+"use client";
+
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/motion/reveal";
 import {
@@ -6,13 +8,15 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
-import { faqs } from "@/lib/site";
+import { getFaqs } from "@/lib/site";
+import { useCurrency } from "@/lib/use-currency";
 
 /**
  * FAQ (§3.10) — the practical mechanics of the subscription: unlimited
  * requests, turnaround, pause/cancel, scope and VAT.
  */
 export function Faq() {
+  const faqs = getFaqs(useCurrency());
   return (
     <section id="faq" className="container-edge scroll-mt-28 py-24 md:py-36">
       <div className="grid gap-12 lg:grid-cols-[1fr_1.6fr] lg:gap-20">

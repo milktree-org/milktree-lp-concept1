@@ -28,13 +28,14 @@ function InstagramIcon({ className }: { className?: string }) {
 }
 
 /**
- * Instagram social proof — one row of three recent posts (the newest is
- * skipped), synced via `npm run sync:instagram`. Each tile links to the
- * real post.
+ * Instagram social proof — one row of three top-performing posts from the
+ * last 30 days (Liquid Death kept as a fixture), synced via
+ * `npm run sync:instagram`. Each tile links to the real post.
  */
 export async function InstagramSection() {
   const feed = await getInstagramFeed();
   const followers = feed.followers || instagram.followers;
+  const posts = feed.posts.slice(0, 3);
 
   return (
     <section
@@ -90,7 +91,7 @@ export async function InstagramSection() {
           </Reveal>
         </div>
 
-        <InstagramGrid posts={feed.posts.slice(1, 4)} />
+        <InstagramGrid posts={posts} />
 
         <Reveal index={1}>
           <a

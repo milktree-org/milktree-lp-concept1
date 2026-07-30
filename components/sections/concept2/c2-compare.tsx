@@ -1,19 +1,23 @@
+"use client";
+
 import { Reveal } from "@/components/motion/reveal";
-import { comparison } from "@/lib/site";
+import { getComparison } from "@/lib/site";
+import { useCurrency } from "@/lib/use-currency";
 
 /** Three-way comparison per the concept spec: Freelancer / In-house / Milktree. */
 const COLUMN_INDICES = [0, 1, 3] as const;
-const columns = COLUMN_INDICES.map((i) => comparison.columns[i]);
-const rows = comparison.rows.map((row) => ({
-  label: row.label,
-  values: COLUMN_INDICES.map((i) => row.values[i]),
-}));
 
 /**
  * Why Milktree — editorial comparison table on the off-white surface.
  * The Milktree column header sits on the warm-black ink block.
  */
 export function C2Compare() {
+  const comparison = getComparison(useCurrency());
+  const columns = COLUMN_INDICES.map((i) => comparison.columns[i]);
+  const rows = comparison.rows.map((row) => ({
+    label: row.label,
+    values: COLUMN_INDICES.map((i) => row.values[i]),
+  }));
   return (
     <section id="why">
       <div className="container-edge py-24 md:py-36">

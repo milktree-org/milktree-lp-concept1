@@ -1,6 +1,9 @@
+"use client";
+
 import { Reveal } from "@/components/motion/reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
-import { problems } from "@/lib/site";
+import { getProblems } from "@/lib/site";
+import { useCurrency } from "@/lib/use-currency";
 
 /**
  * The problem — quiet centred editorial statement (COLLINS-style restraint),
@@ -8,6 +11,7 @@ import { problems } from "@/lib/site";
  * hairline-topped columns.
  */
 export function C2Problem() {
+  const problems = getProblems(useCurrency());
   return (
     <section className="container-edge py-24 md:py-36">
       <Reveal className="mx-auto max-w-4xl text-center">
