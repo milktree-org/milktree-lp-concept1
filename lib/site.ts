@@ -372,27 +372,30 @@ export type Testimonial = {
   result?: string;
 };
 
-// [slot] — anonymous placeholders. Before launch, replace with real, named
-// client quotes (name + company minimum; avatar + result where available).
-// Unattributed quotes on a £2k–4k/mo offer read as invented and hurt trust.
 export const testimonials: Testimonial[] = [
   {
     quote:
-      "Milktree became our design team overnight. Senior work, on-brand, and faster than anyone we'd hired before.",
-    name: "Founder",
-    role: "Series A SaaS",
+      "We've used Milktree for years now. Every time we need something done properly, they're the first call.",
+    name: "Chris",
+    role: "Founder",
+    company: "Mortgage Hut",
+    avatar: "/testimonials/chris.webp",
   },
   {
     quote:
-      "We cancelled three freelancer contracts and replaced a hire we hadn't even made yet. It just works.",
-    name: "Head of Marketing",
-    role: "DTC brand",
+      "They feel like a genuine extension of our team. Full of great ideas, and nothing is ever too much trouble.",
+    name: "Linda",
+    role: "Operations Director",
+    company: "Leadtap",
+    avatar: "/testimonials/linda.webp",
   },
   {
     quote:
-      "The consistency is the thing. Every deck, ad and page now looks like it came from the same place, because it did.",
-    name: "CEO",
-    role: "Fintech",
+      "By far the best creative agency I've worked with. They bring our vision to life and deliver, every single time.",
+    name: "Sabrine",
+    role: "Marketing Manager",
+    company: "Fibo",
+    avatar: "/testimonials/sabrine.webp",
   },
 ];
 

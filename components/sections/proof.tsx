@@ -52,9 +52,6 @@ export function Proof() {
           </Button>
         </Reveal>
 
-        {/* Testimonials [slot] — swap for named client quotes. Attribution
-            fields (company, avatar, result) render automatically once real
-            quotes land in lib/site.ts. */}
         <StaggerGroup className="mt-20 grid gap-5 md:grid-cols-3">
           {testimonials.map((t) => (
             <StaggerItem
