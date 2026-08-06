@@ -61,13 +61,18 @@ export default function PrivacyPage() {
 
       <h2>Cookies &amp; tracking technologies</h2>
       <p>
-        We ask for your consent before setting any non-essential cookie. Until you accept,
-        Microsoft Clarity is not loaded at all, the Meta Pixel is held in a revoked-consent
-        state that writes no cookies, and Google Analytics runs in a cookieless mode that
-        stores nothing on your device. You can change or withdraw your choice at any time
-        using the cookie button in the bottom-left corner of any page.
+        We use a small number of analytics and advertising cookies to understand which ads
+        bring people to this Site and whether they lead to an enquiry. These load when you
+        arrive. We do not use cookies to build advertising profiles for third parties, and we
+        do not sell your data.
       </p>
-      <p>Subject to your consent, we use the following third-party tools, each of which may set cookies or use local storage:</p>
+      <p>
+        You can block or delete these at any time in your browser settings, or use your
+        browser&rsquo;s Do Not Track / tracking-protection features &mdash; the Site works
+        fully without them. To ask us to stop processing your data, email{" "}
+        <a href="mailto:hello@milktreeagency.com">hello@milktreeagency.com</a>.
+      </p>
+      <p>We use the following third-party tools, each of which may set cookies or use local storage:</p>
       <ul>
         <li>
           <strong>Meta Pixel &amp; Conversions API</strong> (Meta Platforms, Inc.) — to
@@ -120,11 +125,12 @@ export default function PrivacyPage() {
 
       <h2>Legal bases (UK GDPR)</h2>
       <p>
-        We rely on <strong>consent</strong> for non-essential analytics and advertising
-        cookies, <strong>legitimate interests</strong> for running and securing the Site and
-        measuring our marketing, and <strong>performance of a contract / pre-contract
-        steps</strong> when you make an enquiry or book a call. You can withdraw consent at
-        any time.
+        We rely on <strong>legitimate interests</strong> for running and securing the Site
+        and for measuring the effectiveness of our advertising, <strong>consent</strong> where
+        you tick a box to hear from us, and <strong>performance of a contract / pre-contract
+        steps</strong> when you make an enquiry or book a call. You can object to processing
+        based on legitimate interests, or withdraw consent where you have given it, at any
+        time by emailing <a href="mailto:hello@milktreeagency.com">hello@milktreeagency.com</a>.
       </p>
 
       <h2>Sharing</h2>

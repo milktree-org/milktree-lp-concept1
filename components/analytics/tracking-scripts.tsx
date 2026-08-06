@@ -1,5 +1,13 @@
 import Script from "next/script";
 import { ConsentedScripts } from "./consented-scripts";
+import { CONSENT_REQUIRED } from "@/lib/analytics/consent";
+
+/**
+ * Consent Mode v2 defaults. With the gate off (see CONSENT_REQUIRED) these
+ * start granted, so GA4 writes `_ga` and reports real conversions rather than
+ * modelled ones from cookieless pings.
+ */
+const CONSENT_DEFAULT = CONSENT_REQUIRED ? "denied" : "granted";
 
 /**
  * Third-party analytics loaders — Meta Pixel, GA4, Microsoft Clarity.
@@ -49,10 +57,10 @@ export function TrackingScripts() {
         {`window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('consent', 'default', {
-          ad_storage: 'denied',
-          ad_user_data: 'denied',
-          ad_personalization: 'denied',
-          analytics_storage: 'denied',
+          ad_storage: '${CONSENT_DEFAULT}',
+          ad_user_data: '${CONSENT_DEFAULT}',
+          ad_personalization: '${CONSENT_DEFAULT}',
+          analytics_storage: '${CONSENT_DEFAULT}',
           wait_for_update: 500
         });
         gtag('js', new Date());

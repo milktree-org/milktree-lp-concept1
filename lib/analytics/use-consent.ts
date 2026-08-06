@@ -1,7 +1,13 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { CONSENT_EVENT, CONSENT_KEY, readConsent, type ConsentState } from "./consent";
+import {
+  CONSENT_EVENT,
+  CONSENT_KEY,
+  CONSENT_REQUIRED,
+  readConsent,
+  type ConsentState,
+} from "./consent";
 
 /**
  * Consent is an external store (localStorage + a custom event), so it belongs in
@@ -32,7 +38,13 @@ function subscribe(onChange: () => void): () => void {
 
 // Returns a primitive, so React's identity check is stable across calls.
 const getSnapshot = (): ConsentState | null => readConsent();
-const getServerSnapshot = (): undefined => undefined;
+
+// With the gate off there is nothing to read from storage, so the server and
+// client snapshots agree on 'granted' from the first paint. Returning undefined
+// here would make ConsentedScripts render null on the server and only mount the
+// Pixel after hydration — a pointless delay on the exact page ad clicks land on.
+const getServerSnapshot = (): ConsentState | undefined =>
+  CONSENT_REQUIRED ? undefined : "granted";
 
 export function useConsent(): ConsentState | null | undefined {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);

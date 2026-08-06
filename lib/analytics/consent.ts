@@ -21,6 +21,29 @@ import { safeLocalStorage, safeSessionStorage, safeGet, safeSet, safeRemove } fr
 
 export type ConsentState = 'granted' | 'denied';
 
+/**
+ * Master switch for the consent gate.
+ *
+ * Turned OFF on 2026-08-06 at Akash's instruction: the gate was costing ~85% of
+ * paid signal. Measured on the Jul-26 campaign — 96 outbound ad clicks produced
+ * 14 landing-page views (14.6%; healthy is 70–85%), because BOTH the Pixel and
+ * the CAPI leg were held until a visitor accepted the bar. 96% of delivery is
+ * the Facebook/Instagram in-app browser, the worst case for acceptance rates.
+ *
+ * With this false: tags load for everyone, Consent Mode defaults to granted and
+ * the bar is not rendered. `/privacy` has been updated in the same change to
+ * state legitimate interests rather than consent — the policy and the code have
+ * to agree, and leaving a "we ask for your consent" claim next to a site that
+ * no longer asks would be a misrepresentation, not just a stale doc.
+ *
+ * This is a commercial/legal trade-off, not a technical one. UK PECR reg. 6
+ * requires opt-in for non-essential storage and the ICO's published position is
+ * that legitimate interests does not cure that for advertising cookies. Flip
+ * this back to `true` to restore the compliant behaviour — nothing else needs
+ * to change, every gate in the app reads through `readConsent()`.
+ */
+export const CONSENT_REQUIRED = false;
+
 export const CONSENT_KEY = 'mt_cookie_consent';
 
 /** Broadcast within the tab when the choice changes (storage events only fire
@@ -28,6 +51,10 @@ export const CONSENT_KEY = 'mt_cookie_consent';
 export const CONSENT_EVENT = 'mt:consent-change';
 
 export function readConsent(): ConsentState | null {
+  // Single choke point: every gate in the app (ConsentedScripts, RouteAnalytics,
+  // hasConsent() in meta-tracking, useConsent()) resolves through here, so the
+  // switch only has to be honoured once.
+  if (!CONSENT_REQUIRED) return 'granted';
   if (typeof window === 'undefined') return null;
   try {
     const v = safeGet(safeLocalStorage(), CONSENT_KEY);

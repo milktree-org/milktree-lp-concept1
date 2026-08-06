@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/footer";
 import { TrackingScripts, TRACKING_ENABLED } from "@/components/analytics/tracking-scripts";
 import { RouteAnalytics } from "@/components/analytics/route-analytics";
 import { ConsentBanner } from "@/components/analytics/consent-banner";
+import { CONSENT_REQUIRED } from "@/lib/analytics/consent";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL, organizationJsonLd, seo, webSiteJsonLd } from "@/lib/seo";
 
@@ -63,7 +64,7 @@ export default function RootLayout({
         <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
         <TrackingScripts />
         <RouteAnalytics enabled={TRACKING_ENABLED} />
-        {TRACKING_ENABLED && <ConsentBanner />}
+        {TRACKING_ENABLED && CONSENT_REQUIRED && <ConsentBanner />}
         {/* The <noscript> Meta pixel that used to sit here has been removed.
             It fires on HTML parse, so no JavaScript consent gate can hold it —
             it would have logged a PageView for every visitor before they were
