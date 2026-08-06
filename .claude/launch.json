@@ -5,8 +5,8 @@
       "name": "milktree-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "port": 3000,
+      "autoPort": true
     }
-  ],
-  "autoVerify": false
+  ]
 }

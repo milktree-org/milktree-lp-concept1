@@ -5,6 +5,7 @@ import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { CustomCursor } from "@/components/motion/custom-cursor";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { SiteChrome } from "@/components/layout/site-chrome";
 import { TrackingScripts, TRACKING_ENABLED } from "@/components/analytics/tracking-scripts";
 import { RouteAnalytics } from "@/components/analytics/route-analytics";
 import { ConsentBanner } from "@/components/analytics/consent-banner";
@@ -72,9 +73,14 @@ export default function RootLayout({
             anyway, so the compliance hole was not worth the coverage. */}
         <SmoothScroll>
           <CustomCursor />
-          <Header />
+          {/* Paid-traffic landing pages (/lp/*) render bare — see SiteChrome. */}
+          <SiteChrome>
+            <Header />
+          </SiteChrome>
           <main id="top">{children}</main>
-          <Footer />
+          <SiteChrome>
+            <Footer />
+          </SiteChrome>
         </SmoothScroll>
       </body>
     </html>
