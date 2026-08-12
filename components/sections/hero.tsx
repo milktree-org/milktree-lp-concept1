@@ -43,7 +43,7 @@ export function Hero() {
             >
               <LineMask
                 className="inline-block text-center"
-                lines={["Your creative department.", "On demand."]}
+                lines={["Design capacity", "without the hire."]}
                 startDelay={0.05}
               />
             </motion.h1>
@@ -55,8 +55,8 @@ export function Hero() {
               initial="hidden"
               animate="visible"
             >
-              Your embedded brand &amp; design team. Unlimited requests, senior
-              work back in 48 hours, one flat monthly fee.
+              For marketing teams tired of freelancers and £50k junior roles.
+              Unlimited requests, senior work in ~48 hours.
             </motion.p>
 
             <motion.div
@@ -92,7 +92,7 @@ export function Hero() {
               initial="hidden"
               animate="visible"
             >
-              {site.trustLine}
+              200+ brands · 6 years as an agency · Pause or cancel anytime
             </motion.p>
           </div>
 
