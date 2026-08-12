@@ -3,7 +3,6 @@ import { Reveal } from "@/components/motion/reveal";
 import { StartButton } from "@/components/layout/start-button";
 import { AnchorLink } from "@/components/layout/anchor-link";
 import { buttonVariants } from "@/components/ui/button";
-import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,14 +20,14 @@ export function FinalCTA() {
 
       <div className="container-edge relative z-10 flex flex-col items-center text-center">
         <Reveal>
-          <h2 className="mx-auto max-w-[16ch] text-balance text-[clamp(2.5rem,7vw,6rem)] font-bold uppercase leading-[0.98] tracking-[-0.03em]">
-            Your business has outgrown its brand.
+          <h2 className="mx-auto max-w-[18ch] text-balance text-[clamp(2.5rem,7vw,6rem)] font-bold uppercase leading-[0.98] tracking-[-0.03em]">
+            Ship your next campaign without waiting on design.
           </h2>
         </Reveal>
         <Reveal index={1}>
           <p className="text-body-lg mt-6 max-w-xl">
-            Let&apos;s fix that. Answer six quick questions and we&apos;ll take
-            it from there.
+            Subscribe, brief, get work back in ~48 hours. Pause or cancel any
+            month.
           </p>
         </Reveal>
         <Reveal index={2} className="mt-10 flex w-full max-w-md flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:items-center sm:justify-center">
@@ -45,7 +44,7 @@ export function FinalCTA() {
         </Reveal>
         <Reveal index={3}>
           <p className="mt-10 max-w-sm px-2 text-sm font-medium text-faint sm:max-w-none">
-            {site.trustLine}
+            200+ brands built · 6 years as an agency · Pause anytime
           </p>
         </Reveal>
         {/* Soft path for the not-ready majority — captures them as leads
