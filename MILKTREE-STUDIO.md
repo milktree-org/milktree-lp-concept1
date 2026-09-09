@@ -35,7 +35,7 @@ All prices exclude VAT. All fixed. No proposals, no quotes, no hourly billing an
 
 - Subscriptions are for ongoing work. **Full brand builds are a product, not something that "happens on" a subscription.** Never say otherwise. If a subscriber needs a full rebrand, they buy a Brand Build.
 - "Senior" is reserved for Design Lead and for the Brand Build's named designer in per-product copy. Essentials copy says "vetted designer, checked by a creative director."
-- Design Lead capacity: one senior designer serves no more than three Design Lead clients. Do not sell past that.
+- Design Lead capacity: one senior designer serves no more than three Design Lead clients. Do not sell past that. Because the bench is freelance, each Design Lead designer is contracted to their accounts for a minimum term so "the same person every time" holds.
 - Value anchor for subscriptions: a UK design lead costs £65k+ a year before National Insurance, holiday cover and recruitment. Design Lead is £30k a year, senior across every discipline, cancel any month.
 - "Need more? Let's talk" remains the only unpublished tier.
 
@@ -75,7 +75,7 @@ A studio site, not a landing page. Every page has one job and one primary CTA.
 /pricing                  All five products on one page, side by side
 /for/[audience]           Who it's for: hospitality · property-and-finance · automotive · retail · health-and-aesthetics · trades
 /how-it-works             The three ways to work with us, step by step
-/studio                   About: six years, 200 brands, the team, the creative director, how we work
+/about                    About: the founder, six years, 200 brands, how the bench model works, the creative director
 /insights                 Journal (exists as concept; build the index and article template)
 /insights/[slug]          Article
 /start                    Start a project: form routes by need to sprint, build or subscription
@@ -94,7 +94,7 @@ A studio site, not a landing page. Every page has one job and one primary CTA.
 
 **Header (sticky, blur on scroll):**
 
-`Work` · `Services ▾` · `Pricing ▾` · `Who it's for ▾` · `Studio` · **[Start a project]** (yellow pill) · `Client login`
+`Work` · `Services ▾` · `Pricing ▾` · `Who it's for ▾` · `About` · **[Start a project]** (yellow pill) · `Client login`
 
 - Services dropdown: the five service pages plus "All services".
 - Pricing dropdown: Sprint £799 · Brand Build from £3,499 · Subscription from £1,499 · "Compare all".
@@ -103,7 +103,7 @@ A studio site, not a landing page. Every page has one job and one primary CTA.
 
 **Primary CTA everywhere:** "Start a project" → `/start`. Secondary CTAs are product-specific ("Book a sprint", "See the build", "Compare plans").
 
-**Footer:** Services column · Products column (Sprint, Brand Build, Subscription, Pricing) · Work column (five featured plus "All work") · Studio column (Studio, Insights, Careers, Contact) · Start column (Start a project, Free Brand Score, Client login). Big wordmark, socials, legal.
+**Footer:** Services column · Products column (Sprint, Brand Build, Subscription, Pricing) · Work column (five featured plus "All work") · About column (About, How it works, Insights, Careers, Contact) · Start column (Start a project, Free Brand Score, Client login). Big wordmark, socials, legal.
 
 ---
 
@@ -121,10 +121,10 @@ Eight sections, down from fourteen.
 4. **Three ways to work with us.** Sprint · Brand Build · Subscription. Price, duration, one line, one link each. This replaces "What's included", "New way" and "How it works".
 5. **Why Milktree.** Comparison: Freelancer · Subscription-only studio · Milktree. Rows: full brand builds, print and outdoor, creative director on every piece, fixed prices, pause anytime. Milktree column highlighted.
 6. **Proof.** Testimonials (real ones only) and the count-up stats bar.
-7. **Studio.** One band: who we are, the creative director, link to `/studio`.
+7. **About.** One band: the founder, the bench model in one line, link to `/about`.
 8. **Final CTA.** "Let's fix the thing that's been bothering you." → Start a project.
 
-Keep FAQ as an accordion inside section 4 or 8, not a standalone section. Keep the Instagram grid only if it loads fast; otherwise move it to `/studio`.
+Keep FAQ as an accordion inside section 4 or 8, not a standalone section. Keep the Instagram grid only if it loads fast; otherwise move it to `/about`.
 
 ### 6.2 Work (`/work`)
 
@@ -158,9 +158,19 @@ All five products in one table, one row per feature. Toggle between one-off and 
 
 One template, six data entries. Hero in that sector's language, the sector's symptoms, two or three case studies from that sector, the recommended starting product, CTA. This is what makes the site feel "for me" rather than generic.
 
-### 6.9 Studio (`/studio`)
+### 6.9 About (`/about`)
 
-The people. Founder and creative director with photos, six years, 200 brands, the bench of 50+ designers explained honestly (who does what on each product), how a request moves through the studio, values in one line each, Instagram grid, careers link.
+**No team grid.** Milktree's delivery model is a founder-led studio working with a bench of vetted freelance designers around the world, matched to each brief and signed off by one creative director. That is the honest description and it is a selling point, not a weakness: one in-house designer has one skill set, the bench has fifty. Say it plainly and never imply permanent staff.
+
+Sections:
+
+1. **Hero.** The founder, photographed properly. H1 in the first person: "Six years. Two hundred brands. One standard." One paragraph on why Milktree exists.
+2. **How the studio works.** Three steps: the brief lands with the creative director, the right designer is matched from the bench (by discipline and sector), every piece is checked before it ships. This is where "50+ experienced designers, worldwide" lives, framed as range and depth.
+3. **The bench, by discipline, not by face.** Brand identity · Packaging and print · Web and product · Motion and social · Illustration and 3D. One line each on the kind of designer we call on and where they've worked. No names required, no headshots.
+4. **The constant.** The creative director (the founder) is on every project. On Design Lead, the client's named senior designer is contracted to that account, so "the same person every time" is a promise the model can keep.
+5. **What we believe.** Four lines, no manifesto.
+6. **Where we are.** UK-based, working with clients across the UK and beyond. Instagram grid here if it moves off home.
+7. **CTA.** Start a project, plus a quiet link to Careers for designers who want onto the bench.
 
 ### 6.10 Start (`/start`)
 
@@ -199,7 +209,7 @@ Notifications, Supabase insert, GHL and Slack hooks stay. Add `product` and `tim
 | Phase | Scope | Ships when |
 |---|---|---|
 | **1. Front door** | `lib/site.ts` offer data, `/pricing`, `/sprint`, `/brand-build`, `/subscription`, home sections 1 and 4, `/start` routing, nav and footer, redirects for retired pages, `CLAUDE.md` and README pointers | First |
-| **2. Substance** | `/services` and five sub-pages, `/for/[audience]` template and six entries, `/work` filters and data fields, `/studio`, `/how-it-works`, remaining home sections | Second |
+| **2. Substance** | `/services` and five sub-pages, `/for/[audience]` template and six entries, `/work` filters and data fields, `/about`, `/how-it-works`, remaining home sections | Second |
 | **3. Depth** | `/insights` index and article template, three launch articles (one per product), before-and-after component for sprints, Stripe payment for the sprint | Third |
 
 Every phase ships on the same design system with the same motion and the same quality bar. No phase ships a page that would embarrass the portfolio.
