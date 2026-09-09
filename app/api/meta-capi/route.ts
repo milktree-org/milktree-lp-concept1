@@ -66,6 +66,8 @@ const ALLOWED_EVENTS = new Set([
   // Custom events fired by the funnels
   "StartFormStart",
   "StartFormSubmitted",
+  "SprintCheckoutStart",
+  "ReferralSubmitted",
   // Legacy names, kept so cached bundles in the wild don't get 400s
   "QualificationFormStart",
   "QualificationFormQualified",

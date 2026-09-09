@@ -51,6 +51,8 @@ const columns = [
     heading: "Studio",
     links: [
       { label: "About", href: "/about" },
+      { label: "Insights", href: "/insights" },
+      { label: "Refer a business", href: "/refer" },
       { label: "Careers", href: "/careers" },
       { label: "Contact us", href: "/contact" },
       { label: "Free brand score", href: "/brand-report" },

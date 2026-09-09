@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { workProjects } from "@/lib/work";
 import { services } from "@/lib/services";
 import { getPublishedAudiences } from "@/lib/audiences";
+import { articles } from "@/lib/insights";
 
 const BASE = "https://www.milktreeagency.com";
 
@@ -25,6 +26,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     })),
     { url: `${BASE}/about`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/insights`, changeFrequency: "weekly", priority: 0.6 },
+    ...articles.map((a) => ({
+      url: `${BASE}/insights/${a.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+      lastModified: a.date,
+    })),
+    { url: `${BASE}/refer`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE}/work`, changeFrequency: "monthly", priority: 0.8 },
     ...workProjects.map((p) => ({
       url: `${BASE}/work/${p.slug}`,

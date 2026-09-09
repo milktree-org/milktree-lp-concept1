@@ -13,12 +13,15 @@ import "server-only";
 export type GhlWebhook =
   | "newsletter"
   | "contact"
+  | "referral"
   | "lead"
   | "brandScore"
   | "brandScoreDoc";
 
 function webhookUrl(webhook: GhlWebhook): string | undefined {
   switch (webhook) {
+    // Referral introductions ride the contact webhook; route on `tags`.
+    case "referral":
     case "contact":
       return (
         process.env.GHL_CONTACT_WEBHOOK_URL ??

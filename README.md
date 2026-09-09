@@ -173,3 +173,16 @@ Video URLs are resolved in `lib/media.ts` — when the CDN env var is set at bui
 - `prefers-reduced-motion` is honoured at the primitive level + a global CSS safety net (smooth scroll, parallax, magnetic and custom cursor all disable; reveals become instant fades; the pinned showcase becomes a normal stacked layout).
 - Dark theme only. Yellow (`#FFEE02`) is used sparingly — one accent per viewport.
 - Keyboard accessible, yellow focus rings, ≥44px targets, statically prerendered for fast LCP.
+
+
+## Environment (phase 3 additions)
+
+| Variable | Purpose |
+|---|---|
+| `STRIPE_SECRET_KEY` | Enables self-serve checkout for the Brand Reset Sprint on `/sprint`. Absent: the pay buttons are hidden and `/api/checkout/sprint` returns 503. |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret for `/api/stripe-webhook` (`checkout.session.completed`). The webhook stores the paid lead, notifies the team and sends the sprint follow-up. |
+| `STRIPE_VAT_TAX_RATE_ID` | Optional `txr_…` for UK VAT. If unset the sprint is charged ex-VAT; set this or enable Stripe Tax before going live. |
+
+Database: run `supabase/migrations/20260909_website_leads_product_routing.sql` (phase 1) and `supabase/migrations/20260909_referrals_and_stripe.sql` (phase 3) against the Milktree project. Both are additive; the APIs degrade to logging if a migration is missing.
+
+Quality gate: `scripts/audit-pages.mjs` (screenshots, overflow, console, heading order, target sizes) and the Lighthouse commands in `docs/lighthouse/phase-1.md`.

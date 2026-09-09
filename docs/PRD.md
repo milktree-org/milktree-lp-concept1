@@ -3,7 +3,7 @@
 **Owner:** Levi (Milktree)
 **Version:** 1.0, 9 September 2026
 **Inputs:** `MILKTREE-STUDIO.md` (offer, site map, page specs), `marketing/growth-strategy-research.md` (evidence), `CLAUDE.md` (design system, motion, quality bar)
-**Status:** Approved direction. Phase 1 ready to start on sign-off.
+**Status:** Phases 1 to 3 built on `claude/low-ticket-offer-strategy-4v9kix`. See `docs/lighthouse/` for the gate results per phase.
 
 ---
 
@@ -144,6 +144,13 @@ The bar is "up a level from today", not "no worse". A page fails the gate if any
 | Old links from ads and emails 404 | Redirect map in phase 1, verified with a link check before ship |
 | Copy drifts back to the subscription-only story | `CLAUDE.md` and README now point at `MILKTREE-STUDIO.md`; phase 1.10 sweeps for the banned phrases |
 | Prices quoted from secondary sources in the research are wrong | Research doc marks verification level; nothing from it is quoted on the public site |
+
+## 9a. Delivery notes
+
+- Phase 1 shipped 9 Sept 2026: `docs/lighthouse/phase-1.md`.
+- Phase 2 shipped 9 Sept 2026: `docs/lighthouse/phase-2.md`. `/for/retail`, `/for/automotive` and `/for/health` are not published (fewer than two case studies each); they publish automatically once the sector has two.
+- Phase 3 shipped 9 Sept 2026. Stripe checkout is wired but untested end-to-end (no keys in the build environment); test with `sk_test_…` and the Stripe CLI before going live. The before-and-after section renders only once `lib/sprints.ts` has entries. The Cal.com embed on `/sprint/thanks` and the `/start` booking screen cannot be exercised from the sandbox.
+- The performance target (≥90) is not met on `/` (80 to 83) or `/work` (73 to 85). New pages sit at 85 to 90. The remaining lever is the shared client bundle; see `docs/lighthouse/phase-2.md`.
 
 ## 10. Open decisions
 

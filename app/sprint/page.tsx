@@ -4,6 +4,9 @@ import { CaseStudyRow } from "@/components/product/case-study-row";
 import { ProductCta } from "@/components/product/product-cta";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getProduct, getSprintFaqs } from "@/lib/offer";
+import { sprintCases } from "@/lib/sprints";
+import { stripeEnabled } from "@/lib/server/stripe";
+import { BeforeAfter } from "@/components/product/before-after";
 import { site } from "@/lib/site";
 import { breadcrumbJsonLd, faqPageJsonLd, pageMeta, productJsonLd } from "@/lib/seo";
 
@@ -31,7 +34,8 @@ export default function Sprint() {
           breadcrumbJsonLd([{ name: "Brand Reset Sprint", path: "/sprint" }]),
         ]}
       />
-      <SprintPage />
+      <SprintPage stripeEnabled={stripeEnabled()} />
+      <BeforeAfter cases={sprintCases} />
       <CaseStudyRow
         eyebrow="The standard"
         title="Work from the same studio."

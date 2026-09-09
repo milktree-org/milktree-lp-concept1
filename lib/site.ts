@@ -104,7 +104,17 @@ export function getNav(currency: CurrencyCode = DEFAULT_CURRENCY): NavItem[] {
         { label: "All work by sector", href: "/work", desc: "Filter the portfolio by what you do" },
       ],
     },
-    { label: "About", href: "/about" },
+    {
+      label: "About",
+      href: "/about",
+      children: [
+        { label: "About Milktree", href: "/about", desc: "Seven years, 200 brands, one standard" },
+        { label: "Insights", href: "/insights", desc: "Straight talk on brand and design" },
+        { label: "Refer a business", href: "/refer", desc: "Introduce a business, get a sprint on us" },
+        { label: "Careers", href: "/careers", desc: "Join the network" },
+        { label: "Contact", href: "/contact", desc: "A real person, within one working day" },
+      ],
+    },
   ];
 }
 

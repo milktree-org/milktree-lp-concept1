@@ -20,7 +20,7 @@ const URL = process.env.URL || "http://localhost:3000";
 const OUT = path.resolve(import.meta.dirname, "../.screenshots/audit");
 fs.mkdirSync(OUT, { recursive: true });
 
-const PAGES = (process.env.PAGES || "/,/pricing,/sprint,/brand-build,/subscription,/start,/start?product=sprint,/work,/work?sector=hospitality,/services,/services/print,/for/hospitality,/about,/how-it-works,/work/melt")
+const PAGES = (process.env.PAGES || "/,/pricing,/sprint,/brand-build,/subscription,/start,/start?product=sprint,/work,/work?sector=hospitality,/services,/services/print,/for/hospitality,/about,/how-it-works,/work/melt,/insights,/insights/what-a-rebrand-actually-costs,/refer,/sprint/thanks")
   .split(",")
   .map((p) => p.trim())
   .filter(Boolean);

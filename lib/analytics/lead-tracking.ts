@@ -36,6 +36,7 @@ const ATTR_PARAMS = [
   // Platform click IDs (gold for ad-platform attribution)
   'fbclid',     // Meta
   'gclid',      // Google Ads
+  'ref',        // referral partner or client name from /refer share links
   'gbraid',     // Google enhanced conversions (iOS web)
   'wbraid',     // Google enhanced conversions (cross-device)
   'msclkid',    // Microsoft (Bing) Ads
@@ -92,6 +93,7 @@ interface TouchData {
   site_source_name?: string;
   fbclid?: string;
   gclid?: string;
+  ref?: string;
   gbraid?: string;
   wbraid?: string;
   msclkid?: string;

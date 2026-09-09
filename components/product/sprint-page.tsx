@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { ProductHero } from "@/components/product/product-hero";
+import { PayButton } from "@/components/product/pay-button";
 import { Steps } from "@/components/product/steps";
 import { FaqAccordion } from "@/components/product/faq-accordion";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -22,7 +23,7 @@ import { useCurrency } from "@/lib/use-currency";
  * Client body of /sprint: hero, choose your sprint, what you get, the two
  * weeks, the credit rule, FAQ. Currency resolves after hydration.
  */
-export function SprintPage() {
+export function SprintPage({ stripeEnabled = false }: { stripeEnabled?: boolean }) {
   const currency = useCurrency();
   const money = CURRENCIES[currency];
   const sprint = getProduct("sprint", currency);
@@ -54,6 +55,7 @@ export function SprintPage() {
             <p className="text-body mt-4 max-w-xl">
               Pick the one that&apos;s costing you. If it&apos;s all three, that&apos;s a brand
               problem and a Brand Build is the honest answer. The sprint fee comes off it.
+              {stripeEnabled && currency === "GBP" && " Pay now and book your day one, or start with a call."}
             </p>
           </Reveal>
         </div>
@@ -68,7 +70,7 @@ export function SprintPage() {
                 {o.name}
               </span>
               <h3 className="text-h3 mt-4">{o.problem}</h3>
-              <ul className="mt-6 space-y-3">
+              <ul className="mt-6 flex-1 space-y-3">
                 {o.deliver.map((d) => (
                   <li key={d} className="flex items-start gap-3 text-[0.95rem] text-muted-foreground">
                     <Check aria-hidden className="mt-0.5 size-4 shrink-0 text-foreground" />
@@ -76,6 +78,9 @@ export function SprintPage() {
                   </li>
                 ))}
               </ul>
+              {stripeEnabled && currency === "GBP" && (
+                <PayButton sprint={o.id} price={sprint.price} className="mt-8" />
+              )}
             </StaggerItem>
           ))}
         </StaggerGroup>
