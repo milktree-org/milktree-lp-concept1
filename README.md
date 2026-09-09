@@ -1,6 +1,6 @@
 # Milktree — marketing site
 
-Premium, motion-rich marketing site for **Milktree** — "your creative department, on demand." Black & yellow, type-led, built to convert cold traffic into qualified subscription leads via the multistep form at `/start` and the Brand Ranking Quiz at `/brand-report`. Design system spec in [`CLAUDE.md`](./CLAUDE.md); offer/funnel spec in `MILKTREE-LANDING.md`.
+Premium, motion-rich studio site for **Milktree** — a UK design studio building "brands you can see on the high street." Black & yellow, type-led. Sells a fixed-price sprint, a fixed-price brand build and an ongoing subscription; every lead enters via `/start`. Design system spec in [`CLAUDE.md`](./CLAUDE.md); offer, site map and funnel spec in [`MILKTREE-STUDIO.md`](./MILKTREE-STUDIO.md); evidence in [`marketing/growth-strategy-research.md`](./marketing/growth-strategy-research.md).
 
 ## Stack
 
