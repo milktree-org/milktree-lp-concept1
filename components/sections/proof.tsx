@@ -12,9 +12,9 @@ import { featuredWorkProjects } from "@/lib/work";
 import { cn } from "@/lib/utils";
 
 /**
- * Proof (§3.9) — the six featured case studies, each opening its own
+ * Proof (spec §6.1.6) — the six featured case studies, each opening its own
  * /work/[slug] page, followed by testimonials and the stat bar. The full
- * twelve live on /work.
+ * set lives on /work.
  */
 export function Proof() {
   return (
@@ -102,7 +102,7 @@ export function Proof() {
             </Reveal>
             <Reveal index={1}>
               <h3 className="text-h2 mt-6 max-w-[14ch]">
-                Six years of agency craft behind it.
+                Seven years of studio craft behind it.
               </h3>
             </Reveal>
           </div>

@@ -9,7 +9,17 @@ import { cn } from "@/lib/utils";
  * poster image, category + title overlay, arrow chip that flips to yellow
  * on hover.
  */
-export function WorkCard({ project }: { project: WorkProject }) {
+export function WorkCard({
+  project,
+  headingLevel: Heading = "h3",
+  priority = false,
+}: {
+  project: WorkProject;
+  /** h2 when the card sits directly under a page h1 (the /work index). */
+  headingLevel?: "h2" | "h3";
+  /** Eager, high-priority image for the first row of an index page (LCP). */
+  priority?: boolean;
+}) {
   return (
     <Link
       href={`/work/${project.slug}`}
@@ -27,6 +37,7 @@ export function WorkCard({ project }: { project: WorkProject }) {
           alt={`${project.title} — ${project.category}`}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          priority={priority}
           className="object-cover transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:scale-[1.03] motion-reduce:transform-none"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
@@ -35,9 +46,9 @@ export function WorkCard({ project }: { project: WorkProject }) {
             <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-faint">
               {project.category}
             </p>
-            <h3 className="mt-1 text-xl font-bold uppercase tracking-tight text-foreground">
+            <Heading className="mt-1 text-xl font-bold uppercase tracking-tight text-foreground">
               {project.title}
-            </h3>
+            </Heading>
           </div>
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/10 backdrop-blur-sm transition-colors duration-300 group-hover:bg-brand group-hover:text-brand-ink">
             <ArrowUpRight className="size-5" />

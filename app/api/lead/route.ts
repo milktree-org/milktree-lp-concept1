@@ -14,32 +14,31 @@ import {
   addToNurture,
   notifySlack,
 } from "@/lib/server/resend";
-import { qualifiedOfferEmail, teamNotifyEmail } from "@/lib/server/emails";
+import { productFollowUpEmail, teamNotifyEmail } from "@/lib/server/emails";
 import {
   NEED_OPTIONS,
+  SECTOR_OPTIONS,
   TEAM_OPTIONS,
-  MARKETING_OPTIONS,
-  BUDGET_OPTIONS,
+  TIMING_OPTIONS,
   optionLabel,
   type LeadSubmission,
   type LeadRoute,
 } from "@/lib/funnel";
-import { foundingSpotsRemaining } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 /**
- * POST /api/lead — the qualification funnel's single write path.
+ * POST /api/lead — the start form's single write path (spec §6.10).
  *
  * Non-negotiable ordering (zero lead loss):
  *   1. validate
- *   2. recompute qualification server-side (client route values are ignored)
+ *   2. route server-side by product (client route values are ignored)
  *   3. AWAIT persistence — Formspree (intake endpoint) and Supabase in
  *      parallel; the request only fails if BOTH stores fail
  *   4. respond with the route
- *   5. after(): Resend offer email, team notify, nurture add — failures are
- *      logged and never affect the stored lead or the response
+ *   5. after(): Resend follow-up email, team notify, GHL, nurture add —
+ *      failures are logged and never affect the stored lead or the response
  */
 export async function POST(request: Request) {
   const allowed = await rateLimit(`lead:${requestIp(request)}`, 20, 600);
@@ -60,14 +59,14 @@ export async function POST(request: Request) {
   }
   const lead = validated.data;
   const route = evaluateRoute(lead);
+  const labels = labelsFor(lead);
 
   // Persist FIRST — Formspree and Supabase in parallel. As long as one store
   // has the lead we proceed; if both fail the client gets a 500 and can retry,
   // and we fire a best-effort team notify so the lead isn't lost silently.
-  const supabase = getSupabase();
-  const [formspreeStored, supabaseResult] = await Promise.all([
+  const [formspreeStored, supabaseInsert] = await Promise.all([
     sendToFormspree("intake", {
-      _subject: `${route === "qualified" ? "New Qualified Lead" : "New Unqualified Lead"} — ${lead.company}`,
+      _subject: `New ${route} lead — ${lead.company}`,
       form: "intake",
       route,
       name: lead.name,
@@ -75,48 +74,18 @@ export async function POST(request: Request) {
       phone: lead.phone ?? "",
       company: lead.company,
       website: lead.website,
-      need: optionLabel(NEED_OPTIONS, lead.need),
-      teamSize: optionLabel(TEAM_OPTIONS, lead.teamSize),
-      marketing: optionLabel(MARKETING_OPTIONS, lead.marketing),
-      budget: optionLabel(BUDGET_OPTIONS, lead.budget),
+      need: labels.need,
+      sector: labels.sector,
+      teamSize: labels.teamSize,
+      timing: labels.timing,
       consent: lead.consent,
       attribution: lead.attribution ?? undefined,
     }),
-    supabase
-      ? supabase
-          .from("website_leads")
-          .insert({
-            name: lead.name,
-            email: lead.email,
-            phone: lead.phone ?? null,
-            company: lead.company,
-            website: lead.website || null,
-            need: lead.need,
-            team_size: lead.teamSize,
-            marketing_function: lead.marketing,
-            budget: lead.budget,
-            route,
-            consent: lead.consent,
-            source: "start-form",
-            attribution: lead.attribution ?? null,
-          })
-          .select("id")
-          .single()
-      : Promise.resolve(null),
+    insertLead(lead, route),
   ]);
 
-  let leadId: string | null = null;
-  let supabaseStored = false;
-  if (supabaseResult) {
-    if (supabaseResult.error) {
-      console.error("[lead] insert failed:", supabaseResult.error.message);
-    } else {
-      leadId = supabaseResult.data.id;
-      supabaseStored = true;
-    }
-  } else {
-    console.error("[lead] Supabase not configured; relying on Formspree:", lead.email);
-  }
+  const leadId = supabaseInsert.id;
+  const supabaseStored = supabaseInsert.stored;
 
   if (!formspreeStored && !supabaseStored) {
     after(() => notifyTeam(lead, route, "ALL STORES FAILED — lead only in this notification"));
@@ -131,12 +100,8 @@ export async function POST(request: Request) {
 
   after(async () => {
     await Promise.allSettled([
-      route === "qualified" ? sendQualifiedEmail(lead, leadId) : Promise.resolve(),
+      sendFollowUpEmail(lead, route, leadId),
       notifyTeam(lead, route),
-      // The /start form is the primary paid conversion, and until now it was
-      // the only funnel that never reached GHL — so a booked call could not be
-      // traced back to the ad that produced it from inside the CRM. Sent with
-      // attribution, and in `after()` so a slow GHL never delays the response.
       sendToGhlWebhook("lead", {
         name: lead.name,
         email: lead.email,
@@ -148,14 +113,15 @@ export async function POST(request: Request) {
         company: lead.company,
         website: lead.website,
         route,
-        need: optionLabel(NEED_OPTIONS, lead.need),
-        teamSize: optionLabel(TEAM_OPTIONS, lead.teamSize),
-        marketing: optionLabel(MARKETING_OPTIONS, lead.marketing),
-        budget: optionLabel(BUDGET_OPTIONS, lead.budget),
+        product: lead.need,
+        need: labels.need,
+        sector: labels.sector,
+        teamSize: labels.teamSize,
+        timing: labels.timing,
         consent: lead.consent,
         leadId,
         source: "start-form",
-        tags: ["start-form", `start-${route}`],
+        tags: ["start-form", `start-${route}`, `product-${lead.need}`, `sector-${lead.sector}`],
         ...ghlAttribution(lead.attribution),
       }),
       lead.consent
@@ -171,13 +137,80 @@ export async function POST(request: Request) {
   return Response.json({ route, leadId });
 }
 
-async function sendQualifiedEmail(lead: LeadSubmission, leadId: string | null) {
+function labelsFor(lead: LeadSubmission) {
+  return {
+    need: optionLabel(NEED_OPTIONS, lead.need),
+    sector: optionLabel(SECTOR_OPTIONS, lead.sector),
+    teamSize: optionLabel(TEAM_OPTIONS, lead.teamSize),
+    timing: optionLabel(TIMING_OPTIONS, lead.timing),
+  };
+}
+
+/**
+ * Insert into website_leads. The phase-1 columns (product, sector, timing)
+ * are added by supabase/migrations/20260909_website_leads_product_routing.sql;
+ * if the migration hasn't run yet, retry with the legacy shape so the lead is
+ * still stored, and log loudly.
+ */
+async function insertLead(
+  lead: LeadSubmission,
+  route: LeadRoute,
+): Promise<{ id: string | null; stored: boolean }> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    console.error("[lead] Supabase not configured; relying on Formspree:", lead.email);
+    return { id: null, stored: false };
+  }
+
+  const base = {
+    name: lead.name,
+    email: lead.email,
+    phone: lead.phone ?? null,
+    company: lead.company,
+    website: lead.website || null,
+    need: lead.need,
+    team_size: lead.teamSize,
+    route,
+    consent: lead.consent,
+    source: "start-form",
+    attribution: lead.attribution ?? null,
+  };
+
+  const first = await supabase
+    .from("website_leads")
+    .insert({ ...base, product: lead.need, sector: lead.sector, timing: lead.timing })
+    .select("id")
+    .single();
+  if (!first.error) return { id: first.data.id, stored: true };
+
+  const missingColumn = /column .* does not exist|schema cache/i.test(first.error.message);
+  if (!missingColumn) {
+    console.error("[lead] insert failed:", first.error.message);
+    return { id: null, stored: false };
+  }
+
+  console.error(
+    "[lead] website_leads is missing the phase-1 columns; run supabase/migrations/20260909_website_leads_product_routing.sql. Storing legacy shape.",
+  );
+  const second = await supabase
+    .from("website_leads")
+    .insert({ ...base, budget: null, marketing_function: null })
+    .select("id")
+    .single();
+  if (second.error) {
+    console.error("[lead] legacy insert failed:", second.error.message);
+    return { id: null, stored: false };
+  }
+  return { id: second.data.id, stored: true };
+}
+
+async function sendFollowUpEmail(lead: LeadSubmission, route: LeadRoute, leadId: string | null) {
   const resend = getResend();
   if (!resend) return;
   try {
-    const email = qualifiedOfferEmail({
+    const email = productFollowUpEmail({
       firstName: lead.name.split(" ")[0] || "there",
-      foundingSpots: foundingSpotsRemaining,
+      route,
     });
     await resend.emails.send({
       from: FROM,
@@ -195,7 +228,7 @@ async function sendQualifiedEmail(lead: LeadSubmission, leadId: string | null) {
         .eq("id", leadId);
     }
   } catch (e) {
-    console.error("[lead] qualified email failed:", e);
+    console.error("[lead] follow-up email failed:", e);
   }
 }
 
@@ -204,16 +237,14 @@ async function notifyTeam(
   route: LeadRoute,
   warning?: string,
 ) {
+  const labels = labelsFor(lead);
   const details = {
     name: lead.name,
     email: lead.email,
     phone: lead.phone,
     company: lead.company,
     website: lead.website,
-    teamSize: optionLabel(TEAM_OPTIONS, lead.teamSize),
-    budget: optionLabel(BUDGET_OPTIONS, lead.budget),
-    need: optionLabel(NEED_OPTIONS, lead.need),
-    marketing: optionLabel(MARKETING_OPTIONS, lead.marketing),
+    ...labels,
     route,
   };
 
@@ -222,7 +253,7 @@ async function notifyTeam(
       warning ? `:rotating_light: ${warning}` : null,
       `*New ${route} lead* — ${details.company}`,
       `${details.name} · ${details.email}${details.phone ? ` · ${details.phone}` : ""}`,
-      `Team: ${details.teamSize} · Budget: ${details.budget} · Needs: ${details.need}`,
+      `Wants: ${details.need} · Sector: ${details.sector} · Team: ${details.teamSize} · When: ${details.timing}`,
     ]
       .filter(Boolean)
       .join("\n");

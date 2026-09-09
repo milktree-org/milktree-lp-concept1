@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 type Comparison = ReturnType<typeof getComparison>;
 
 /**
- * Why Milktree (§3.8) — four-way comparison (freelancer / hire / budget
- * subscriptions / Milktree) on desktop; stacked cards on mobile so nothing
- * requires horizontal scrolling.
+ * Why Milktree (spec §6.1.5) — four-way comparison (freelancer / hire /
+ * subscription-only studio / Milktree) on desktop; stacked cards on mobile
+ * so nothing requires horizontal scrolling.
  */
 const GRID = "grid grid-cols-[0.9fr_1fr_1fr_1.15fr_1.15fr]";
 
@@ -26,12 +26,12 @@ export function WhyMilktree() {
           <Eyebrow>Why Milktree</Eyebrow>
         </Reveal>
         <Reveal index={1}>
-          <h2 className="text-h2 mt-6">The maths is simple.</h2>
+          <h2 className="text-h2 mt-6">The difference is visible.</h2>
         </Reveal>
         <Reveal index={2}>
           <p className="text-body mt-4">
-            Compare the options most teams weigh up, and where an embedded
-            creative partner lands.
+            Compare the options most owners weigh up, and where a studio that
+            builds whole brands lands.
           </p>
         </Reveal>
       </div>

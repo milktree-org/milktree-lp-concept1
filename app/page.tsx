@@ -1,43 +1,36 @@
 import { Hero } from "@/components/sections/hero";
-import { Problem } from "@/components/sections/problem";
-import { NewWay } from "@/components/sections/new-way";
-import { HowItWorks } from "@/components/sections/how-it-works";
+import { WorkStrip } from "@/components/sections/work-strip";
+import { Symptoms } from "@/components/sections/symptoms";
+import { ThreeWays } from "@/components/sections/three-ways";
 import { WayWeWork } from "@/components/sections/way-we-work";
-import { Services } from "@/components/sections/services";
-import { Proof } from "@/components/sections/proof";
-import { InstagramSection } from "@/components/sections/instagram";
-import { CtaBand } from "@/components/sections/cta-band";
 import { WhyMilktree } from "@/components/sections/why-milktree";
+import { Proof } from "@/components/sections/proof";
 import { WhoItsFor } from "@/components/sections/who-its-for";
-import { Plans } from "@/components/sections/plans";
 import { Faq } from "@/components/sections/faq";
+import { InstagramSection } from "@/components/sections/instagram";
 import { FinalCTA } from "@/components/sections/final-cta";
 import { JsonLd } from "@/components/seo/json-ld";
 import { faqJsonLd, serviceJsonLd } from "@/lib/seo";
 
 /**
- * Homepage flow follows the conversion sequence the category leaders use:
- * hook → problem → reframe → what's included → mechanism → proof → ask →
- * comparison → who it's for → price → objections → close. Proof always
- * lands before price; no non-buyer sections between hero and close —
- * Instagram (outbound links) sits after the FAQ so it can't leak traffic
- * ahead of the mid-page CTA.
+ * Homepage (MILKTREE-STUDIO.md §6.1): hook → the work → the symptoms → the
+ * three ways to buy → how the studio runs a job → why us → proof → who it's
+ * for → objections → close. Work lands before pricing; pricing lands before
+ * proof of scale. Instagram sits after the FAQ so outbound links can't leak
+ * traffic ahead of the ask.
  */
 export default function Home() {
   return (
     <>
       <JsonLd data={[serviceJsonLd(), faqJsonLd()]} />
       <Hero />
-      <Problem />
-      <NewWay />
-      <Services />
-      <HowItWorks />
+      <WorkStrip className="border-y border-border bg-surface py-16 md:py-24" />
+      <Symptoms />
+      <ThreeWays />
       <WayWeWork />
-      <Proof />
-      <CtaBand />
       <WhyMilktree />
+      <Proof />
       <WhoItsFor />
-      <Plans />
       <Faq />
       <InstagramSection />
       <FinalCTA />

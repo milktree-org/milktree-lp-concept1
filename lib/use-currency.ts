@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
   CURRENCY_COOKIE,
   DEFAULT_CURRENCY,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/currency";
 
 function readCurrencyCookie(): CurrencyCode {
+  if (typeof document === "undefined") return DEFAULT_CURRENCY;
   const match = document.cookie.match(
     new RegExp(`(?:^|;\\s*)${CURRENCY_COOKIE}=([A-Za-z]{3})`),
   );
@@ -16,15 +17,16 @@ function readCurrencyCookie(): CurrencyCode {
   return isCurrencyCode(value) ? value : DEFAULT_CURRENCY;
 }
 
+// The cookie is written once by proxy.ts before the page loads and never
+// changes during a session, so there is nothing to subscribe to.
+const subscribe = () => () => {};
+const getServerSnapshot = () => DEFAULT_CURRENCY;
+
 /**
  * The visitor's display currency, set by `proxy.ts` from Vercel geo.
  * Server-rendered HTML always shows GBP; the real currency applies after
  * hydration, which keeps every page fully static and cache-friendly.
  */
 export function useCurrency(): CurrencyCode {
-  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY);
-  useEffect(() => {
-    setCurrency(readCurrencyCookie());
-  }, []);
-  return currency;
+  return useSyncExternalStore(subscribe, readCurrencyCookie, getServerSnapshot);
 }

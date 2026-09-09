@@ -6,7 +6,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Book your intro call",
   description:
-    "Book a 30-minute intro call. We'll walk through how the subscription works, what your first month looks like, and answer anything else.",
+    "Book a 30-minute intro call. We'll talk through what you need, which product fits, and what the first two weeks look like.",
   robots: { index: false, follow: true },
 };
 
@@ -21,9 +21,8 @@ export default function BookPage() {
         </Reveal>
         <Reveal index={1}>
           <p className="text-body-lg mt-6 max-w-xl">
-            30 minutes, no commitment. We&apos;ll walk through how the
-            subscription works, what your first month looks like, and answer
-            anything else.
+            30 minutes, no commitment. We&apos;ll talk through what you need,
+            which product fits, and what the first two weeks look like.
           </p>
         </Reveal>
         <Reveal index={2}>

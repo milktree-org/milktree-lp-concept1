@@ -10,21 +10,21 @@ import { workProjects } from "@/lib/work";
 export const metadata: Metadata = {
   title: "Our Work — Brand & Design Case Studies",
   description:
-    "Twelve case studies from 200+ brands built: brand identity, websites, event design and campaign creative by Milktree.",
+    "Case studies from 200+ brands built by Milktree: brand identity, campaigns, signage, packaging, print and web for real UK businesses.",
   alternates: {
     canonical: "/work",
   },
   openGraph: {
     title: "Our Work — Brand & Design Case Studies — Milktree",
     description:
-      "Twelve case studies from 200+ brands built: brand identity, websites, event design and campaign creative.",
+      "Case studies from 200+ brands built by Milktree: brand identity, campaigns, signage, packaging, print and web.",
     url: "/work",
   },
   twitter: {
     card: "summary_large_image",
     title: "Our Work — Brand & Design Case Studies — Milktree",
     description:
-      "Twelve case studies from 200+ brands built: brand identity, websites, event design and campaign creative.",
+      "Case studies from 200+ brands built by Milktree: brand identity, campaigns, signage, packaging, print and web.",
   },
 };
 
@@ -42,16 +42,24 @@ export default function WorkIndexPage() {
             </Reveal>
             <Reveal index={2}>
               <p className="text-body-lg mt-6 max-w-xl">
-                Twelve of the 200+ brands we&apos;ve built. Every one shipped by
-                the same team you get on subscription.
+                Some of the 200+ brands we&apos;ve built. Identity, campaigns,
+                signage, packaging and web, for businesses people can see.
               </p>
             </Reveal>
           </div>
 
-          <StaggerGroup className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {workProjects.map((project) => (
+          {/* First row paints from the server HTML (no reveal, priority images):
+              it holds the page's LCP element on mobile. Everything below
+              cascades in as usual. */}
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {workProjects.slice(0, 3).map((project) => (
+              <WorkCard key={project.slug} project={project} headingLevel="h2" priority />
+            ))}
+          </div>
+          <StaggerGroup className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {workProjects.slice(3).map((project) => (
               <StaggerItem key={project.slug}>
-                <WorkCard project={project} />
+                <WorkCard project={project} headingLevel="h2" />
               </StaggerItem>
             ))}
           </StaggerGroup>
@@ -66,13 +74,13 @@ export default function WorkIndexPage() {
               Want work like this on your brand?
             </h2>
             <p className="text-body mt-3 max-w-md">
-              One subscription, every kind of design. Your first request could
-              be back this week.
+              Fix one thing in two weeks, rebuild the brand in six, or keep us
+              on. Fixed prices, no proposals.
             </p>
           </Reveal>
           <Reveal index={1} className="flex shrink-0 flex-col items-start gap-4 md:items-end">
             <StartButton size="pill-lg" magnetic source="Work index">
-              Get started
+              Start a project
             </StartButton>
             <p className="text-sm font-medium text-faint">{site.trustLine}</p>
           </Reveal>

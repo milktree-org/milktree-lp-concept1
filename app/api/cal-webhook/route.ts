@@ -142,9 +142,9 @@ export async function POST(request: Request) {
   };
 
   // Same event_id scheme as the browser copy in booking-embed.tsx, so Meta
-  // collapses the pair instead of counting the booking twice.
+  // collapses the pair instead of counting the booking twice. `Lead` fires
+  // from the /start form (one per person, spec §9); the booking is `Schedule`.
   const events = [
-    { name: "Lead", id: `cal-lead-${uid}` },
     { name: "Schedule", id: `cal-schedule-${uid}` },
   ].map((e) => ({
     event_name: e.name,

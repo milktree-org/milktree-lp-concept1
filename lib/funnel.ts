@@ -1,15 +1,30 @@
 /**
- * Shared definitions for the multistep qualification form (§4).
+ * Shared definitions for the multistep start form (MILKTREE-STUDIO.md §6.10).
  * Pure data — safe to import from both client components and API routes.
- * Qualification EVALUATION lives server-side in lib/server/qualification.ts.
+ * Routing lives server-side in lib/server/qualification.ts.
  */
+import type { StartProduct } from "@/lib/offer";
 
+/** Step 1: what do you need? Maps straight onto the offer ladder. */
 export const NEED_OPTIONS = [
-  { value: "ongoing", label: "Ongoing design support" },
-  { value: "brand-build", label: "A full brand build" },
-  { value: "not-sure", label: "Not sure yet" },
+  { value: "sprint", label: "Fix one thing", hint: "Homepage, deck or identity. Two weeks." },
+  { value: "build", label: "Build or rebuild the brand", hint: "The whole thing, four to six weeks." },
+  { value: "subscription", label: "Ongoing design support", hint: "A queue that never runs dry." },
+  { value: "not-sure", label: "Not sure yet", hint: "We'll point you at the right one." },
 ] as const;
 
+/** Step 2: sector. The six the portfolio proves, plus other. */
+export const SECTOR_OPTIONS = [
+  { value: "hospitality", label: "Hospitality and food" },
+  { value: "property-finance", label: "Property and finance" },
+  { value: "trades", label: "Trades and construction" },
+  { value: "retail", label: "Retail and consumer" },
+  { value: "automotive", label: "Automotive" },
+  { value: "health", label: "Health and aesthetics" },
+  { value: "other", label: "Something else" },
+] as const;
+
+/** Step 3: team size. Informs the conversation, never disqualifies. */
 export const TEAM_OPTIONS = [
   { value: "just-me", label: "Just me" },
   { value: "2-9", label: "2–9" },
@@ -18,29 +33,23 @@ export const TEAM_OPTIONS = [
   { value: "100+", label: "100+" },
 ] as const;
 
-export const MARKETING_OPTIONS = [
-  { value: "team", label: "Yes, a team" },
-  { value: "one", label: "One marketer" },
-  { value: "founder", label: "No — founder does it" },
-] as const;
-
-export const BUDGET_OPTIONS = [
-  { value: "under-1k", label: "Under £1,000" },
-  { value: "1k-2k", label: "£1,000–£2,000" },
-  { value: "2k-4k", label: "£2,000–£4,000" },
-  { value: "4k+", label: "£4,000+" },
+/** Step 4: when? */
+export const TIMING_OPTIONS = [
+  { value: "this-month", label: "This month" },
+  { value: "next-month", label: "Next month or so" },
+  { value: "looking", label: "Just looking for now" },
 ] as const;
 
 export type NeedValue = (typeof NEED_OPTIONS)[number]["value"];
+export type SectorValue = (typeof SECTOR_OPTIONS)[number]["value"];
 export type TeamValue = (typeof TEAM_OPTIONS)[number]["value"];
-export type MarketingValue = (typeof MARKETING_OPTIONS)[number]["value"];
-export type BudgetValue = (typeof BUDGET_OPTIONS)[number]["value"];
+export type TimingValue = (typeof TIMING_OPTIONS)[number]["value"];
 
 export type LeadSubmission = {
   need: NeedValue;
+  sector: SectorValue;
   teamSize: TeamValue;
-  marketing: MarketingValue;
-  budget: BudgetValue;
+  timing: TimingValue;
   company: string;
   website: string;
   name: string;
@@ -50,9 +59,18 @@ export type LeadSubmission = {
   attribution?: Record<string, string>;
 };
 
-export type LeadRoute = "qualified" | "unqualified";
+/**
+ * Where a submission goes next. Every submission is a lead; "nurture" is a
+ * softer next step, not a rejection.
+ */
+export type LeadRoute = StartProduct | "nurture";
 
 export const optionLabel = (
   options: readonly { value: string; label: string }[],
   value: string,
 ) => options.find((o) => o.value === value)?.label ?? value;
+
+/** A "need" value that is also a product door on the ladder. */
+export function needToProduct(need: NeedValue): StartProduct | null {
+  return need === "not-sure" ? null : need;
+}

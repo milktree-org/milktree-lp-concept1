@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { motion, useMotionValue, useSpring, useReducedMotion } from "framer-motion";
+
+// "Fine pointer" is external state (a media query), so it's read through
+// useSyncExternalStore rather than set from inside an effect. The server
+// snapshot is false, so SSR renders nothing and hydration stays clean.
+const FINE_POINTER = "(hover: hover) and (pointer: fine)";
+function subscribeFinePointer(onChange: () => void) {
+  const mq = window.matchMedia(FINE_POINTER);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+const getFinePointer = () => window.matchMedia(FINE_POINTER).matches;
+const getFinePointerServer = () => false;
 
 /**
  * Custom cursor (§5.7) — a small ring that trails the pointer and scales up
@@ -12,7 +24,8 @@ import { motion, useMotionValue, useSpring, useReducedMotion } from "framer-moti
  */
 export function CustomCursor() {
   const reduce = useReducedMotion();
-  const [enabled, setEnabled] = useState(false);
+  const finePointer = useSyncExternalStore(subscribeFinePointer, getFinePointer, getFinePointerServer);
+  const enabled = finePointer && !reduce;
   const [active, setActive] = useState(false);
   const [hidden, setHidden] = useState(true);
 
@@ -22,10 +35,7 @@ export function CustomCursor() {
   const sy = useSpring(y, { stiffness: 500, damping: 40, mass: 0.4 });
 
   useEffect(() => {
-    if (reduce) return;
-    const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
-    if (!fine.matches) return;
-    setEnabled(true);
+    if (!enabled) return;
 
     const move = (e: MouseEvent) => {
       x.set(e.clientX);
@@ -42,7 +52,7 @@ export function CustomCursor() {
       window.removeEventListener("mousemove", move);
       document.documentElement.removeEventListener("mouseleave", leave);
     };
-  }, [reduce, x, y]);
+  }, [enabled, x, y]);
 
   if (!enabled) return null;
 

@@ -629,11 +629,11 @@ function ResultsScreen({
           Want a team to do all of this for you?
         </h3>
         <p className="text-body mx-auto mt-3 max-w-md text-[0.95rem]">
-          Milktree starts at £1,999/mo. Unlimited requests, senior work back
-          in ~48 hours, cancel any month.
+          Fix one thing in two weeks from £799, rebuild the brand from £3,499,
+          or keep us on from £1,499 a month. Fixed prices, no proposals.
         </p>
         <Link
-          href="/#plans"
+          href="/pricing"
           data-cursor="hover"
           className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-[44px] bg-brand px-7 text-[0.95rem] font-bold text-brand-ink transition-all hover:brightness-105"
         >

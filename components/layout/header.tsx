@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { nav } from "@/lib/site";
+import { getNav } from "@/lib/site";
+import { useCurrency } from "@/lib/use-currency";
 import { AnchorLink } from "@/components/layout/anchor-link";
 import { StartButton } from "@/components/layout/start-button";
 import { Wordmark } from "@/components/layout/wordmark";
@@ -22,15 +23,17 @@ import { motion } from "framer-motion";
 import { EASE_OUT_EXPO } from "@/lib/motion";
 
 /**
- * Sticky header (§6). Transparent over the hero, gains a blurred dark
+ * Sticky header (spec §5). Transparent over the hero, gains a blurred dark
  * background once scrolled. Desktop dropdowns via NavigationMenu; mobile
- * full-screen Sheet with staggered links.
+ * full-screen Sheet with grouped, staggered links. The primary CTA is
+ * "Start a project" everywhere.
  */
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [pastHero, setPastHero] = useState(false);
   const [open, setOpen] = useState(false);
   const isHome = usePathname() === "/";
+  const nav = getNav(useCurrency());
 
   useEffect(() => {
     const onScroll = () => {
@@ -44,7 +47,7 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const ctaVariant = isHome && !pastHero ? "ghostPill" : "brand";
+  const ctaVariant = pastHero ? "brand" : "ghostPill";
 
   return (
     <header
@@ -76,7 +79,7 @@ export function Header() {
         )}
 
         {/* Desktop nav */}
-        <nav className="hidden lg:block">
+        <nav className="hidden lg:block" aria-label="Primary">
           <NavigationMenu closeDelay={150}>
             <NavigationMenuList className="gap-0.5">
               {nav.map((item) =>
@@ -86,7 +89,7 @@ export function Header() {
                       {item.label}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <ul className="grid w-[320px] gap-1 p-2">
+                      <ul className="grid w-[340px] gap-1 p-2">
                         {item.children.map((child) => (
                           <li key={child.label}>
                             <NavigationMenuLink
@@ -126,7 +129,7 @@ export function Header() {
           </NavigationMenu>
         </nav>
 
-        {/* Right actions — book CTA always visible; full label on desktop */}
+        {/* Right actions */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 md:gap-3">
           <Link
             href="/login"
@@ -141,7 +144,7 @@ export function Header() {
             source="Header"
             className="h-11 shrink-0 px-3.5 text-[0.78rem] sm:px-5 sm:text-[0.85rem] lg:hidden"
           >
-            Get started
+            Start a project
           </StartButton>
           <StartButton
             size="pill"
@@ -149,7 +152,7 @@ export function Header() {
             source="Header"
             className="hidden h-11 lg:inline-flex"
           >
-            Get started
+            Start a project
           </StartButton>
 
           {/* Mobile menu */}
@@ -169,8 +172,8 @@ export function Header() {
               className="w-full border-l-0 bg-background sm:max-w-md"
             >
               <SheetTitle className="sr-only">Menu</SheetTitle>
-              <div className="flex h-full flex-col px-6 pt-16 pb-10">
-                <nav className="flex flex-col gap-1">
+              <div className="flex h-full flex-col overflow-y-auto px-6 pt-16 pb-10">
+                <nav className="flex flex-col gap-1" aria-label="Mobile">
                   {nav.map((item, i) => (
                     <motion.div
                       key={item.label}
@@ -185,12 +188,27 @@ export function Header() {
                       >
                         {item.label}
                       </AnchorLink>
+                      {item.children && (
+                        <ul className="mb-2 ml-1 flex flex-col border-l border-border pl-4">
+                          {item.children.map((child) => (
+                            <li key={child.label}>
+                              <AnchorLink
+                                href={child.href}
+                                onNavigate={() => setOpen(false)}
+                                className="block py-2.5 text-base font-medium text-muted-foreground"
+                              >
+                                {child.label}
+                              </AnchorLink>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </motion.div>
                   ))}
                 </nav>
-                <div className="mt-auto flex flex-col gap-3">
+                <div className="mt-auto flex flex-col gap-3 pt-8">
                   <StartButton size="pill-lg" source="Mobile Menu" className="w-full">
-                    Get started
+                    Start a project
                   </StartButton>
                   <Link
                     href="/login"

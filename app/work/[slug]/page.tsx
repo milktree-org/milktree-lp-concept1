@@ -137,13 +137,13 @@ export default async function WorkProjectPage({ params }: { params: Params }) {
               Want work like this on your brand?
             </h2>
             <p className="text-body mt-3 max-w-md">
-              One subscription, every kind of design. Your first request could be
-              back this week.
+              Fix one thing in two weeks, rebuild the brand in six, or keep us
+              on. Fixed prices, no proposals.
             </p>
           </Reveal>
           <Reveal index={1} className="flex shrink-0 flex-col items-start gap-4 md:items-end">
             <StartButton size="pill-lg" magnetic source={`Case study — ${project.title}`}>
-              Get started
+              Start a project
             </StartButton>
             <p className="text-sm font-medium text-faint">{site.trustLine}</p>
           </Reveal>

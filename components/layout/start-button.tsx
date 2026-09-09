@@ -6,9 +6,12 @@ import { Magnetic } from "@/components/motion/magnetic";
 import { trackContact } from "@/lib/analytics/meta-tracking";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
+import type { StartProduct } from "@/lib/offer";
 
 type StartButtonProps = {
   children?: React.ReactNode;
+  /** Pre-selects the product on /start (spec §6.10). */
+  product?: StartProduct;
   variant?: "brand" | "ghostPill" | "default";
   size?: "pill" | "pill-lg";
   magnetic?: boolean;
@@ -19,13 +22,15 @@ type StartButtonProps = {
 };
 
 /**
- * The single primary CTA — routes to the /start qualification funnel, keeping
- * the visitor on-domain so downstream conversions fire tracked events (Pixel +
- * CAPI) with ad attribution intact. Clicking fires a Contact event (top of
- * funnel). Wrap the hero instance in the magnetic effect.
+ * The single primary CTA — routes to /start, keeping the visitor on-domain so
+ * downstream conversions fire tracked events (Pixel + CAPI) with ad
+ * attribution intact. Clicking fires a Contact event (top of funnel). Pass
+ * `product` from a product page so the form opens on the right door. Wrap the
+ * hero instance in the magnetic effect.
  */
 export function StartButton({
-  children = "Get started",
+  children = "Start a project",
+  product,
   variant = "brand",
   size = "pill",
   magnetic = false,
@@ -33,9 +38,10 @@ export function StartButton({
   className,
   source = "Start Button",
 }: StartButtonProps) {
+  const href = product ? `/start?product=${product}` : "/start";
   const link = (
     <Link
-      href="/start"
+      href={href}
       data-cursor="hover"
       onClick={() => trackContact({ eventSource: source })}
       className={cn(

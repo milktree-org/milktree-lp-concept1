@@ -80,7 +80,7 @@
   /* shadcn `muted` is a surface; `muted-foreground` is muted text (white-alpha) */
   --muted: rgba(255, 255, 255, 0.05);
   --muted-foreground: rgba(255, 255, 255, 0.6);
-  --faint: rgba(255, 255, 255, 0.4);
+  --faint: rgba(255, 255, 255, 0.52);
 
   /* shadcn `accent` is a subtle hover surface — NOT the brand yellow */
   --accent: rgba(255, 255, 255, 0.08);
@@ -126,7 +126,7 @@
 
   --muted: rgba(16, 16, 9, 0.05);
   --muted-foreground: rgba(16, 16, 9, 0.64);
-  --faint: rgba(16, 16, 9, 0.42);
+  --faint: rgba(16, 16, 9, 0.6);
 
   --accent: rgba(16, 16, 9, 0.06);
   --accent-foreground: #101009;
@@ -431,7 +431,7 @@ body:has([data-hide-chrome]) .site-footer {
 .hero__trust {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--faint);
   margin-top: 4px;
   text-wrap: balance;
 }

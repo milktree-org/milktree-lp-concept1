@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Milktree — Your creative department. On demand.";
+export const alt = "Milktree — Brands you can see on the high street.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -40,7 +40,7 @@ export default function OpengraphImage() {
               maxWidth: 920,
             }}
           >
-            Your creative department. On demand.
+            Brands you can see on the high street.
           </div>
           <div
             style={{
@@ -53,7 +53,7 @@ export default function OpengraphImage() {
           </div>
         </div>
         <div style={{ fontSize: 26, color: "rgba(255,255,255,0.5)" }}>
-          200+ brands built · 6 years as an agency · No contracts · Pause anytime
+          200+ brands built · 7 years · Fixed prices · No contracts
         </div>
       </div>
     ),

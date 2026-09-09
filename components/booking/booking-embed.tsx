@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { CAL_URL } from "@/lib/site";
 import {
-  trackLead,
   trackSchedule,
   trackCustom,
   LEAD_VALUE,
@@ -20,10 +19,13 @@ const CAL_LINK = CAL_URL.replace(/^https?:\/\/(app\.)?cal\.com\//, "");
 /**
  * Inline Cal.com booking embed (dark, brand-yellow) for the intro call.
  *
- * On a completed booking it fires the conversion events that the whole funnel
- * exists for — Meta `Lead` + `Schedule` (Pixel + CAPI, deduplicated) and a GA4
- * `generate_lead` — carrying first/last-touch ad attribution as Cal metadata so
- * the booking can be tied back to the ad that produced it.
+ * On a completed booking it fires Meta `Schedule` (Pixel + CAPI, deduplicated)
+ * and a GA4 `generate_lead`, carrying first/last-touch ad attribution as Cal
+ * metadata so the booking can be tied back to the ad that produced it.
+ *
+ * Meta `Lead` is NOT fired here. Since the studio relaunch every /start
+ * submission is a lead and fires `Lead` from the form (spec §9: exactly one
+ * lead event per person). Firing it again on the booking would double count.
  */
 export type BookingPrefill = {
   name?: string;
@@ -198,11 +200,6 @@ export function BookingEmbed({
         window.clarity?.("set", "converted", "true");
         window.clarity?.("upgrade", "booking");
 
-        trackLead({
-          eventSource: `${source} Booking`,
-          userData,
-          eventId: uid ? `cal-lead-${uid}` : undefined,
-        });
         trackSchedule({
           eventSource: `${source} Booking`,
           userData,

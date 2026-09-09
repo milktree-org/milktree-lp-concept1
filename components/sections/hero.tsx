@@ -1,11 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { LineMask } from "@/components/motion/line-mask";
 import { HeroVideo } from "@/components/motion/hero-video";
 import { StartButton } from "@/components/layout/start-button";
-import { AnchorLink } from "@/components/layout/anchor-link";
 import { LogoMarquee } from "@/components/ui/logo-marquee";
 import { EASE_OUT_EXPO } from "@/lib/motion";
 import { site } from "@/lib/site";
@@ -19,12 +19,22 @@ const fadeUp = {
   }),
 };
 
+// The media card holds the page's LCP element (the showreel poster). It rises
+// into place but never starts at opacity 0, so the poster paints from the
+// server HTML instead of waiting for hydration. Transform-only keeps the
+// motion and takes seconds off LCP on slow devices.
+const riseOnly = {
+  hidden: { y: 24 },
+  visible: (i: number) => ({
+    y: 0,
+    transition: { duration: 0.7, ease: EASE_OUT_EXPO, delay: i * 0.1 },
+  }),
+};
+
 /**
- * Hero — black canvas with centered copy, the showreel video framed in a
- * media card below the CTAs, closed by the client logo marquee. The work
- * showcase strip
- * lives further down the page (§WorkStrip) so imagery is spread across the
- * scroll instead of front-loaded here.
+ * Hero (spec §6.1.1) — the founder's problem in one line, the studio's answer
+ * in one paragraph, the yellow CTA, the showreel in a media card, closed by
+ * the client logo marquee. The CTA is the viewport's single yellow element.
  */
 export function Hero() {
   const reduce = useReducedMotion();
@@ -43,7 +53,7 @@ export function Hero() {
             >
               <LineMask
                 className="inline-block text-center"
-                lines={["Design capacity", "without the hire."]}
+                lines={["Your business has grown.", "Your brand hasn't caught up."]}
                 startDelay={0.05}
               />
             </motion.h1>
@@ -55,8 +65,9 @@ export function Hero() {
               initial="hidden"
               animate="visible"
             >
-              For marketing teams tired of freelancers and £50k junior roles.
-              Unlimited requests, senior work in ~48 hours.
+              Milktree is a UK design studio that builds brands you can see on the
+              high street. Fix one thing in two weeks, rebuild the lot in six, or
+              keep us on retainer. Fixed prices, no proposals.
             </motion.p>
 
             <motion.div
@@ -67,12 +78,12 @@ export function Hero() {
               animate="visible"
             >
               <StartButton size="pill-lg" magnetic source="Hero" className="hero__cta-primary">
-                Get started
+                Start a project
               </StartButton>
-              <AnchorLink href="#plans" className="hero__cta-secondary">
-                <ArrowDown className="size-4" aria-hidden />
-                See plans
-              </AnchorLink>
+              <Link href="/work" data-cursor="hover" className="hero__cta-secondary">
+                See the work
+                <ArrowRight className="size-4" aria-hidden />
+              </Link>
             </motion.div>
 
             <motion.p
@@ -92,14 +103,14 @@ export function Hero() {
               initial="hidden"
               animate="visible"
             >
-              200+ brands · 6 years as an agency · Pause or cancel anytime
+              {site.trustLine}
             </motion.p>
           </div>
 
           <motion.div
             className="hero__media-card"
             custom={4}
-            variants={fadeUp}
+            variants={riseOnly}
             initial="hidden"
             animate="visible"
           >
@@ -113,7 +124,6 @@ export function Hero() {
           animate={{ opacity: 1 }}
           transition={{ delay: reduce ? 0 : 0.55, duration: 0.8, ease: EASE_OUT_EXPO }}
         >
-          {/* Frames the (real) client logos as evidence of the 200+ claim */}
           <p className="hero__marquee-caption">{site.marqueeCaption}</p>
           <LogoMarquee />
         </motion.div>

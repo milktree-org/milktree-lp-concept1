@@ -16,14 +16,15 @@ const socialIcons = {
   Facebook: FacebookIcon,
 } as const;
 
+/** Footer columns (spec §5). Phase 2 adds Services, Who it's for and About. */
 const columns = [
   {
-    heading: "What's included",
+    heading: "Products",
     links: [
-      { label: "Brand identity & guidelines", href: "#services" },
-      { label: "Ads & email design", href: "#services" },
-      { label: "Landing page & web design", href: "#services" },
-      { label: "AI creative systems", href: "#services" },
+      { label: "Brand Reset Sprint", href: "/sprint" },
+      { label: "Brand Build", href: "/brand-build" },
+      { label: "Subscription", href: "/subscription" },
+      { label: "Pricing", href: "/pricing" },
     ],
   },
   {
@@ -31,30 +32,28 @@ const columns = [
     links: [
       { label: "Eazy Phone", href: "/work/eazyphone" },
       { label: "Mint Mortgages", href: "/work/mint-mortgages" },
-      { label: "Saints Foundation", href: "/work/saints-foundation" },
+      { label: "Latimers", href: "/work/latimers" },
       { label: "Melt", href: "/work/melt" },
-      { label: "AO", href: "/work/ao" },
+      { label: "Alltrad Roofing", href: "/work/alltrad-roofing" },
       { label: "View all work", href: "/work" },
     ],
   },
   {
-    heading: "Company",
+    heading: "Studio",
     links: [
       { label: "Our work", href: "/work" },
-      { label: "Why Milktree", href: "#why" },
-      { label: "Plans", href: "#plans" },
-      { label: "FAQ", href: "#faq" },
+      { label: "FAQ", href: "/#faq" },
       { label: "Careers", href: "/careers" },
       { label: "Contact us", href: "/contact" },
+      { label: "Client login", href: "/login" },
     ],
   },
   {
-    heading: "Get started",
+    heading: "Start",
     links: [
-      { label: "Start your subscription", href: "/start" },
+      { label: "Start a project", href: "/start" },
       { label: "Free brand score", href: "/brand-report" },
       { label: "Brand tips by email", href: "/subscribe" },
-      { label: "Client login", href: "/login" },
     ],
   },
 ];
@@ -66,18 +65,18 @@ export function Footer() {
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr] lg:gap-12">
           {/* Brand + CTA */}
           <div className="max-w-sm">
-            <Eyebrow>Your creative department</Eyebrow>
+            <Eyebrow>Milktree</Eyebrow>
             <p className="mt-5 text-2xl font-bold tracking-tight text-foreground">
-              Unlimited design, senior work in 48 hours, one flat monthly fee.
+              Brands you can see on the high street.
             </p>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              Milktree is a UK design subscription: an embedded brand &amp;
-              design team for scaling companies. Six years as an agency, 200+
-              brands built and 50+ experienced designers across brand identity,
-              campaigns, packaging and web.
+              A UK design studio. Seven years, 200+ brands, a core team of
+              senior designers and a network of 50+ more. Fix one thing in two
+              weeks, rebuild the brand in six, or keep us on. Fixed prices, no
+              proposals.
             </p>
             <div className="mt-7">
-              <StartButton size="pill" source="Footer">Get started</StartButton>
+              <StartButton size="pill" source="Footer">Start a project</StartButton>
             </div>
             <div className="mt-8 flex gap-3">
               {socials.map(({ label, href }) => {
@@ -101,9 +100,9 @@ export function Footer() {
           {/* Link columns */}
           {columns.map((col) => (
             <div key={col.heading}>
-              <h4 className="text-[0.8rem] font-bold uppercase tracking-[0.16em] text-faint">
+              <h2 className="text-[0.8rem] font-bold uppercase tracking-[0.16em] text-faint">
                 {col.heading}
-              </h4>
+              </h2>
               <ul className="mt-5 space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
@@ -136,7 +135,7 @@ export function Footer() {
             >
               Terms
             </a>
-            <p className="w-full sm:w-auto">No contracts · Pause anytime</p>
+            <p className="w-full sm:w-auto">Fixed prices · No contracts</p>
           </div>
         </div>
       </div>

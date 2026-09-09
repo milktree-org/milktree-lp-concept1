@@ -67,10 +67,10 @@ export default async function DownloadPage({
           href="/start"
           className="inline-flex min-h-11 items-center rounded-full bg-brand px-7 font-bold text-brand-ink"
         >
-          Get started
+          Start a project
         </Link>
         <Link
-          href="/#plans"
+          href="/pricing"
           className="inline-flex min-h-11 items-center rounded-full border border-border px-7 font-bold"
         >
           See plans

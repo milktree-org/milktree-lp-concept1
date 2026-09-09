@@ -623,7 +623,7 @@ export function BrandScoreDocument({ data }: { data: BrandScoreDocData }) {
         <PageTitle
           kicker="Or skip the queue"
           title="Everything in this report, done for you."
-          sub={`Milktree is an embedded brand and design team on a flat monthly subscription. We have spent 6 years building 200+ brands, and closing exactly the gaps this report found is what we do every week for businesses in ${playbook.noun}.`}
+          sub={`Milktree is a UK design studio. We have spent seven years building 200+ brands, and closing exactly the gaps this report found is what we do every week for businesses in ${playbook.noun}. Fix one thing in two weeks, rebuild the brand in six, or keep us on.`}
         />
 
         <div className="mt-9 grid grid-cols-2 gap-5">
@@ -666,8 +666,8 @@ export function BrandScoreDocument({ data }: { data: BrandScoreDocData }) {
           {[
             ["200+", "brands built"],
             ["15+", "industries"],
-            ["6", "years as an agency"],
-            ["50+", "experienced designers"],
+            ["7", "years"],
+            ["50+", "designers in the network"],
           ].map(([stat, label]) => (
             <div key={label} className="rounded-xl border border-white/10 py-3.5">
               <p className="text-[20px] font-black text-white">{stat}</p>
@@ -690,7 +690,7 @@ export function BrandScoreDocument({ data }: { data: BrandScoreDocData }) {
             href={`${SITE_URL}/start`}
             className="mt-5 inline-block rounded-full bg-black px-9 py-3.5 text-[14px] font-black text-white"
           >
-            Get started &rarr;
+            Start a project &rarr;
           </a>
           <p className="mt-3 text-[11px] font-bold text-black/60">
             {SITE_URL.replace("https://www.", "")}/start

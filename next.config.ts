@@ -25,6 +25,16 @@ const nextConfig: NextConfig = {
       { source: "/audit/thank-you", destination: "/book", permanent: false },
       // Old Vite site served legal at /privacy-policy; keep indexed/bookmarked links alive.
       { source: "/privacy-policy", destination: "/privacy", permanent: true },
+      // Studio relaunch (MILKTREE-STUDIO.md §4): retired pages fold into the
+      // nearest product page so old ad, email and search links keep working.
+      { source: "/hire-calculator", destination: "/subscription", permanent: true },
+      { source: "/brand-audit", destination: "/brand-report", permanent: true },
+      { source: "/lp/creative-department", destination: "/sprint", permanent: false },
+      { source: "/lp/:path*", destination: "/sprint", permanent: false },
+      { source: "/concept-2", destination: "/", permanent: true },
+      { source: "/concept-3", destination: "/", permanent: true },
+      { source: "/ads", destination: "/work", permanent: true },
+      { source: "/plans", destination: "/pricing", permanent: true },
     ];
   },
 };

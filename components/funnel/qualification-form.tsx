@@ -1,35 +1,41 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import {
-  Repeat,
+  Zap,
   Sparkles,
+  Repeat,
   HelpCircle,
+  UtensilsCrossed,
+  Landmark,
+  HardHat,
+  ShoppingBag,
+  Car,
+  HeartPulse,
+  Shapes,
   User,
   Users,
   Building2,
-  Landmark,
-  Megaphone,
-  UserCheck,
-  Rocket,
-  Coins,
-  Banknote,
-  Wallet,
-  Gem,
+  Building,
+  CalendarCheck,
+  CalendarClock,
+  Eye,
   ArrowRight,
 } from "lucide-react";
 import {
   NEED_OPTIONS,
+  SECTOR_OPTIONS,
   TEAM_OPTIONS,
-  MARKETING_OPTIONS,
-  BUDGET_OPTIONS,
+  TIMING_OPTIONS,
   optionLabel,
   type LeadRoute,
 } from "@/lib/funnel";
+import { isStartProduct, getProduct, type ProductId } from "@/lib/offer";
 import { getLeadTrackingFields } from "@/lib/analytics/lead-tracking";
 import { writeFunnelHandoff } from "@/lib/analytics/funnel-handoff";
-import { trackCustom } from "@/lib/analytics/meta-tracking";
+import { trackCustom, trackLead } from "@/lib/analytics/meta-tracking";
 import { trackGA } from "@/lib/analytics/ga";
 import { BookingEmbed } from "@/components/booking/booking-embed";
 import {
@@ -44,17 +50,18 @@ import {
 } from "@/components/funnel/ui";
 
 /**
- * The multistep qualification form (§4). One question per screen, icon option
- * cards, progress bar, back navigation, Enter-to-advance — a conversation,
- * not a form. Qualification is recomputed server-side in /api/lead; the route
- * returned by the API is the only routing decision this component trusts.
+ * The start form (MILKTREE-STUDIO.md §6.10). One question per screen, icon
+ * option cards, progress bar, back navigation, Enter-to-advance. Routing is
+ * decided server-side in /api/lead by product, never by budget; every
+ * submission is a lead. `?product=` pre-answers the first question so a
+ * product page's CTA lands on step two.
  */
 
 type Answers = {
   need?: string;
+  sector?: string;
   teamSize?: string;
-  marketing?: string;
-  budget?: string;
+  timing?: string;
   company: string;
   website: string;
   name: string;
@@ -64,25 +71,40 @@ type Answers = {
 };
 
 const ICONS = {
-  need: { ongoing: Repeat, "brand-build": Sparkles, "not-sure": HelpCircle },
+  need: { sprint: Zap, build: Sparkles, subscription: Repeat, "not-sure": HelpCircle },
+  sector: {
+    hospitality: UtensilsCrossed,
+    "property-finance": Landmark,
+    trades: HardHat,
+    retail: ShoppingBag,
+    automotive: Car,
+    health: HeartPulse,
+    other: Shapes,
+  },
   team: {
     "just-me": User,
     "2-9": Users,
     "10-50": Building2,
-    "51-100": Landmark,
-    "100+": Landmark,
+    "51-100": Building,
+    "100+": Building,
   },
-  marketing: { team: Megaphone, one: UserCheck, founder: Rocket },
-  budget: { "under-1k": Coins, "1k-2k": Banknote, "2k-4k": Wallet, "4k+": Gem },
+  timing: { "this-month": CalendarCheck, "next-month": CalendarClock, looking: Eye },
 } as const;
 
+type Field = "need" | "sector" | "teamSize" | "timing";
+const STEP_FOR_FIELD: Record<Field, number> = { need: 0, sector: 1, teamSize: 2, timing: 3 };
 const TOTAL_STEPS = 6;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function QualificationForm() {
-  const [step, setStep] = useState(0);
+  const params = useSearchParams();
+  const preselected = params.get("product");
+  const startOnProduct = isStartProduct(preselected) ? preselected : undefined;
+
+  const [step, setStep] = useState(startOnProduct ? 1 : 0);
   const [direction, setDirection] = useState(1);
   const [answers, setAnswers] = useState<Answers>({
+    need: startOnProduct,
     company: "",
     website: "",
     name: "",
@@ -98,8 +120,13 @@ export function QualificationForm() {
   const markStarted = useCallback(() => {
     if (started.current) return;
     started.current = true;
-    trackCustom("QualificationFormStart");
-  }, []);
+    trackCustom("StartFormStart", { eventSource: startOnProduct ? `/start?product=${startOnProduct}` : "/start" });
+  }, [startOnProduct]);
+
+  // A product-page CTA counts as starting the form.
+  useEffect(() => {
+    if (startOnProduct) markStarted();
+  }, [startOnProduct, markStarted]);
 
   const goTo = useCallback((next: number, dir: number) => {
     setDirection(dir);
@@ -108,11 +135,11 @@ export function QualificationForm() {
   }, []);
 
   const pick = useCallback(
-    (field: "need" | "teamSize" | "marketing" | "budget", value: string) => {
+    (field: Field, value: string) => {
       markStarted();
       setAnswers((a) => ({ ...a, [field]: value }));
       // brief pause so the selected state registers before the slide
-      window.setTimeout(() => goTo(stepForField(field) + 1, 1), 180);
+      window.setTimeout(() => goTo(STEP_FOR_FIELD[field] + 1, 1), 180);
     },
     [goTo, markStarted],
   );
@@ -132,9 +159,9 @@ export function QualificationForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           need: answers.need,
+          sector: answers.sector,
           teamSize: answers.teamSize,
-          marketing: answers.marketing,
-          budget: answers.budget,
+          timing: answers.timing,
           company: answers.company.trim(),
           website: answers.website.trim(),
           name: answers.name.trim(),
@@ -154,28 +181,32 @@ export function QualificationForm() {
         setSubmitting(false);
         return;
       }
-      if (data.route === "qualified") {
-        // NOT `Lead`. Lead is reserved for a completed Cal.com booking — the
-        // calendar is rendered on the very next screen, so firing Lead here too
-        // would report two Leads and £300 for one person and train delivery
-        // toward form-fillers instead of bookers.
-        const [firstName, ...rest] = answers.name.trim().split(/\s+/).filter(Boolean);
-        trackGA("generate_lead", {
-          lead_source: "Website — /start",
-          lead_type: "qualification_form",
-        });
-        trackCustom("QualificationFormQualified", {
-          eventSource: "Start Form — Qualified",
-          userData: {
-            email: answers.email.trim(),
-            phone: answers.phone.trim() || undefined,
-            firstName,
-            lastName: rest.length ? rest.join(" ") : undefined,
-          },
-        });
-      } else {
-        trackCustom("QualificationFormUnqualified");
-      }
+
+      // The submission IS the lead (spec §9): one Meta `Lead` per person, fired
+      // here and nowhere else. The booking that may follow fires `Schedule`.
+      const [firstName, ...rest] = answers.name.trim().split(/\s+/).filter(Boolean);
+      const userData = {
+        email: answers.email.trim(),
+        phone: answers.phone.trim() || undefined,
+        firstName,
+        lastName: rest.length ? rest.join(" ") : undefined,
+      };
+      trackLead({
+        eventSource: `Start Form — ${data.route}`,
+        userData,
+        eventId: data.leadId ? `start-lead-${data.leadId}` : undefined,
+      });
+      trackGA("generate_lead", {
+        lead_source: "Website — /start",
+        lead_type: "start_form",
+        product: answers.need,
+        route: data.route,
+      });
+      trackCustom("StartFormSubmitted", {
+        eventSource: `Start Form — ${data.route}`,
+        userData,
+      });
+
       setResult({ route: data.route, leadId: data.leadId ?? null });
       setSubmitting(false);
     } catch {
@@ -194,17 +225,17 @@ export function QualificationForm() {
       website: answers.website,
       email: answers.email,
     });
-    const params = new URLSearchParams();
-    if (result?.leadId) params.set("lead", result.leadId);
-    params.set("src", "form");
-    return `/brand-report?${params.toString()}`;
+    const p = new URLSearchParams();
+    if (result?.leadId) p.set("lead", result.leadId);
+    p.set("src", "form");
+    return `/brand-report?${p.toString()}`;
   }, [answers, result]);
 
   if (result) {
-    return result.route === "qualified" ? (
-      <QualifiedScreen answers={answers} />
+    return result.route === "nurture" ? (
+      <NurtureScreen quizUrl={quizUrl} />
     ) : (
-      <UnqualifiedScreen quizUrl={quizUrl} />
+      <BookingScreen answers={answers} route={result.route} />
     );
   }
 
@@ -214,6 +245,8 @@ export function QualificationForm() {
       action();
     }
   };
+
+  const needLabel = answers.need ? optionLabel(NEED_OPTIONS, answers.need) : null;
 
   return (
     <div className="mx-auto w-full max-w-xl">
@@ -229,13 +262,14 @@ export function QualificationForm() {
         <AnimatePresence mode="wait" custom={direction}>
           {step === 0 && (
             <StepPanel key="need" stepKey="need" direction={direction}>
-              <StepHeading title="What do you need?" />
+              <StepHeading as="h1" title="What do you need?" sub="Pick the closest. You can change your mind on the call." />
               <div className="grid gap-3">
                 {NEED_OPTIONS.map((o) => (
                   <OptionCard
                     key={o.value}
                     icon={ICONS.need[o.value]}
                     label={o.label}
+                    hint={o.hint}
                     selected={answers.need === o.value}
                     onSelect={() => pick("need", o.value)}
                   />
@@ -245,8 +279,29 @@ export function QualificationForm() {
           )}
 
           {step === 1 && (
+            <StepPanel key="sector" stepKey="sector" direction={direction}>
+              <StepHeading
+                as="h1"
+                title="What kind of business?"
+                sub={needLabel ? `${needLabel}. Good. This helps us match the right designer.` : "This helps us match the right designer."}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {SECTOR_OPTIONS.map((o) => (
+                  <OptionCard
+                    key={o.value}
+                    icon={ICONS.sector[o.value]}
+                    label={o.label}
+                    selected={answers.sector === o.value}
+                    onSelect={() => pick("sector", o.value)}
+                  />
+                ))}
+              </div>
+            </StepPanel>
+          )}
+
+          {step === 2 && (
             <StepPanel key="team" stepKey="team" direction={direction}>
-              <StepHeading title="How big is your team?" />
+              <StepHeading as="h1" title="How big is the team?" />
               <div className="grid gap-3 sm:grid-cols-2">
                 {TEAM_OPTIONS.map((o) => (
                   <OptionCard
@@ -261,37 +316,17 @@ export function QualificationForm() {
             </StepPanel>
           )}
 
-          {step === 2 && (
-            <StepPanel key="marketing" stepKey="marketing" direction={direction}>
-              <StepHeading title="Do you have a marketing function?" />
-              <div className="grid gap-3">
-                {MARKETING_OPTIONS.map((o) => (
-                  <OptionCard
-                    key={o.value}
-                    icon={ICONS.marketing[o.value]}
-                    label={o.label}
-                    selected={answers.marketing === o.value}
-                    onSelect={() => pick("marketing", o.value)}
-                  />
-                ))}
-              </div>
-            </StepPanel>
-          )}
-
           {step === 3 && (
-            <StepPanel key="budget" stepKey="budget" direction={direction}>
-              <StepHeading
-                title="What's your monthly design budget?"
-                sub="A rough band is fine. This just helps us point you at the right thing."
-              />
-              <div className="grid gap-3 sm:grid-cols-2">
-                {BUDGET_OPTIONS.map((o) => (
+            <StepPanel key="timing" stepKey="timing" direction={direction}>
+              <StepHeading as="h1" title="When do you want to start?" sub="Honest answer. Just looking is fine." />
+              <div className="grid gap-3">
+                {TIMING_OPTIONS.map((o) => (
                   <OptionCard
                     key={o.value}
-                    icon={ICONS.budget[o.value]}
+                    icon={ICONS.timing[o.value]}
                     label={o.label}
-                    selected={answers.budget === o.value}
-                    onSelect={() => pick("budget", o.value)}
+                    selected={answers.timing === o.value}
+                    onSelect={() => pick("timing", o.value)}
                   />
                 ))}
               </div>
@@ -300,17 +335,15 @@ export function QualificationForm() {
 
           {step === 4 && (
             <StepPanel key="company" stepKey="company" direction={direction}>
-              <StepHeading title="Tell us about the company." />
+              <StepHeading as="h1" title="Tell us about the business." />
               <div className="grid gap-5">
                 <FunnelInput
-                  label="Company name"
+                  label="Business name"
                   placeholder="Acme Ltd"
                   value={answers.company}
                   autoFocus
                   onChange={(e) => setAnswers((a) => ({ ...a, company: e.target.value }))}
-                  onKeyDown={(e) =>
-                    onEnter(e, () => answers.company.trim() && goTo(5, 1))
-                  }
+                  onKeyDown={(e) => onEnter(e, () => answers.company.trim() && goTo(5, 1))}
                 />
                 <FunnelInput
                   label="Website"
@@ -319,9 +352,7 @@ export function QualificationForm() {
                   inputMode="url"
                   value={answers.website}
                   onChange={(e) => setAnswers((a) => ({ ...a, website: e.target.value }))}
-                  onKeyDown={(e) =>
-                    onEnter(e, () => answers.company.trim() && goTo(5, 1))
-                  }
+                  onKeyDown={(e) => onEnter(e, () => answers.company.trim() && goTo(5, 1))}
                 />
               </div>
               {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
@@ -338,7 +369,7 @@ export function QualificationForm() {
 
           {step === 5 && (
             <StepPanel key="you" stepKey="you" direction={direction}>
-              <StepHeading title="Last one. Where do we send things?" />
+              <StepHeading as="h1" title="Last one. Where do we send things?" />
               <div className="grid gap-5">
                 <FunnelInput
                   label="Your name"
@@ -381,7 +412,7 @@ export function QualificationForm() {
                 disabled={submitting}
                 onClick={submit}
               >
-                See what fits
+                Send it
                 <ArrowRight className="size-4" />
               </PrimaryButton>
             </StepPanel>
@@ -392,22 +423,40 @@ export function QualificationForm() {
   );
 }
 
-function stepForField(field: "need" | "teamSize" | "marketing" | "budget") {
-  return { need: 0, teamSize: 1, marketing: 2, budget: 3 }[field];
-}
-
 /* ------------------------------ Result screens ---------------------------- */
 
-function QualifiedScreen({ answers }: { answers: Answers }) {
+const ROUTE_COPY: Record<Exclude<LeadRoute, "nurture">, { eyebrow: string; title: string; body: string; productId: ProductId }> = {
+  sprint: {
+    eyebrow: "Brand Reset Sprint",
+    title: "Book your sprint call.",
+    body: "Fifteen minutes to agree exactly what's being fixed. The sprint details are on their way to your inbox.",
+    productId: "sprint",
+  },
+  build: {
+    eyebrow: "Brand Build",
+    title: "Book your intro call.",
+    body: "Thirty minutes, no commitment. We'll walk through the six weeks and pick a start date. The details are on their way to your inbox.",
+    productId: "build",
+  },
+  subscription: {
+    eyebrow: "Subscription",
+    title: "Book your intro call.",
+    body: "Thirty minutes, no commitment. We'll pick the plan and get your first request in the queue. The plans are on their way to your inbox.",
+    productId: "essentials",
+  },
+};
+
+function BookingScreen({ answers, route }: { answers: Answers; route: Exclude<LeadRoute, "nurture"> }) {
+  const copy = ROUTE_COPY[route];
+  const product = getProduct(copy.productId, "GBP");
   const prefill = useMemo(() => {
     const summary = [
       answers.company.trim() && `Company: ${answers.company.trim()}`,
       answers.website.trim() && `Website: ${answers.website.trim()}`,
-      answers.need && `Looking for: ${optionLabel(NEED_OPTIONS, answers.need)}`,
+      answers.need && `Wants: ${optionLabel(NEED_OPTIONS, answers.need)}`,
+      answers.sector && `Sector: ${optionLabel(SECTOR_OPTIONS, answers.sector)}`,
       answers.teamSize && `Team size: ${optionLabel(TEAM_OPTIONS, answers.teamSize)}`,
-      answers.marketing &&
-        `Marketing: ${optionLabel(MARKETING_OPTIONS, answers.marketing)}`,
-      answers.budget && `Budget: ${optionLabel(BUDGET_OPTIONS, answers.budget)}`,
+      answers.timing && `Timing: ${optionLabel(TIMING_OPTIONS, answers.timing)}`,
     ].filter(Boolean) as string[];
 
     return {
@@ -423,38 +472,34 @@ function QualifiedScreen({ answers }: { answers: Answers }) {
   return (
     <div className="mx-auto w-full max-w-4xl text-center">
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">
-        You&apos;re a fit
+        {copy.eyebrow} · {product.price}
+        {product.cadence === "/mo" ? "/mo" : ""}
       </p>
-      <h2 className="mx-auto mt-4 max-w-[18ch] text-balance text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.02] tracking-[-0.025em]">
-        Book your intro call.
-      </h2>
-      <p className="text-body mx-auto mt-4 max-w-lg">
-        30 minutes, no commitment. We&apos;ve also sent the plans and how it
-        all works to your inbox.
-      </p>
+      <h1 className="mx-auto mt-4 max-w-[18ch] text-balance text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.02] tracking-[-0.025em]">
+        {copy.title}
+      </h1>
+      <p className="text-body mx-auto mt-4 max-w-lg">{copy.body}</p>
       <div className="mt-10 overflow-hidden rounded-[2rem] border border-border bg-surface p-2 text-left sm:p-4">
-        <BookingEmbed source="Website — /start Qualified" prefill={prefill} />
+        <BookingEmbed source={`Website — /start ${route}`} prefill={prefill} />
       </div>
     </div>
   );
 }
 
-function UnqualifiedScreen({ quizUrl }: { quizUrl: string }) {
+function NurtureScreen({ quizUrl }: { quizUrl: string }) {
   return (
     <div className="mx-auto w-full max-w-xl text-center">
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">
-        An honest read
+        No rush
       </p>
-      <h2 className="mx-auto mt-4 max-w-[20ch] text-balance text-[clamp(1.8rem,4.5vw,3rem)] font-bold leading-[1.05] tracking-[-0.025em]">
-        Now might not be the right time.
-      </h2>
+      <h1 className="mx-auto mt-4 max-w-[20ch] text-balance text-[clamp(1.8rem,4.5vw,3rem)] font-bold leading-[1.05] tracking-[-0.025em]">
+        Start with a straight read on your brand.
+      </h1>
       <p className="text-body mx-auto mt-5 max-w-lg">
-        Milktree starts at £1,999/mo, and it sounds like that&apos;s beyond
-        the budget right now. No hard feelings — timing matters. In the
-        meantime, get your{" "}
-        <strong className="text-foreground">free Brand Score</strong>: see how
-        your brand stacks up against the top three players in your market,
-        with fixes you can action this week.
+        Three minutes, real search data, and an honest score for how your brand
+        stacks up against the top players in your market, with fixes you can
+        action this week. We&apos;ve sent a short note to your inbox too, and a
+        real person will follow up in a few days.
       </p>
       <a
         href={quizUrl}
@@ -465,7 +510,11 @@ function UnqualifiedScreen({ quizUrl }: { quizUrl: string }) {
         <ArrowRight className="size-4" />
       </a>
       <p className="mt-5 text-sm text-faint">
-        Takes about two minutes. Real search data, not fluff.
+        Or, if one thing is bothering you, the{" "}
+        <a href="/sprint" className="font-bold text-foreground underline underline-offset-4 hover:text-brand">
+          two-week sprint
+        </a>{" "}
+        is the easy first step.
       </p>
     </div>
   );

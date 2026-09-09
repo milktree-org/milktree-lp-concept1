@@ -16,6 +16,7 @@ export function ProgressBar({ value }: { value: number }) {
   return (
     <div
       role="progressbar"
+      aria-label="Progress"
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(value * 100)}
@@ -74,15 +75,18 @@ export function StepPanel({
 export function StepHeading({
   title,
   sub,
+  as: Tag = "h2",
 }: {
   title: string;
   sub?: string;
+  /** The step title is the page's main heading on /start, so it renders as h1 there. */
+  as?: "h1" | "h2";
 }) {
   return (
     <div className="mb-8">
-      <h2 className="text-balance text-[clamp(1.6rem,4.5vw,2.4rem)] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">
+      <Tag className="text-balance text-[clamp(1.6rem,4.5vw,2.4rem)] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">
         {title}
-      </h2>
+      </Tag>
       {sub && <p className="text-body mt-3 text-[0.95rem]">{sub}</p>}
     </div>
   );
@@ -91,12 +95,15 @@ export function StepHeading({
 export function OptionCard({
   icon: Icon,
   label,
+  hint,
   selected,
   onSelect,
   autoFocus,
 }: {
   icon?: React.ComponentType<{ className?: string }>;
   label: string;
+  /** One-line detail under the label, e.g. "Two weeks." */
+  hint?: string;
   selected: boolean;
   onSelect: () => void;
   autoFocus?: boolean;
@@ -128,8 +135,11 @@ export function OptionCard({
           <Icon className="size-5" />
         </span>
       )}
-      <span className="text-[1.02rem] font-bold tracking-tight text-foreground">
-        {label}
+      <span className="flex flex-col">
+        <span className="text-[1.02rem] font-bold tracking-tight text-foreground">
+          {label}
+        </span>
+        {hint && <span className="mt-0.5 text-sm text-muted-foreground">{hint}</span>}
       </span>
     </button>
   );

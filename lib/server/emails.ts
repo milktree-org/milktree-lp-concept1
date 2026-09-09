@@ -1,5 +1,14 @@
 import "server-only";
 
+import {
+  creditRule,
+  getProducts,
+  paymentTerms,
+  type Product,
+  type ProductId,
+} from "@/lib/offer";
+import type { LeadRoute } from "@/lib/funnel";
+
 /**
  * On-brand transactional email templates (black canvas, yellow accent,
  * Satoshi with system fallback). Plain HTML strings — no client runtime.
@@ -46,7 +55,7 @@ function shell(content: string): string {
             <tr>
               <td style="padding:20px 36px 32px;border-top:1px solid #1A1A1A;">
                 <p style="margin:0;font-family:${FONT};font-size:12px;line-height:1.6;color:rgba(255,255,255,0.4);">
-                  Milktree — your creative department, on demand. UK-based.<br/>
+                  Milktree — a UK design studio. Brands you can see on the high street.<br/>
                   You're receiving this because you contacted us at
                   <a href="${SITE_URL}" style="color:rgba(255,255,255,0.55);">milktreeagency.com</a>.
                   To manage your email preferences or stop hearing from us, just reply to this email.
@@ -82,61 +91,137 @@ const planCard = (name: string, price: string, lines: string[], highlight = fals
 
 /* ------------------------- Qualified offer email -------------------------- */
 
-export function qualifiedOfferEmail(input: {
+export function productFollowUpEmail(input: {
   firstName: string;
-  foundingSpots: number;
+  route: LeadRoute;
 }): { subject: string; html: string; text: string } {
-  const subject = "Milktree — how it works + your plan options";
+  const products = getProducts("GBP");
+  const byId = (id: ProductId) => products.find((p) => p.id === id)!;
   const bookUrl = `${SITE_URL}/book`;
-  const onePagerUrl = `${SITE_URL}/docs/milktree-offer.pdf`;
+  const quizUrl = `${SITE_URL}/brand-report`;
+  const pricingUrl = `${SITE_URL}/pricing`;
 
+  const card = (p: Product, highlight = false) =>
+    planCard(
+      p.name,
+      `${p.price}${p.cadence === "/mo" ? "/mo" : ""}`,
+      [p.duration, ...p.features.slice(0, 3)],
+      highlight,
+    );
+
+  if (input.route === "sprint") {
+    const sprint = byId("sprint");
+    const subject = "Your Brand Reset Sprint — what happens next";
+    const html = shell(`
+      ${h(`Hi ${input.firstName} — here's how the sprint works.`)}
+      ${p("One thing fixed properly in two weeks: your homepage, your deck, or your identity tightened up. One revision round, a creative director on it, files you can use on day ten.")}
+      ${card(sprint, true)}
+      ${p(`<strong style="color:#ffffff;">The step-up rule:</strong> ${creditRule}`)}
+      ${p("Grab a 15-minute slot and we'll agree exactly what's being fixed:")}
+      ${button("Book your sprint call", bookUrl)}
+      ${p(`Everything side by side is here: <a href="${pricingUrl}" style="color:${YELLOW};">milktreeagency.com/pricing</a>.`)}
+      ${p("Speak soon,<br/>The Milktree team")}
+    `);
+    const text = [
+      `Hi ${input.firstName} — here's how the sprint works.`,
+      "",
+      `Brand Reset Sprint — ${sprint.price} (+VAT), two weeks, one thing fixed properly. One revision round, creative director on it.`,
+      creditRule,
+      "",
+      `Book your sprint call: ${bookUrl}`,
+      `Compare everything: ${pricingUrl}`,
+      "",
+      "Speak soon,",
+      "The Milktree team",
+    ].join("\n");
+    return { subject, html, text };
+  }
+
+  if (input.route === "build") {
+    const build = byId("build");
+    const plus = byId("build-plus");
+    const subject = "Your Brand Build — how the six weeks run";
+    const html = shell(`
+      ${h(`Hi ${input.firstName} — here's how a Brand Build works.`)}
+      ${p("A half-day workshop, two rough directions, then the identity designed in full, applied to the five things your business actually uses, and handed over with guidelines. A named senior designer and a creative director throughout. Fixed price.")}
+      ${card(build, true)}
+      ${card(plus)}
+      ${p(`<strong style="color:#ffffff;">Payment:</strong> ${paymentTerms.build}`)}
+      ${p("Book 30 minutes and we'll walk through the process and pick a start date:")}
+      ${button("Book your intro call", bookUrl)}
+      ${p(`Everything side by side is here: <a href="${pricingUrl}" style="color:${YELLOW};">milktreeagency.com/pricing</a>.`)}
+      ${p("Speak soon,<br/>The Milktree team")}
+    `);
+    const text = [
+      `Hi ${input.firstName} — here's how a Brand Build works.`,
+      "",
+      `Brand Build — ${build.price} (+VAT), four to six weeks: workshop, positioning, identity, five applications, guidelines. Named senior designer, creative director.`,
+      `Brand Build Plus — ${plus.price} (+VAT), six to eight weeks: everything above plus the campaign toolkit (ads, social templates, print and outdoor, launch assets).`,
+      `Payment: ${paymentTerms.build}`,
+      "",
+      `Book your intro call: ${bookUrl}`,
+      `Compare everything: ${pricingUrl}`,
+      "",
+      "Speak soon,",
+      "The Milktree team",
+    ].join("\n");
+    return { subject, html, text };
+  }
+
+  if (input.route === "subscription") {
+    const essentials = byId("essentials");
+    const lead = byId("design-lead");
+    const subject = "Milktree subscription — the two plans";
+    const html = shell(`
+      ${h(`Hi ${input.firstName} — here are the two plans.`)}
+      ${p("Unlimited design requests in a queue, back in around 48 hours, every piece checked by a creative director. Pause or cancel any month. Design Lead adds a named senior designer, the same person every time, on your Slack.")}
+      ${card(essentials)}
+      ${card(lead, true)}
+      ${p(`<strong style="color:#ffffff;">Billing:</strong> ${paymentTerms.subscription}`)}
+      ${p("Book 30 minutes and we'll pick the plan and get your first request in the queue:")}
+      ${button("Book your intro call", bookUrl)}
+      ${p(`Everything side by side is here: <a href="${pricingUrl}" style="color:${YELLOW};">milktreeagency.com/pricing</a>.`)}
+      ${p("Speak soon,<br/>The Milktree team")}
+    `);
+    const text = [
+      `Hi ${input.firstName} — here are the two plans.`,
+      "",
+      `Essentials — ${essentials.price}/mo (+VAT): unlimited requests, one at a time, ~48h turnaround, creative director on every piece, pause or cancel any month.`,
+      `Design Lead — ${lead.price}/mo (+VAT): two at a time, a named senior designer on your Slack, creative direction on everything.`,
+      `Billing: ${paymentTerms.subscription}`,
+      "",
+      `Book your intro call: ${bookUrl}`,
+      `Compare everything: ${pricingUrl}`,
+      "",
+      "Speak soon,",
+      "The Milktree team",
+    ].join("\n");
+    return { subject, html, text };
+  }
+
+  // nurture
+  const sprint = byId("sprint");
+  const subject = "Milktree — a quick read on where to start";
   const html = shell(`
-    ${h(`Hi ${input.firstName} — here's how Milktree works.`)}
-    ${p(
-      "Milktree becomes your embedded brand &amp; design team — unlimited requests, senior work back in around 48 hours, for one flat monthly fee. No proposals, no quotes, no hourly billing.",
-    )}
-    ${planCard("Essentials", "£1,999/mo", [
-      "Unlimited requests, one at a time",
-      "~48h turnaround · pause anytime, unused time banks",
-    ])}
-    ${planCard(
-      "Design Lead",
-      "£3,999/mo",
-      [
-        "Unlimited requests, two at a time",
-        "Your own dedicated senior designer, plus creative direction on everything",
-        "Direct Slack access to your design lead",
-        "Full brand builds in 4–6 weeks",
-      ],
-      true,
-    )}
-    ${p(
-      `<strong style="color:#ffffff;">Founding rate:</strong> the first 10 Design Lead clients lock <strong style="color:#ffffff;">£3,500/mo for life</strong> — ${input.foundingSpots} spots left.`,
-    )}
-    ${p("If you haven't already, grab a time for your intro call:")}
-    ${button("Book your intro call", bookUrl)}
-    ${p(
-      `The one-pager with the full breakdown is here: <a href="${onePagerUrl}" style="color:${YELLOW};">Milktree — the offer (PDF)</a>.`,
-    )}
+    ${h(`Hi ${input.firstName} — thanks for getting in touch.`)}
+    ${p("No rush. Two things that might help while you decide.")}
+    ${p(`<strong style="color:#ffffff;">Your free Brand Score.</strong> Three minutes, real search data, and a straight read on how your brand stacks up against the top players in your market.`)}
+    ${button("Get your Brand Score", quizUrl)}
+    ${p("And if one specific thing is bothering you, the sprint is the easy first step:")}
+    ${card(sprint)}
+    ${p(`When you're ready, everything is here: <a href="${pricingUrl}" style="color:${YELLOW};">milktreeagency.com/pricing</a>. Or just reply to this email.`)}
     ${p("Speak soon,<br/>The Milktree team")}
   `);
-
   const text = [
-    `Hi ${input.firstName} — here's how Milktree works.`,
+    `Hi ${input.firstName} — thanks for getting in touch.`,
     "",
-    "Milktree becomes your embedded brand & design team — unlimited requests, senior work back in ~48 hours, one flat monthly fee.",
-    "",
-    "Essentials — £1,999/mo (+VAT): unlimited requests, one at a time, vetted designers matched per request and checked by a creative director, ~48h turnaround, pause anytime.",
-    "Design Lead — £3,999/mo (+VAT): two at a time, your own dedicated senior designer reachable on Slack, creative direction on everything, brand builds in 4–6 weeks.",
-    `Founding rate: first 10 Design Lead clients lock £3,500/mo for life — ${input.foundingSpots} spots left.`,
-    "",
-    `Book your intro call: ${bookUrl}`,
-    `The offer one-pager: ${onePagerUrl}`,
+    `Your free Brand Score (three minutes): ${quizUrl}`,
+    `If one thing is bothering you: Brand Reset Sprint — ${sprint.price} (+VAT), two weeks, one thing fixed properly.`,
+    `Everything else: ${pricingUrl}`,
     "",
     "Speak soon,",
     "The Milktree team",
   ].join("\n");
-
   return { subject, html, text };
 }
 
@@ -148,10 +233,10 @@ export function teamNotifyEmail(input: {
   phone?: string;
   company: string;
   website?: string;
-  teamSize: string;
-  budget: string;
   need: string;
-  marketing: string;
+  sector: string;
+  teamSize: string;
+  timing: string;
   route: string;
 }): { subject: string; html: string; text: string } {
   const subject = `New ${input.route} lead — ${input.company}`;
@@ -166,10 +251,10 @@ export function teamNotifyEmail(input: {
       ${row("Phone", input.phone || "—")}
       ${row("Company", input.company)}
       ${row("Website", input.website || "—")}
-      ${row("Team size", input.teamSize)}
-      ${row("Budget", input.budget)}
       ${row("Needs", input.need)}
-      ${row("Marketing function", input.marketing)}
+      ${row("Sector", input.sector)}
+      ${row("Team size", input.teamSize)}
+      ${row("Timing", input.timing)}
       ${row("Route", input.route)}
       ${row("Booked", "Not yet — booking happens on the confirmation screen")}
     </table>
@@ -182,10 +267,10 @@ export function teamNotifyEmail(input: {
     `Phone: ${input.phone || "—"}`,
     `Company: ${input.company}`,
     `Website: ${input.website || "—"}`,
-    `Team size: ${input.teamSize}`,
-    `Budget: ${input.budget}`,
     `Needs: ${input.need}`,
-    `Marketing function: ${input.marketing}`,
+    `Sector: ${input.sector}`,
+    `Team size: ${input.teamSize}`,
+    `Timing: ${input.timing}`,
     `Route: ${input.route}`,
   ].join("\n");
 
@@ -279,7 +364,7 @@ export function auditReportEmail(input: {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 14px;">${findingRows}</table>
     ${benchmarkHtml}
     ${p(
-      `Every “fix first” item above is a standard request on a Milktree plan — from <strong style="color:#ffffff;">£1,999/mo</strong>, unlimited requests, senior work back in ~48 hours, cancel any month.`,
+      `Every “fix first” item above is the kind of thing a <strong style="color:#ffffff;">Brand Reset Sprint</strong> fixes in two weeks for £799, or a subscription handles month to month from £1,499. Fixed prices, no proposals.`,
     )}
     ${button("See if Milktree fits", `${SITE_URL}/start`)}
   `);
@@ -419,7 +504,7 @@ export function brandScoreDocEmail(input: {
     ${p(
       `And if you'd rather skip the queue: Milktree is an embedded design team on a flat monthly fee, from <strong style="color:#ffffff;">£1,999/mo</strong>. Closing exactly these gaps is what we do every week.`,
     )}
-    ${p(`<a href="${SITE_URL}/start" style="color:${YELLOW};font-weight:700;">Get started &rarr;</a>`)}
+    ${p(`<a href="${SITE_URL}/start" style="color:${YELLOW};font-weight:700;">Start a project &rarr;</a>`)}
     ${p("— The Milktree team")}
   `);
 
@@ -435,7 +520,7 @@ export function brandScoreDocEmail(input: {
     "Inside you'll find your score breakdown, a one-page read-out of your own brand pulled live from your site, the brands leading your space side by side, your 10 prioritised fixes and a 90-day roadmap you can run with any team.",
     "",
     "And if you'd rather skip the queue: Milktree is an embedded design team on a flat monthly fee, from £1,999/mo. Closing exactly these gaps is what we do every week.",
-    `Get started: ${SITE_URL}/start`,
+    `Start a project: ${SITE_URL}/start`,
     "",
     "— The Milktree team",
   ].join("\n");
@@ -575,9 +660,9 @@ export function quizReportEmail(input: {
     <p style="margin:20px 0 10px;font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);">Your 10 fixes</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">${actionsHtml}</table>
     ${p(
-      `When you're ready for a team to do this for you, Milktree starts at <strong style="color:#ffffff;">£1,999/mo</strong> — unlimited requests, senior work back in ~48 hours, cancel any month.`,
+      `When you're ready for a team to do this for you: fix one thing in two weeks from <strong style="color:#ffffff;">£799</strong>, rebuild the brand from <strong style="color:#ffffff;">£3,499</strong>, or keep us on from <strong style="color:#ffffff;">£1,499</strong> a month. Fixed prices, no proposals.`,
     )}
-    ${button("See how Milktree works", `${SITE_URL}/#plans`)}
+    ${button("See how Milktree works", `${SITE_URL}/pricing`)}
   `);
 
   const text = [
@@ -600,7 +685,7 @@ export function quizReportEmail(input: {
     ...input.actions.map((a, i) => `  ${i + 1}. ${a}`),
     "",
     "When you're ready for a team to do this for you, Milktree starts at £1,999/mo.",
-    `${SITE_URL}/#plans`,
+    `${SITE_URL}/pricing`,
   ].join("\n");
 
   return { subject, html, text };

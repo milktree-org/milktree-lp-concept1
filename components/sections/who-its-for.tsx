@@ -20,9 +20,9 @@ function KeywordTitle({ title, keyword }: { title: string; keyword: string }) {
 }
 
 /**
- * Who it's for — type-led editorial rows naming the three audiences,
- * plus a one-line disqualifier. Sits between WhyMilktree and Plans so
- * "is this for me?" is answered right before pricing.
+ * Who it's for — type-led editorial rows naming the six sectors the
+ * portfolio proves, plus a one-line disqualifier. Phase 2 links each row
+ * to its /for/[audience] page.
  */
 export function WhoItsFor() {
   return (
@@ -32,7 +32,7 @@ export function WhoItsFor() {
           <Eyebrow>Who it&apos;s for</Eyebrow>
         </Reveal>
         <Reveal index={1}>
-          <h2 className="text-h2 mt-6 text-balance">Built for teams that ship.</h2>
+          <h2 className="text-h2 mt-6 text-balance">Built for businesses people can see.</h2>
         </Reveal>
       </div>
 

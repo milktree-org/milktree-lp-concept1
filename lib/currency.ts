@@ -5,8 +5,9 @@
  *
  * These are marketing price points, NOT live FX conversions — each currency
  * gets clean charm pricing pegged roughly to the GBP rate. Adjust the numbers
- * here and every surface (plan cards, banners, anchors, comparison table,
- * FAQ) updates together.
+ * here and every surface (product pages, pricing table, anchors, FAQ,
+ * schema.org offers, emails) updates together. GBP is the billing currency
+ * and the source of truth; the offer ladder itself lives in lib/offer.ts.
  */
 
 export const CURRENCY_COOKIE = "mt_currency";
@@ -22,12 +23,27 @@ export function isCurrencyCode(value: string): value is CurrencyCode {
 
 export type CurrencyPricing = {
   code: CurrencyCode;
-  /** Monthly plan prices as display strings, e.g. "£1,999". */
+  /** Currency symbol or code prefix used by `formatAmount`, e.g. "£" or "AED ". */
+  symbol: string;
+  /**
+   * The offer ladder (MILKTREE-STUDIO.md §2) as numbers, so schema.org and
+   * any arithmetic read the same figures the cards display. Non-GBP values
+   * are marketing pegs, not FX conversions.
+   */
+  amounts: {
+    sprint: number;
+    build: number;
+    buildPlus: number;
+    essentials: number;
+    designLead: number;
+  };
+  /** Display strings derived from `amounts`, e.g. "£1,499". */
+  sprint: string;
+  build: string;
+  buildPlus: string;
   essentialsMonthly: string;
   designLeadMonthly: string;
-  /** Founding-rate monthly price locked for the first 10 Design Lead clients. */
-  foundingMonthly: string;
-  /** Design Lead annualised, for the value anchor, e.g. "£48k". */
+  /** Design Lead annualised, for the value anchor, e.g. "£30k". */
   designLeadAnnual: string;
   /** What a design-lead hire costs locally, e.g. "£65k+ a year in the UK". */
   hireAnchor: string;
@@ -48,10 +64,14 @@ export type CurrencyPricing = {
 export const CURRENCIES: Record<CurrencyCode, CurrencyPricing> = {
   GBP: {
     code: "GBP",
-    essentialsMonthly: "£1,999",
-    designLeadMonthly: "£3,999",
-    foundingMonthly: "£3,500",
-    designLeadAnnual: "£48k",
+    symbol: "£",
+    amounts: { sprint: 799, build: 3499, buildPlus: 5999, essentials: 1499, designLead: 2499 },
+    sprint: "£799",
+    build: "£3,499",
+    buildPlus: "£5,999",
+    essentialsMonthly: "£1,499",
+    designLeadMonthly: "£2,499",
+    designLeadAnnual: "£30k",
     hireAnchor: "£65k+ a year in the UK",
     hireOverheads: "before National Insurance, holiday cover and recruitment",
     hireCost: "£50k+",
@@ -62,10 +82,14 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyPricing> = {
   },
   USD: {
     code: "USD",
-    essentialsMonthly: "$2,499",
-    designLeadMonthly: "$4,999",
-    foundingMonthly: "$4,399",
-    designLeadAnnual: "$60k",
+    symbol: "$",
+    amounts: { sprint: 999, build: 4499, buildPlus: 7499, essentials: 1899, designLead: 3199 },
+    sprint: "$999",
+    build: "$4,499",
+    buildPlus: "$7,499",
+    essentialsMonthly: "$1,899",
+    designLeadMonthly: "$3,199",
+    designLeadAnnual: "$38k",
     hireAnchor: "$120k+ a year in the US",
     hireOverheads: "before payroll taxes, benefits and recruitment",
     hireCost: "$80k+",
@@ -76,10 +100,14 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyPricing> = {
   },
   EUR: {
     code: "EUR",
-    essentialsMonthly: "€2,299",
-    designLeadMonthly: "€4,699",
-    foundingMonthly: "€4,099",
-    designLeadAnnual: "€56k",
+    symbol: "€",
+    amounts: { sprint: 899, build: 3999, buildPlus: 6999, essentials: 1699, designLead: 2899 },
+    sprint: "€899",
+    build: "€3,999",
+    buildPlus: "€6,999",
+    essentialsMonthly: "€1,699",
+    designLeadMonthly: "€2,899",
+    designLeadAnnual: "€35k",
     hireAnchor: "€80k+ a year",
     hireOverheads: "before employer taxes, holiday cover and recruitment",
     hireCost: "€60k+",
@@ -90,10 +118,14 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyPricing> = {
   },
   AED: {
     code: "AED",
-    essentialsMonthly: "AED 8,999",
-    designLeadMonthly: "AED 17,999",
-    foundingMonthly: "AED 15,999",
-    designLeadAnnual: "AED 216k",
+    symbol: "AED ",
+    amounts: { sprint: 3699, build: 15999, buildPlus: 27999, essentials: 6999, designLead: 11499 },
+    sprint: "AED 3,699",
+    build: "AED 15,999",
+    buildPlus: "AED 27,999",
+    essentialsMonthly: "AED 6,999",
+    designLeadMonthly: "AED 11,499",
+    designLeadAnnual: "AED 138k",
     hireAnchor: "AED 350k+ a year in Dubai",
     hireOverheads: "before visas, benefits and recruitment",
     hireCost: "AED 300k+",

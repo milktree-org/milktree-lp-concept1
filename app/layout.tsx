@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   keywords: seo.keywords,
   openGraph: {
-    title: "Milktree | Your creative department. On demand.",
+    title: "Milktree | Brands you can see on the high street",
     description: seo.ogDescription,
     type: "website",
     url: SITE_URL,
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Milktree | Your creative department. On demand.",
+    title: "Milktree | Brands you can see on the high street",
     description: seo.ogDescription,
   },
 };

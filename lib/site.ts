@@ -4,10 +4,17 @@ import {
   DEFAULT_CURRENCY,
   type CurrencyCode,
 } from "@/lib/currency";
+import { proofLine } from "@/lib/offer";
 
 /**
- * Cal.com — intro call for qualified leads. Override with NEXT_PUBLIC_CAL_URL
- * if the event slug ever changes.
+ * Site-wide copy and data (MILKTREE-STUDIO.md). The offer ladder itself
+ * (products, prices, product-page copy) lives in lib/offer.ts; this file
+ * holds everything else the chrome and the homepage read.
+ */
+
+/**
+ * Cal.com — intro call. Override with NEXT_PUBLIC_CAL_URL if the event slug
+ * ever changes.
  */
 export const CAL_URL =
   process.env.NEXT_PUBLIC_CAL_URL ??
@@ -25,21 +32,17 @@ export const contact = {
   responseNote: "We reply to every message within one working day.",
 };
 
-/** Founding-rate urgency — decrement manually as Design Lead spots fill. */
-export const foundingSpotsRemaining = Number(
-  process.env.NEXT_PUBLIC_FOUNDING_SPOTS ?? "7",
-);
-
 export const site = {
   name: "Milktree",
-  tagline: "Your creative department. On demand.",
+  tagline: "Brands you can see on the high street.",
   description:
-    "Milktree becomes your embedded brand and design team. Unlimited requests, senior work back in 48 hours, one flat monthly fee.",
-  trustLine: "200+ brands built · 6 years as an agency · No contracts · Pause anytime",
+    "Milktree is a UK design studio that builds brands for real businesses and takes them all the way to signage, packaging and print. Fix one thing in two weeks, rebuild the lot in six, or keep us on retainer. Fixed prices, no proposals.",
+  trustLine: "200+ brands built · 7 years · Fixed prices · No contracts",
+  proofLine,
   /** Friction-reducer shown directly under primary CTAs. */
-  ctaNote: "Takes about 2 minutes. No call required.",
+  ctaNote: "Takes about two minutes. No commitment.",
   /** Caption framing the client logo marquee as proof of the 200+ claim. */
-  marqueeCaption: "Some of the 200+ brands we\u2019ve built",
+  marqueeCaption: "Some of the 200+ brands we’ve built",
 };
 
 /* ------------------------------- Instagram (social proof) ---------------- */
@@ -63,151 +66,116 @@ export const socials = [
 export type NavChild = { label: string; href: string; desc?: string };
 export type NavItem = { label: string; href: string; children?: NavChild[] };
 
-// Homepage-only build: nav points at on-page section anchors (smooth-scrolled
-// via Lenis). Swap these for real routes when the other pages land.
-export const nav: NavItem[] = [
-  {
-    label: "What's included",
-    href: "#services",
-    children: [
-      { label: "Brand identity & guidelines", href: "#services", desc: "Logo, system, rules" },
-      { label: "Social & templates", href: "#services", desc: "Always-on creative" },
-      { label: "Ads & email design", href: "#services", desc: "Paid and owned channels" },
-      { label: "Decks & sales collateral", href: "#services", desc: "Pitches that close" },
-      { label: "AI creative systems", href: "#services", desc: "Senior-directed, shippable" },
-      { label: "Packaging, print & OOH", href: "#services", desc: "Off-screen, on-brand" },
-    ],
-  },
-  { label: "Our work", href: "/work" },
-  {
-    label: "Why Milktree",
-    href: "#why",
-    children: [
-      { label: "How it works", href: "#how", desc: "Subscribe, request, receive" },
-      { label: "The approach", href: "#way", desc: "Embedded, senior, fast" },
-    ],
-  },
-  { label: "Plans", href: "#plans" },
-  { label: "FAQ", href: "#faq" },
-];
-
-/* ------------------------------- Problem (§3.3) --------------------------- */
-export function getProblems(currency: CurrencyCode = DEFAULT_CURRENCY) {
-  const money = CURRENCIES[currency];
+/**
+ * Header navigation (spec §5). Phase 1 links only to pages that exist;
+ * Services, Who it's for and About join in phase 2.
+ */
+export function getNav(currency: CurrencyCode = DEFAULT_CURRENCY): NavItem[] {
+  const m = CURRENCIES[currency];
   return [
+    { label: "Work", href: "/work" },
     {
-      label: "Freelancers",
-      title: "Ghost when you need them.",
-      body: "Talented, but stretched across five other clients. Inconsistent, hard to brief, and gone the moment your deadline actually matters.",
+      label: "Pricing",
+      href: "/pricing",
+      children: [
+        { label: "Brand Reset Sprint", href: "/sprint", desc: `${m.sprint} · one thing fixed in two weeks` },
+        { label: "Brand Build", href: "/brand-build", desc: `from ${m.build} · the whole brand, rebuilt` },
+        { label: "Subscription", href: "/subscription", desc: `from ${m.essentialsMonthly}/mo · ongoing design, on tap` },
+        { label: "Compare all", href: "/pricing", desc: "Every product side by side" },
+      ],
     },
-    {
-      label: "Hiring",
-      title: `${money.hireCost} for one skill set.`,
-      body: "Months to recruit, then salary, software and management overhead. All for one person who can't cover brand, web, social and ads alone.",
-    },
-    {
-      label: "Agencies",
-      title: "Four-figure quotes, then gone.",
-      body: "A proposal for every small thing, layers of account managers, and radio silence once the project wraps. Great for one job, painful as a partner.",
-    },
+    { label: "FAQ", href: "/#faq" },
+    { label: "Contact", href: "/contact" },
   ];
 }
 
-export const problems = getProblems();
+export const nav: NavItem[] = getNav();
 
-/* ---------------------------- What's included (§3.6) ---------------------- */
-export const included = [
-  { id: "brand", title: "Brand identity & guidelines", body: "Logos, systems and rules that hold up everywhere." },
-  { id: "social", title: "Social & templates", body: "Always-on creative that keeps your feed sharp." },
-  { id: "ads", title: "Ads & email design", body: "Static and motion ads, plus campaigns and flows that convert." },
-  { id: "decks", title: "Decks & sales collateral", body: "Pitch decks and sales material that close." },
-  { id: "web", title: "Landing page & web design", body: "Design, not build. Pages engineered to convert." },
-  { id: "ai", title: "AI creative systems", body: "Senior-directed systems, assets and workflows your team can actually ship." },
-  { id: "print", title: "Packaging & print", body: "Physical brand moments, done properly." },
-  { id: "ooh", title: "Presentations & OOH", body: "From boardroom screens to billboards." },
-];
-
-export const includedFootnote =
-  "One request = one deliverable with one revision round included.";
-
-/* ------------------------------ How it works (§3.5) ----------------------- */
-export const steps = [
+/* ------------------------------- Symptoms (home §6.1.3) ------------------- */
+/**
+ * The four lines that produced every lead in the 2026 ad account, in the
+ * buyer's own words. Each card points at the product that fixes it.
+ */
+export const symptoms = [
   {
-    n: "01",
-    title: "Subscribe",
-    body: "Pick your plan and get dashboard access the same day. No onboarding calls required, no paperwork.",
+    label: "The homepage",
+    title: "It can't explain what you do in one sentence.",
+    body: "People land, squint, and leave. The business has moved on; the page hasn't.",
+    href: "/sprint",
+    cta: "Fix the homepage",
   },
   {
-    n: "02",
-    title: "Request",
-    body: "Drop guided briefs into your queue. Add as many as you like; we work through them in priority order.",
+    label: "The deck",
+    title: "The deck doesn't match the website.",
+    body: "Different logo, different colours, different story. It reads like two companies.",
+    href: "/sprint",
+    cta: "Fix the deck",
   },
   {
-    n: "03",
-    title: "Receive",
-    body: "Senior work back in around 48 hours. Approve it in a click or send it back. Every request includes one revision round.",
+    label: "The brand",
+    title: "It looks like ten different people made it.",
+    body: "Because they did. A freelancer here, a template there, six years of drift.",
+    href: "/brand-build",
+    cta: "Rebuild the brand",
   },
-];
+  {
+    label: "The backlog",
+    title: "Design is always the thing that's late.",
+    body: "The menu, the ads, the signage for the new site. Everything waits on a designer who isn't there.",
+    href: "/subscription",
+    cta: "Get design on tap",
+  },
+] as const;
 
-export const stepsFootnote = "No proposals. No quotes. The process is the product.";
-
-/* ------------------------------ Comparison (§3.8) ------------------------- */
+/* ------------------------------ Comparison (home §6.1.5) ------------------ */
 export function getComparison(currency: CurrencyCode = DEFAULT_CURRENCY) {
   const money = CURRENCIES[currency];
   return {
-    // "Budget subscriptions" heads the column so a low price band isn't the
-    // anchor visitors carry into the Plans section; the figure lives in the
-    // Cost cell where the "shallow" framing does the work.
-    columns: [
-      "Freelancer",
-      "In-house hire",
-      "Budget subscriptions",
-      "Milktree",
-    ],
+    columns: ["Freelancer", "In-house hire", "Subscription-only studio", "Milktree"],
     rows: [
+      {
+        label: "Full brand builds",
+        values: [
+          "One person, one style",
+          "Rarely their specialism",
+          "Not what they do",
+          "200 built, fixed price",
+        ],
+      },
+      {
+        label: "Print, signage, outdoor",
+        values: [
+          "Depends who you find",
+          "Usually outsourced",
+          "Digital assets only",
+          "Standard. It's on the high street",
+        ],
+      },
+      {
+        label: "Creative direction",
+        values: [
+          "None",
+          "They are the direction",
+          "A ticket queue",
+          "A creative director on every piece",
+        ],
+      },
       {
         label: "Cost",
         values: [
           "Variable day rates",
           `${money.hireCost}/yr + overheads`,
-          `${money.cheapSubs}/mo, but shallow`,
-          "One flat monthly fee",
+          `${money.cheapSubs}/mo`,
+          "Fixed prices. No quotes",
         ],
       },
       {
-        label: "Coverage",
-        values: [
-          "One specialism",
-          "One skill set",
-          "One generalist working a queue. Production, not brand",
-          "Senior team across every discipline",
-        ],
-      },
-      {
-        label: "Consistency",
-        values: [
-          "Drifts over time",
-          "Strong, until they leave",
-          "No creative direction",
-          "On-brand, every time",
-        ],
-      },
-      {
-        label: "Speed",
-        values: [
-          "Depends on their week",
-          "Limited capacity",
-          "Days per ticket",
-          "~48h turnaround",
-        ],
-      },
-      {
-        label: "Risk",
+        label: "Commitment",
         values: [
           "Can vanish mid-project",
-          "Hiring & notice periods",
-          "Easy in, little accountability",
-          "Pause or cancel anytime",
+          "Notice periods",
+          "Rolling",
+          "Pause or cancel any month",
         ],
       },
     ],
@@ -215,88 +183,6 @@ export function getComparison(currency: CurrencyCode = DEFAULT_CURRENCY) {
 }
 
 export const comparison = getComparison();
-
-/* ------------------------------- Plans (§3.7) ------------------------------ */
-export type Plan = {
-  name: string;
-  kicker: string;
-  price: string;
-  cadence: string;
-  summary: string;
-  anchor: string;
-  features: string[];
-  featured: boolean;
-  note?: string;
-  /** Founding-rate urgency banner (Design Lead only). */
-  banner?: string;
-  cta: string;
-};
-
-export function getPlans(currency: CurrencyCode = DEFAULT_CURRENCY): Plan[] {
-  const money = CURRENCIES[currency];
-  return [
-    {
-      name: "Essentials",
-      kicker: "Ongoing design support",
-      price: money.essentialsMonthly,
-      cadence: "/mo",
-      summary: "Your design queue, handled. One request at a time.",
-      anchor:
-        "Unlimited requests, worked one at a time by vetted designers from our bench of 50+, quality-checked by a creative director before it ships. Pause whenever things go quiet and unused time banks.",
-      features: [
-        "Unlimited requests, one at a time",
-        "~48h average turnaround",
-        "Vetted designers, quality-checked by a creative director",
-        "One revision round per request",
-        "Pause anytime, unused time banks",
-        "Cancel any month",
-      ],
-      featured: false,
-      cta: "Get started",
-    },
-    {
-      name: "Design Lead",
-      kicker: "The flagship",
-      price: money.designLeadMonthly,
-      cadence: "/mo",
-      summary:
-        "Two requests at a time, with your own dedicated design lead, reachable on Slack.",
-      anchor: `A design lead costs ${money.hireAnchor} ${money.hireOverheads}, and buys one skill set. Design Lead is ${money.designLeadAnnual} a year, senior across every discipline, cancel any month.`,
-      features: [
-        "Unlimited requests, two at a time",
-        "Your own dedicated senior designer, the same person every time",
-        "Direct Slack access to your design lead",
-        "Creative direction on every piece",
-        "Full brand builds, typically 4–6 weeks",
-        "~48h average turnaround",
-        "Pause or cancel anytime",
-      ],
-      featured: true,
-      note: "Most teams choose Design Lead",
-      banner: `First 10 Design Lead clients lock ${money.foundingMonthly}/mo for life. ${foundingSpotsRemaining} spots left.`,
-      cta: "Get started",
-    },
-  ];
-}
-
-export const plans: Plan[] = getPlans();
-
-export const planAnchor =
-  "Both plans replace the cost and risk of hiring. No recruitment, no management overhead, no notice periods. Need more firepower?";
-
-/** Risk-reversal microcopy rendered directly under each plan CTA. */
-export const planCtaNote = "No contracts · Pause or cancel anytime";
-
-/** Suffix rendered beside the plan price, e.g. "+VAT". Empty outside the UK. */
-export function getPlanTaxSuffix(currency: CurrencyCode = DEFAULT_CURRENCY) {
-  return CURRENCIES[currency].taxSuffix;
-}
-
-export function getPlanVatNote(currency: CurrencyCode = DEFAULT_CURRENCY) {
-  return CURRENCIES[currency].vatNote;
-}
-
-export const planVatNote = getPlanVatNote();
 
 /* -------------------------------- Stats ----------------------------------- */
 export const stats = [
@@ -310,56 +196,23 @@ export const stats = [
     value: 15,
     suffix: "+",
     label: "Industries",
-    sub: "Construction to fintech. The process holds everywhere.",
+    sub: "Hospitality to trades to finance. The process holds everywhere.",
   },
   {
-    value: 6,
+    value: 7,
     suffix: "",
-    label: "Years as an agency",
-    sub: "Six years of agency craft, now delivered on subscription.",
+    label: "Years",
+    sub: "Seven years of studio craft, three ways to buy it.",
   },
   {
     value: 50,
     suffix: "+",
-    label: "Experienced designers",
-    sub: "A vetted bench, quality-checked by a creative director.",
+    label: "Designers in the network",
+    sub: "A core team of senior designers and a vetted network worldwide, every piece checked by a creative director.",
   },
 ];
 
-/* ------------------------- Case studies (§3.9) ---------------------------- */
-// Scope lines describe what was delivered. Swap `result` in for a real,
-// verified number per client when available — never ship placeholder stats.
-export type CaseStudy = {
-  title: string;
-  category: string;
-  poster: string;
-  scope: string;
-  /** Optional verified outcome, e.g. "2.4× more qualified enquiries". */
-  result?: string;
-};
-
-export const caseStudies: CaseStudy[] = [
-  {
-    title: "EazyPhone",
-    category: "Brand Identity",
-    poster: "/work/portfolio/eazyphone-identity.webp",
-    scope: "Full identity, guidelines and collateral, rolled out across retail and out-of-home.",
-  },
-  {
-    title: "Mint Mortgages",
-    category: "Brand & Campaign",
-    poster: "/work/portfolio/mint-simplifying.webp",
-    scope: "Brand identity and an always-on campaign system, from broker kits to billboards.",
-  },
-  {
-    title: "Alltrad Roofing",
-    category: "Brand Identity",
-    poster: "/work/portfolio/alltrad-ooh.webp",
-    scope: "Identity, brand system and out-of-home built to win commercial contracts.",
-  },
-];
-
-/* ----------------------------- Testimonials (§3.9) ------------------------ */
+/* ----------------------------- Testimonials ------------------------------- */
 export type Testimonial = {
   quote: string;
   name: string;
@@ -416,54 +269,45 @@ export const portfolio: PortfolioItem[] = [
   { title: "Lussobrunch", category: "Out-of-Home", poster: "/work/portfolio/lusso-billboard.webp" },
 ];
 
-/* -------------------------------- FAQ (§3.10) ------------------------------ */
+/* -------------------------------- FAQ (home) ------------------------------ */
+/** Studio-level questions. Product mechanics live with each product in lib/offer.ts. */
 export function getFaqs(currency: CurrencyCode = DEFAULT_CURRENCY) {
   const money = CURRENCIES[currency];
   return [
-  {
-    q: "What is a design subscription?",
-    a: "A design subscription replaces project quotes and retainers with one flat monthly fee. You subscribe, add unlimited design requests to your queue, and senior work comes back in around 48 hours. It works like an in-house creative department, without the headcount, the recruitment or the notice periods.",
-  },
-  {
-    q: "How does “unlimited requests” work?",
-    a: "Add as many requests to your queue as you like. There's no cap on volume. The constraint is concurrency: we work one request at a time on Essentials, two at a time on Design Lead, and move to the next the moment one is approved.",
-  },
-  {
-    q: "What counts as one request?",
-    a: "One deliverable: a deck, a landing page design, an ad set, a social template pack, a packaging concept. One revision round is included on every request. If a job is bigger than one deliverable, we split it into clear requests with you before starting.",
-  },
-  {
-    q: "How fast will I get work back?",
-    a: "Most requests come back in around 48 hours. Larger pieces like full brand builds and multi-page sites are scoped into stages, so you see real progress every couple of days rather than waiting weeks for a reveal.",
-  },
-  {
-    q: "How do pause and cancel work?",
-    a: "Billing is monthly with no contracts. Pause whenever things go quiet; unused time banks and picks up where you left off. Cancel any month with a click, and everything we've made is yours to keep.",
-  },
-  {
-    q: `How is Milktree different from cheaper ${money.cheapSubs} design subscriptions?`,
-    a: "Those services put one generalist on a ticket queue. That's production, not brand. Milktree is a senior team with creative direction on every piece, covering brand identity, campaigns, packaging, web and everything between. It's an unlimited design service run like a creative department, not a help desk.",
-  },
-  {
-    q: "Is Milktree a UK design agency?",
-    a: `Yes. Milktree is a UK-based design agency working on subscription. Six years as an agency, 200+ brands built, and clients scaling across the UK and beyond. ${money.faqPricesLine}, and there are no contracts: pause or cancel any month.`,
-  },
-  {
-    q: "Who's actually doing the design?",
-    a: "No juniors, no outsourcing marketplaces, on either plan. On Essentials, every request is worked by a vetted designer from our bench of 50+ experienced designers and checked by a creative director before it ships. On Design Lead, one senior designer is assigned to you as your permanent design lead. You work with the same person every time, with creative direction on everything, so nothing ships off-brand.",
-  },
-  {
-    q: "What's the Slack channel on Design Lead for?",
-    a: "A dedicated channel with your design lead and creative director. Drop notes, ask quick questions, share references and get real-time updates between deliverables. It's not a ticket queue. It's how you'd talk to an in-house team.",
-  },
-  {
-    q: "What's out of scope?",
-    a: "Development and code builds (we design landing pages and websites; your developers or our partners build them), video shoots, 3D, and complex motion production. If you're unsure, ask and we'll tell you straight.",
-  },
-  {
-    q: "Do prices include VAT?",
-    a: "No, all prices exclude VAT. UK VAT is added at the prevailing rate on your invoice where applicable.",
-  },
+    {
+      q: "What does Milktree actually do?",
+      a: "We build brands for real businesses and take them all the way to the things people see: the website, the deck, the signage, the packaging, the ads. Seven years, 200+ brands, across hospitality, property and finance, automotive, retail, health and the trades.",
+    },
+    {
+      q: "What are the three ways to work with you?",
+      a: `A Brand Reset Sprint (${money.sprint}, two weeks, one thing fixed), a Brand Build (from ${money.build}, four to six weeks, the whole brand), or a subscription (from ${money.essentialsMonthly} a month, ongoing design on tap). Most clients start with a sprint or a build and keep us on afterwards.`,
+    },
+    {
+      q: "Is the price really the price?",
+      a: `Yes. Every product has a fixed price on the page${money.taxSuffix ? ", plus VAT" : ""}. No proposals, no quotes, no hourly billing. If you want something outside the scope, we tell you what it costs before we do it.`,
+    },
+    {
+      q: "Who's doing the design?",
+      a: "A core team of senior designers and a network of 50+ vetted designers around the world, matched to each brief by discipline and sector. A creative director checks every piece before it reaches you. On Design Lead and on every Brand Build, you get a named senior designer.",
+    },
+    {
+      q: "How long does it take?",
+      a: "A sprint is two weeks. A Brand Build is four to six weeks, Build Plus six to eight. On subscription, standard requests come back in around 48 hours.",
+    },
+    {
+      q: "Do you build websites?",
+      a: "We design them, to the pixel, for desktop and mobile. Your developer or one of our partners builds them. If you don't have a developer, tell us and we'll introduce you.",
+    },
+    {
+      q: "Where are you based?",
+      a: `The UK. Most of our clients are UK businesses, and we work with companies further afield too. ${money.faqPricesLine}.`,
+    },
+    {
+      q: "Do prices include VAT?",
+      a: money.taxSuffix
+        ? "No, all prices exclude VAT. UK VAT is added at the prevailing rate on your invoice where applicable."
+        : "Prices exclude any applicable taxes.",
+    },
   ];
 }
 
@@ -497,36 +341,55 @@ export const workShowcase: WorkShowcaseItem[] = [
   { src: "/work/strip/ymp-web.webp", title: "Your Mortgage Partner", sub: "Web Design" },
 ];
 
-export const heroBadges = [
-  "200+ brands built",
-  "6 years as an agency",
-  "50+ experienced designers",
-] as const;
-
 /* ------------------------------ Who it's for ------------------------------ */
 // Editorial audience rows. `keyword` is the single word (or hyphenated
 // phrase) inside `title` that turns yellow on row hover — it must appear
-// verbatim exactly once in `title`.
+// verbatim exactly once in `title`. Phase 2 gives each a /for/[audience] page.
 export const audiences = [
   {
-    label: "For agencies",
-    title: "Your overflow team, white-label.",
-    keyword: "white-label",
-    body: "Take on more work without hiring. Senior design capacity under your banner, and your clients never know we exist.",
+    label: "Hospitality",
+    title: "Menus, signage and a brand people photograph.",
+    keyword: "photograph",
+    body: "Restaurants, bars, cafés and food brands. Melt, Latimers, Orange Rooms, Alo.",
   },
   {
-    label: "For marketing teams",
-    title: "The ideas are yours. The firepower is ours.",
-    keyword: "firepower",
-    body: "Ship campaigns, decks and landing pages without waiting on a stretched design resource.",
+    label: "Property and finance",
+    title: "Trust you can see from the street.",
+    keyword: "Trust",
+    body: "Brokers, agents, advisers. Mint Mortgages, Your Mortgage Partner, Rentlyst.",
   },
   {
-    label: "For established brands",
-    title: "For businesses that know design is leverage.",
-    keyword: "leverage",
-    body: "Senior-level craft on everything you put out, not just the big projects.",
+    label: "Trades and construction",
+    title: "A brand that wins the bigger contracts.",
+    keyword: "bigger",
+    body: "Roofers, builders, installers. Alltrad, EJW Concrete, Powerforce.",
+  },
+  {
+    label: "Retail and consumer",
+    title: "Packaging and campaigns that sell on sight.",
+    keyword: "sight",
+    body: "Shops, products, drinks. EazyPhone, Baya, Grin, Zillwoods.",
+  },
+  {
+    label: "Automotive",
+    title: "From the forecourt to the motorway.",
+    keyword: "motorway",
+    body: "Dealers, leasing, fleet. FlexiBuy, Mailmans.",
+  },
+  {
+    label: "Health and aesthetics",
+    title: "Clinical trust, considered design.",
+    keyword: "trust",
+    body: "Clinics, practices, wellbeing brands.",
   },
 ] as const;
 
 export const notAFit =
-  "Not the right fit if you need a one-off logo, or design isn't a priority yet.";
+  "If you need a one-off logo for a hundred quid, we're not the right fit. If your business has outgrown its brand, we are.";
+
+/** Small badges used by the case-study pages and the work index. */
+export const heroBadges = [
+  "200+ brands built",
+  "7 years",
+  "50+ designers in the network",
+] as const;
