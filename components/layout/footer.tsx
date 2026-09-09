@@ -16,8 +16,18 @@ const socialIcons = {
   Facebook: FacebookIcon,
 } as const;
 
-/** Footer columns (spec §5). Phase 2 adds Services, Who it's for and About. */
+/** Footer columns (spec §5). */
 const columns = [
+  {
+    heading: "Services",
+    links: [
+      { label: "Brand identity", href: "/services/brand-identity" },
+      { label: "Campaigns and social", href: "/services/campaigns" },
+      { label: "Web and product", href: "/services/web" },
+      { label: "Print, packaging and outdoor", href: "/services/print" },
+      { label: "Decks and collateral", href: "/services/decks" },
+    ],
+  },
   {
     heading: "Products",
     links: [
@@ -25,35 +35,26 @@ const columns = [
       { label: "Brand Build", href: "/brand-build" },
       { label: "Subscription", href: "/subscription" },
       { label: "Pricing", href: "/pricing" },
+      { label: "How it works", href: "/how-it-works" },
     ],
   },
   {
-    heading: "Selected work",
+    heading: "Work",
     links: [
-      { label: "Eazy Phone", href: "/work/eazyphone" },
-      { label: "Mint Mortgages", href: "/work/mint-mortgages" },
-      { label: "Latimers", href: "/work/latimers" },
-      { label: "Melt", href: "/work/melt" },
-      { label: "Alltrad Roofing", href: "/work/alltrad-roofing" },
-      { label: "View all work", href: "/work" },
+      { label: "Hospitality", href: "/for/hospitality" },
+      { label: "Property and finance", href: "/for/property-finance" },
+      { label: "Trades and construction", href: "/for/trades" },
+      { label: "All work", href: "/work" },
     ],
   },
   {
     heading: "Studio",
     links: [
-      { label: "Our work", href: "/work" },
-      { label: "FAQ", href: "/#faq" },
+      { label: "About", href: "/about" },
       { label: "Careers", href: "/careers" },
       { label: "Contact us", href: "/contact" },
-      { label: "Client login", href: "/login" },
-    ],
-  },
-  {
-    heading: "Start",
-    links: [
-      { label: "Start a project", href: "/start" },
       { label: "Free brand score", href: "/brand-report" },
-      { label: "Brand tips by email", href: "/subscribe" },
+      { label: "Client login", href: "/login" },
     ],
   },
 ];

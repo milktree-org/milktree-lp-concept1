@@ -8,6 +8,9 @@
  * accessibility and image SEO. `body` is the case-study copy, rendered as
  * paragraphs verbatim.
  */
+import type { ProductId } from "@/lib/offer";
+import type { DisciplineSlug, SectorSlug } from "@/lib/taxonomy";
+
 export type GalleryImage = {
   src: string;
   alt: string;
@@ -29,6 +32,15 @@ export type WorkProject = {
   services: string[];
   /** Featured projects appear in the homepage proof grid (6 of 12). */
   featured: boolean;
+  /** Sector the client trades in — drives /work filters and /for pages. */
+  sector: SectorSlug;
+  /** Disciplines visible in the work — drives /work filters and service pages. */
+  disciplines: DisciplineSlug[];
+  /**
+   * Which product this scope maps to today. The projects predate the ladder,
+   * so the case page phrases it as "today this would be a …".
+   */
+  boughtAs: ProductId;
   gallery: GalleryImage[][];
 };
 
@@ -49,6 +61,9 @@ export const workProjects: WorkProject[] = [
       "Brand identity for Eazy Phone: a clear, recognisable identity built from launch for a telecommunications start-up. A Milktree case study.",
     services: ["Brand identity"],
     featured: true,
+    sector: "retail",
+    disciplines: ["brand-identity", "campaigns", "print"],
+    boughtAs: "build-plus",
     gallery: [
       [
         {
@@ -114,6 +129,9 @@ export const workProjects: WorkProject[] = [
       "Brand identity and social media design for Mint Mortgages: a clear visual direction with a consistent, professional presence. A Milktree case study.",
     services: ["Brand identity", "Social media design"],
     featured: true,
+    sector: "property-finance",
+    disciplines: ["brand-identity", "campaigns", "web", "print", "decks"],
+    boughtAs: "build-plus",
     gallery: [
       [
         {
@@ -175,6 +193,9 @@ export const workProjects: WorkProject[] = [
       "Event graphic design for the Saints Foundation charity gala at Southampton FC: programmes, stage graphics and venue branding. By Milktree.",
     services: ["Event graphic design"],
     featured: true,
+    sector: "other",
+    disciplines: ["print", "campaigns"],
+    boughtAs: "essentials",
     gallery: [
       [
         {
@@ -230,6 +251,9 @@ export const workProjects: WorkProject[] = [
       "Brand identity for Melt Pizza Co: a distinctive visual direction carried across packaging, menus and every customer touchpoint. A Milktree case study.",
     services: ["Brand identity"],
     featured: true,
+    sector: "hospitality",
+    disciplines: ["brand-identity", "print"],
+    boughtAs: "build",
     gallery: [
       [
         {
@@ -301,6 +325,9 @@ export const workProjects: WorkProject[] = [
       "Brand identity for AO, a Michelin Guide fine dining restaurant: a considered visual direction for every customer-facing touchpoint. By Milktree.",
     services: ["Brand identity"],
     featured: true,
+    sector: "hospitality",
+    disciplines: ["brand-identity", "print", "web"],
+    boughtAs: "build",
     gallery: [
       [
         {
@@ -362,6 +389,9 @@ export const workProjects: WorkProject[] = [
       "Brand identity, website and app design for Remigo: one consistent visual experience across the remortgage specialist's business. A Milktree case study.",
     services: ["Brand identity", "Website design", "App design"],
     featured: true,
+    sector: "property-finance",
+    disciplines: ["brand-identity", "web", "campaigns", "print"],
+    boughtAs: "build-plus",
     gallery: [
       [
         {
@@ -423,6 +453,9 @@ export const workProjects: WorkProject[] = [
       "Brand identity for Alltrad Roofing: an early concept developed into a clear, professional identity for a roofing company. A Milktree case study.",
     services: ["Brand identity"],
     featured: false,
+    sector: "trades",
+    disciplines: ["brand-identity", "web", "campaigns", "print"],
+    boughtAs: "build-plus",
     gallery: [
       [
         {
@@ -504,6 +537,9 @@ export const workProjects: WorkProject[] = [
       "Brand refresh and website design for EJW Concrete Structures: a consistent identity and stronger digital presence. A Milktree case study.",
     services: ["Brand refresh", "Website design"],
     featured: false,
+    sector: "trades",
+    disciplines: ["brand-identity", "web", "print"],
+    boughtAs: "build",
     gallery: [
       [
         {
@@ -549,6 +585,9 @@ export const workProjects: WorkProject[] = [
       "Branding and launch creatives for Latimers, an independent Hampshire restaurant: a clear visual direction from day one. A Milktree case study.",
     services: ["Branding", "Launch creatives"],
     featured: false,
+    sector: "hospitality",
+    disciplines: ["brand-identity", "campaigns", "print"],
+    boughtAs: "build-plus",
     gallery: [
       [
         {
@@ -636,6 +675,9 @@ export const workProjects: WorkProject[] = [
       "Brand identity for SaleSprout: a clear, consistent visual direction for a software company's digital presence and materials. A Milktree case study.",
     services: ["Brand identity"],
     featured: false,
+    sector: "other",
+    disciplines: ["brand-identity", "print", "web", "decks"],
+    boughtAs: "build",
     gallery: [
       [
         {
@@ -681,6 +723,9 @@ export const workProjects: WorkProject[] = [
       "Brand identity and website design for Powerforce Renewables: a professional, consistent presence for a solar solutions company. By Milktree.",
     services: ["Brand identity", "Website design"],
     featured: false,
+    sector: "trades",
+    disciplines: ["brand-identity", "web", "campaigns", "print"],
+    boughtAs: "build-plus",
     gallery: [
       [
         {
@@ -736,6 +781,9 @@ export const workProjects: WorkProject[] = [
       "Graphic design for Orange Rooms, an established UK bar: menus and marketing creatives consistent with the venue's identity. A Milktree case study.",
     services: ["Graphic design"],
     featured: false,
+    sector: "hospitality",
+    disciplines: ["print", "campaigns"],
+    boughtAs: "essentials",
     gallery: [
       [
         {
@@ -771,6 +819,23 @@ export const featuredWorkProjects = workProjects.filter((p) => p.featured);
 
 export function getWorkProject(slug: string): WorkProject | undefined {
   return workProjects.find((p) => p.slug === slug);
+}
+
+/** Case studies in a sector, featured first. */
+export function workBySector(sector: SectorSlug): WorkProject[] {
+  return workProjects
+    .filter((p) => p.sector === sector)
+    .sort((a, b) => Number(b.featured) - Number(a.featured));
+}
+
+/** Case studies showing a discipline, featured first, padded with featured brand work to `min`. */
+export function workByDiscipline(discipline: DisciplineSlug, min = 3): WorkProject[] {
+  const hits = workProjects
+    .filter((p) => p.disciplines.includes(discipline))
+    .sort((a, b) => Number(b.featured) - Number(a.featured));
+  if (hits.length >= min) return hits;
+  const fill = featuredWorkProjects.filter((p) => !hits.includes(p));
+  return [...hits, ...fill].slice(0, Math.max(min, hits.length));
 }
 
 export function getNextWorkProject(slug: string): WorkProject {

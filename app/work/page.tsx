@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Reveal } from "@/components/motion/reveal";
-import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
-import { WorkCard } from "@/components/ui/work-card";
+import { Suspense } from "react";
+import { WorkIndex, type WorkIndexItem } from "@/components/work/work-index";
 import { StartButton } from "@/components/layout/start-button";
 import { site } from "@/lib/site";
 import { workProjects } from "@/lib/work";
@@ -28,6 +28,16 @@ export const metadata: Metadata = {
   },
 };
 
+const items: WorkIndexItem[] = workProjects.map((p) => ({
+  slug: p.slug,
+  title: p.title,
+  category: p.category,
+  poster: p.poster,
+  sector: p.sector,
+  disciplines: p.disciplines,
+  featured: p.featured,
+}));
+
 export default function WorkIndexPage() {
   return (
     <>
@@ -48,21 +58,9 @@ export default function WorkIndexPage() {
             </Reveal>
           </div>
 
-          {/* First row paints from the server HTML (no reveal, priority images):
-              it holds the page's LCP element on mobile. Everything below
-              cascades in as usual. */}
-          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {workProjects.slice(0, 3).map((project) => (
-              <WorkCard key={project.slug} project={project} headingLevel="h2" priority />
-            ))}
-          </div>
-          <StaggerGroup className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {workProjects.slice(3).map((project) => (
-              <StaggerItem key={project.slug}>
-                <WorkCard project={project} headingLevel="h2" />
-              </StaggerItem>
-            ))}
-          </StaggerGroup>
+          <Suspense fallback={<div className="mt-12 min-h-[60vh]" aria-busy="true" />}>
+            <WorkIndex items={items} />
+          </Suspense>
         </div>
       </section>
 

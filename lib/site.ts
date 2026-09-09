@@ -66,14 +66,23 @@ export const socials = [
 export type NavChild = { label: string; href: string; desc?: string };
 export type NavItem = { label: string; href: string; children?: NavChild[] };
 
-/**
- * Header navigation (spec §5). Phase 1 links only to pages that exist;
- * Services, Who it's for and About join in phase 2.
- */
+/** Header navigation (spec §5). */
 export function getNav(currency: CurrencyCode = DEFAULT_CURRENCY): NavItem[] {
   const m = CURRENCIES[currency];
   return [
     { label: "Work", href: "/work" },
+    {
+      label: "Services",
+      href: "/services",
+      children: [
+        { label: "Brand identity", href: "/services/brand-identity", desc: "The name, the mark, the system, the rules" },
+        { label: "Campaigns and social", href: "/services/campaigns", desc: "Ads, launches and a feed that looks like one brand" },
+        { label: "Web and product", href: "/services/web", desc: "Pages that explain you in one sentence" },
+        { label: "Print, packaging and outdoor", href: "/services/print", desc: "Signage, packaging, menus, vehicles, billboards" },
+        { label: "Decks and collateral", href: "/services/decks", desc: "The pitch that matches the website" },
+        { label: "All services", href: "/services", desc: "Five disciplines, one creative director" },
+      ],
+    },
     {
       label: "Pricing",
       href: "/pricing",
@@ -81,11 +90,21 @@ export function getNav(currency: CurrencyCode = DEFAULT_CURRENCY): NavItem[] {
         { label: "Brand Reset Sprint", href: "/sprint", desc: `${m.sprint} · one thing fixed in two weeks` },
         { label: "Brand Build", href: "/brand-build", desc: `from ${m.build} · the whole brand, rebuilt` },
         { label: "Subscription", href: "/subscription", desc: `from ${m.essentialsMonthly}/mo · ongoing design, on tap` },
+        { label: "How it works", href: "/how-it-works", desc: "What happens on day one and after" },
         { label: "Compare all", href: "/pricing", desc: "Every product side by side" },
       ],
     },
-    { label: "FAQ", href: "/#faq" },
-    { label: "Contact", href: "/contact" },
+    {
+      label: "Who it's for",
+      href: "/for/hospitality",
+      children: [
+        { label: "Hospitality and food", href: "/for/hospitality", desc: "Melt · AO · Latimers · Orange Rooms" },
+        { label: "Property and finance", href: "/for/property-finance", desc: "Mint Mortgages · Remigo" },
+        { label: "Trades and construction", href: "/for/trades", desc: "Alltrad · EJW · Powerforce" },
+        { label: "All work by sector", href: "/work", desc: "Filter the portfolio by what you do" },
+      ],
+    },
+    { label: "About", href: "/about" },
   ];
 }
 
@@ -347,36 +366,42 @@ export const workShowcase: WorkShowcaseItem[] = [
 // verbatim exactly once in `title`. Phase 2 gives each a /for/[audience] page.
 export const audiences = [
   {
+    slug: "hospitality",
     label: "Hospitality",
     title: "Menus, signage and a brand people photograph.",
     keyword: "photograph",
     body: "Restaurants, bars, cafés and food brands. Melt, Latimers, Orange Rooms, Alo.",
   },
   {
+    slug: "property-finance",
     label: "Property and finance",
     title: "Trust you can see from the street.",
     keyword: "Trust",
     body: "Brokers, agents, advisers. Mint Mortgages, Your Mortgage Partner, Rentlyst.",
   },
   {
+    slug: "trades",
     label: "Trades and construction",
     title: "A brand that wins the bigger contracts.",
     keyword: "bigger",
     body: "Roofers, builders, installers. Alltrad, EJW Concrete, Powerforce.",
   },
   {
+    slug: "retail",
     label: "Retail and consumer",
     title: "Packaging and campaigns that sell on sight.",
     keyword: "sight",
     body: "Shops, products, drinks. EazyPhone, Baya, Grin, Zillwoods.",
   },
   {
+    slug: "automotive",
     label: "Automotive",
     title: "From the forecourt to the motorway.",
     keyword: "motorway",
     body: "Dealers, leasing, fleet. FlexiBuy, Mailmans.",
   },
   {
+    slug: "health",
     label: "Health and aesthetics",
     title: "Clinical trust, considered design.",
     keyword: "trust",

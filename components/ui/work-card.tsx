@@ -9,12 +9,14 @@ import { cn } from "@/lib/utils";
  * poster image, category + title overlay, arrow chip that flips to yellow
  * on hover.
  */
+export type WorkCardProject = Pick<WorkProject, "slug" | "title" | "category" | "poster">;
+
 export function WorkCard({
   project,
   headingLevel: Heading = "h3",
   priority = false,
 }: {
-  project: WorkProject;
+  project: WorkCardProject;
   /** h2 when the card sits directly under a page h1 (the /work index). */
   headingLevel?: "h2" | "h3";
   /** Eager, high-priority image for the first row of an index page (LCP). */

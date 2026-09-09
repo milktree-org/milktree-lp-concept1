@@ -9,6 +9,8 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
 import { StartButton } from "@/components/layout/start-button";
 import { getNextWorkProject, getWorkProject, workProjects, type GalleryImage } from "@/lib/work";
 import { site } from "@/lib/site";
+import { getProduct } from "@/lib/offer";
+import { sectorLabel } from "@/lib/taxonomy";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ViewContentTracker } from "@/components/analytics/view-content";
 import { workBreadcrumbJsonLd, workCreativeWorkJsonLd } from "@/lib/seo";
@@ -53,6 +55,7 @@ export default async function WorkProjectPage({ params }: { params: Params }) {
   if (!project) notFound();
 
   const next = getNextWorkProject(project.slug);
+  const boughtAs = getProduct(project.boughtAs, "GBP");
   const midpoint = Math.ceil(project.gallery.length / 2);
   const galleryTop = project.gallery.slice(0, midpoint);
   const galleryBottom = project.gallery.slice(midpoint);
@@ -100,6 +103,32 @@ export default async function WorkProjectPage({ params }: { params: Params }) {
                 </li>
               ))}
             </ul>
+            <dl className="mt-8 space-y-4 border-t border-border pt-6">
+              <div>
+                <dt className="text-[0.72rem] font-bold uppercase tracking-[0.18em] text-faint">Sector</dt>
+                <dd className="mt-1">
+                  <Link
+                    href={`/work?sector=${project.sector}`}
+                    data-cursor="hover"
+                    className="inline-flex min-h-11 items-center font-bold text-foreground underline underline-offset-4 transition-colors hover:text-brand"
+                  >
+                    {sectorLabel(project.sector)}
+                  </Link>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[0.72rem] font-bold uppercase tracking-[0.18em] text-faint">Today this would be</dt>
+                <dd className="mt-1">
+                  <Link
+                    href={boughtAs.href}
+                    data-cursor="hover"
+                    className="inline-flex min-h-11 items-center font-bold text-foreground underline underline-offset-4 transition-colors hover:text-brand"
+                  >
+                    {boughtAs.name} · {boughtAs.price}{boughtAs.cadence === "/mo" ? "/mo" : ""}
+                  </Link>
+                </dd>
+              </div>
+            </dl>
           </Reveal>
           <Reveal index={3} className="max-w-2xl space-y-6">
             {project.body.map((paragraph) => (
@@ -134,16 +163,21 @@ export default async function WorkProjectPage({ params }: { params: Params }) {
         <div className="container-edge flex flex-col items-start gap-8 py-16 md:flex-row md:items-center md:justify-between md:py-20">
           <Reveal>
             <h2 className="max-w-[20ch] text-balance text-[clamp(1.75rem,3.5vw,2.75rem)] font-bold leading-[1.05] tracking-[-0.025em]">
-              Want work like this on your brand?
+              Start something like this.
             </h2>
             <p className="text-body mt-3 max-w-md">
-              Fix one thing in two weeks, rebuild the brand in six, or keep us
-              on. Fixed prices, no proposals.
+              Today this scope is a {boughtAs.name}: {boughtAs.price}
+              {boughtAs.cadence === "/mo" ? " a month" : ", fixed"}, {boughtAs.duration.toLowerCase()}. No proposals.
             </p>
           </Reveal>
           <Reveal index={1} className="flex shrink-0 flex-col items-start gap-4 md:items-end">
-            <StartButton size="pill-lg" magnetic source={`Case study — ${project.title}`}>
-              Start a project
+            <StartButton
+              size="pill-lg"
+              magnetic
+              product={boughtAs.startProduct}
+              source={`Case study — ${project.title}`}
+            >
+              {boughtAs.cta}
             </StartButton>
             <p className="text-sm font-medium text-faint">{site.trustLine}</p>
           </Reveal>

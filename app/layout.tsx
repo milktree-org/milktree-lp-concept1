@@ -2,10 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { instrumentSans, satoshi } from "./fonts";
 import "./globals.css";
 import { SmoothScroll } from "@/components/motion/smooth-scroll";
-import { CustomCursor } from "@/components/motion/custom-cursor";
+import { CustomCursorLazy } from "@/components/motion/custom-cursor-lazy";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { SiteChrome } from "@/components/layout/site-chrome";
 import { TrackingScripts, TRACKING_ENABLED } from "@/components/analytics/tracking-scripts";
 import { RouteAnalytics } from "@/components/analytics/route-analytics";
 import { ConsentBanner } from "@/components/analytics/consent-banner";
@@ -72,15 +71,10 @@ export default function RootLayout({
             asked. It only ever covered no-JS visitors, who can't use the funnel
             anyway, so the compliance hole was not worth the coverage. */}
         <SmoothScroll>
-          <CustomCursor />
-          {/* Paid-traffic landing pages (/lp/*) render bare — see SiteChrome. */}
-          <SiteChrome>
-            <Header />
-          </SiteChrome>
+          <CustomCursorLazy />
+          <Header />
           <main id="top">{children}</main>
-          <SiteChrome>
-            <Footer />
-          </SiteChrome>
+          <Footer />
         </SmoothScroll>
       </body>
     </html>
