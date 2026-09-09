@@ -2,7 +2,7 @@
 
 > **Authoritative.** This file replaces the (never committed) `MILKTREE-LANDING.md` and supersedes the offer and funnel sections of `CLAUDE.md`. Design system, motion rules and the quality bar in `CLAUDE.md` remain in force. The reasoning and evidence behind every decision here is in `marketing/growth-strategy-research.md`. Read that before arguing with this.
 
-**Version:** 1.0, 9 September 2026
+**Version:** 1.1, 9 September 2026
 **Direction:** Milktree is a **design studio** that sells brand work three ways: a fixed-price sprint, a fixed-price brand build, and an ongoing subscription. The subscription is the back end of the relationship, not the front door.
 
 ---
@@ -28,14 +28,14 @@ All prices exclude VAT. All fixed. No proposals, no quotes, no hourly billing an
 | 1 | **Brand Reset Sprint** | **£799** one-off | 2 weeks | One thing fixed properly. Choose one: homepage design, pitch deck, or core identity tightened (logo lock-up, colour, type, three key applications). One revision round. Creative director on it. | Fee credited in full against a Brand Build or first subscription month if booked within 30 days of delivery. |
 | 2 | **Brand Build** | **£3,499** fixed | 4 to 6 weeks | Identity from strategy to guidelines: positioning workshop, logo system, colour, type, brand guidelines, five core applications. Two revision rounds. Named senior designer, creative director. | Every build ends with a subscription offer. |
 | 2+ | **Brand Build Plus** | **£5,999** fixed | 6 to 8 weeks | Everything in Brand Build, plus a campaign toolkit: ad set, social templates, print and outdoor (signage, packaging or OOH as relevant), launch assets. | As above. |
-| 3 | **Essentials** subscription | **£1,499** / month | Rolling, pause or cancel any month | Unlimited requests, one active at a time, ~48h turnaround on standard requests. Vetted designer from the bench per request, every piece checked by a creative director. | |
-| 3+ | **Design Lead** subscription | **£2,499** / month | Rolling, pause or cancel any month | Unlimited requests, two active at a time. **A named senior designer, the same person every time, direct on your Slack.** Creative direction on everything. | Founding rate: first 10 Design Lead clients lock **£1,999/month for life**. |
+| 3 | **Essentials** subscription | **£1,499** / month | Rolling, pause or cancel any month | Unlimited requests, one active at a time, ~48h turnaround on standard requests. Worked by the core team or a vetted designer from the network, every piece checked by a creative director. | |
+| 3+ | **Design Lead** subscription | **£2,499** / month | Rolling, pause or cancel any month | Unlimited requests, two active at a time. **A named senior designer, the same person every time, direct on your Slack.** Creative direction on everything. | No founding rate. Milktree is an established studio; scarcity gimmicks undercut that. |
 
 **Hard rules:**
 
 - Subscriptions are for ongoing work. **Full brand builds are a product, not something that "happens on" a subscription.** Never say otherwise. If a subscriber needs a full rebrand, they buy a Brand Build.
-- "Senior" is reserved for Design Lead and for the Brand Build's named designer in per-product copy. Essentials copy says "vetted designer, checked by a creative director."
-- Design Lead capacity: one senior designer serves no more than three Design Lead clients. Do not sell past that. Because the bench is freelance, each Design Lead designer is contracted to their accounts for a minimum term so "the same person every time" holds.
+- "Senior" is reserved for Design Lead and for the Brand Build's named designer in per-product copy. Essentials copy says "vetted designer from our network, checked by a creative director."
+- Design Lead capacity: one senior designer serves no more than three Design Lead clients. Do not sell past that. Design Lead accounts are led by the core senior team first; a network designer leads one only under a minimum-term agreement, so "the same person every time" holds.
 - Value anchor for subscriptions: a UK design lead costs £65k+ a year before National Insurance, holiday cover and recruitment. Design Lead is £30k a year, senior across every discipline, cancel any month.
 - "Need more? Let's talk" remains the only unpublished tier.
 
@@ -47,7 +47,7 @@ All prices exclude VAT. All fixed. No proposals, no quotes, no hourly billing an
 
 **Why:** UK design subscriptions (Hatchly, Studiovine, Design Shake) sell digital assets: social, ads, decks, flyers. Milktree builds whole brands for real businesses and takes them all the way to signage, packaging, vehicles and billboards. That is the visible difference and the portfolio proves it. Lead with it everywhere.
 
-**Proof line:** `200+ brands built · 6 years · 15+ industries · 50+ experienced designers`. Never claim the subscription itself has been running for years.
+**Proof line:** `200+ brands built · 7 years · 15+ industries · 50+ designers in the network`. Never claim the subscription itself has been running for years.
 
 **Voice:** confident, premium, plain. Short lines. No hype, no exclamation marks, no emoji. Lead with the buyer's problem and our proof, never our features. Say "you" more than "we".
 
@@ -75,7 +75,7 @@ A studio site, not a landing page. Every page has one job and one primary CTA.
 /pricing                  All five products on one page, side by side
 /for/[audience]           Who it's for: hospitality · property-and-finance · automotive · retail · health-and-aesthetics · trades
 /how-it-works             The three ways to work with us, step by step
-/about                    About: the founder, six years, 200 brands, how the bench model works, the creative director
+/about                    About: the founder, seven years, 200 brands, the core team and the network, the creative director
 /insights                 Journal (exists as concept; build the index and article template)
 /insights/[slug]          Article
 /start                    Start a project: form routes by need to sprint, build or subscription
@@ -115,13 +115,13 @@ Each page: hero (H1 + one line + primary CTA), then the sections listed, then a 
 
 Eight sections, down from fourteen.
 
-1. **Hero.** Video reel behind. H1: **"Your business has grown. Your brand hasn't caught up."** Sub: "Milktree is a UK design studio that builds brands you can see on the high street. Fix one thing in two weeks, rebuild the lot in six, or keep us on retainer. Fixed prices, no proposals." CTA: **Start a project**. Secondary: **See the work**. Trust line: `200+ brands built · 6 years · Fixed prices · No contracts`.
+1. **Hero.** Video reel behind. H1: **"Your business has grown. Your brand hasn't caught up."** Sub: "Milktree is a UK design studio that builds brands you can see on the high street. Fix one thing in two weeks, rebuild the lot in six, or keep us on retainer. Fixed prices, no proposals." CTA: **Start a project**. Secondary: **See the work**. Trust line: `200+ brands built · 7 years · Fixed prices · No contracts`.
 2. **Work strip.** Six featured case studies, large, before proof and before pricing. Link to `/work`.
 3. **The symptoms.** H2: "Sound familiar?" Four cards using the buyer's own lines (§1). Each links to the relevant service or the sprint.
 4. **Three ways to work with us.** Sprint · Brand Build · Subscription. Price, duration, one line, one link each. This replaces "What's included", "New way" and "How it works".
 5. **Why Milktree.** Comparison: Freelancer · Subscription-only studio · Milktree. Rows: full brand builds, print and outdoor, creative director on every piece, fixed prices, pause anytime. Milktree column highlighted.
 6. **Proof.** Testimonials (real ones only) and the count-up stats bar.
-7. **About.** One band: the founder, the bench model in one line, link to `/about`.
+7. **About.** One band: the founder, the core-team-plus-network model in one line, link to `/about`.
 8. **Final CTA.** "Let's fix the thing that's been bothering you." → Start a project.
 
 Keep FAQ as an accordion inside section 4 or 8, not a standalone section. Keep the Instagram grid only if it loads fast; otherwise move it to `/about`.
@@ -148,7 +148,7 @@ Both tiers side by side. Process in six weeks (workshop, direction, design, appl
 
 ### 6.6 Subscription (`/subscription`)
 
-Two plans. Framed as "keep it alive": most subscribers come to us after a build. What a month looks like, request examples, turnaround, the queue, pause rules. The £65k anchor. Founding rate on Design Lead. FAQ (senior vs vetted, who I'll work with, what's not included: full rebrands). CTA **Start a subscription** → `/start?product=subscription`.
+Two plans. Framed as "keep it alive": most subscribers come to us after a build. What a month looks like, request examples, turnaround, the queue, pause rules. The £65k anchor. FAQ (senior vs vetted, who I'll work with, what's not included: full rebrands). CTA **Start a subscription** → `/start?product=subscription`.
 
 ### 6.7 Pricing (`/pricing`)
 
@@ -160,17 +160,17 @@ One template, six data entries. Hero in that sector's language, the sector's sym
 
 ### 6.9 About (`/about`)
 
-**No team grid.** Milktree's delivery model is a founder-led studio working with a bench of vetted freelance designers around the world, matched to each brief and signed off by one creative director. That is the honest description and it is a selling point, not a weakness: one in-house designer has one skill set, the bench has fifty. Say it plainly and never imply permanent staff.
+**No team grid, no headshots.** Milktree's delivery model is a founder-led studio with a **core team of three senior designers** and a **network of 50+ vetted designers** around the world, matched to each brief by discipline and sector and signed off by one creative director. State that as fact. Do not name or photograph the team, and never use the word "freelancers" in copy: it is "our network" or "the designers we work with". The model is a selling point: one in-house hire has one skill set, the network covers every discipline.
 
 Sections:
 
-1. **Hero.** The founder, photographed properly. H1 in the first person: "Six years. Two hundred brands. One standard." One paragraph on why Milktree exists.
-2. **How the studio works.** Three steps: the brief lands with the creative director, the right designer is matched from the bench (by discipline and sector), every piece is checked before it ships. This is where "50+ experienced designers, worldwide" lives, framed as range and depth.
-3. **The bench, by discipline, not by face.** Brand identity · Packaging and print · Web and product · Motion and social · Illustration and 3D. One line each on the kind of designer we call on and where they've worked. No names required, no headshots.
+1. **Hero.** The founder, photographed properly. H1 in the first person: "Seven years. Two hundred brands. One standard." One paragraph on why Milktree exists.
+2. **How the studio works.** Three steps: the brief lands with the creative director, it goes to the core team or the right specialist from the network (by discipline and sector), every piece is checked before it ships. This is where "three senior designers in-house, 50+ in the network, worldwide" lives, framed as range and depth.
+3. **The network, by discipline, not by face.** Brand identity · Packaging and print · Web and product · Motion and social · Illustration and 3D. One line each on the kind of designer we call on and where they've worked. No names required, no headshots.
 4. **The constant.** The creative director (the founder) is on every project. On Design Lead, the client's named senior designer is contracted to that account, so "the same person every time" is a promise the model can keep.
 5. **What we believe.** Four lines, no manifesto.
 6. **Where we are.** UK-based, working with clients across the UK and beyond. Instagram grid here if it moves off home.
-7. **CTA.** Start a project, plus a quiet link to Careers for designers who want onto the bench.
+7. **CTA.** Start a project, plus a quiet link to Careers for designers who want to join the network.
 
 ### 6.10 Start (`/start`)
 
