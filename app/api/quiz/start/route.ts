@@ -80,6 +80,19 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("[quiz] session insert failed:", error.message);
+    // Keep connection diagnostics in server logs only. Never log credentials,
+    // request bodies or the full error details, which can include row data.
+    let databaseHost = "invalid";
+    try {
+      databaseHost = new URL(process.env.SUPABASE_URL ?? "").hostname;
+    } catch {}
+    const networkCode = error.details?.match(
+      /\b(ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ECONNRESET|ETIMEDOUT|UND_ERR_CONNECT_TIMEOUT)\b/,
+    )?.[1];
+    console.error("[quiz] database diagnostics:", {
+      host: databaseHost,
+      code: error.code || networkCode || "unknown",
+    });
     // The contact is already safe in Formspree — degrade to a
     // self-assessment-only session rather than erroring the user out.
     return Response.json({ sessionId: null, mode: "self-assessment", emailAvailable: false });
