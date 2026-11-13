@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     // No DB configured: self-assessment-only session; the contact is already
     // in Formspree from the capture step.
     console.error("[quiz] Supabase not configured; running self-assessment-only");
-    return Response.json({ sessionId: null });
+    return Response.json({ sessionId: null, mode: "self-assessment", emailAvailable: false });
   }
 
   const { data, error } = await supabase
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     console.error("[quiz] session insert failed:", error.message);
     // The contact is already safe in Formspree — degrade to a
     // self-assessment-only session rather than erroring the user out.
-    return Response.json({ sessionId: null });
+    return Response.json({ sessionId: null, mode: "self-assessment", emailAvailable: false });
   }
 
   const sessionId = data.id as string;
@@ -97,5 +97,5 @@ export async function POST(request: Request) {
     });
   });
 
-  return Response.json({ sessionId });
+  return Response.json({ sessionId, mode: "saved" });
 }

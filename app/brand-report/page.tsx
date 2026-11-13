@@ -35,9 +35,9 @@ export default function BrandReportPage() {
             How does your brand really rank?
           </h1>
           <p className="text-body mx-auto mt-5 max-w-lg">
-            Two minutes, real Google data. Get your score instantly, then we
-            build the full Brand Score document for your business and email it
-            to you within three hours.
+            Answer a few questions to get your brand score and practical fixes.
+            Live market checks and an emailed report depend on service availability.
+            You can still see your self-assessment results if those services are unavailable.
           </p>
         </div>
         <Suspense fallback={null}>

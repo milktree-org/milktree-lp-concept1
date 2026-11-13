@@ -18,6 +18,7 @@ import {
 } from "@/lib/brand-score-doc";
 import { Wordmark } from "@/components/layout/wordmark";
 import { SITE_URL } from "@/lib/seo";
+import { brandScoreOffer } from "@/lib/offer";
 import { cn } from "@/lib/utils";
 
 /**
@@ -630,34 +631,33 @@ export function BrandScoreDocument({ data }: { data: BrandScoreDocData }) {
           <div className="rounded-2xl border border-white/12 bg-white/[0.04] p-6">
             <p className="text-[15px] font-black text-white">Essentials</p>
             <p className="mt-1 text-[24px] font-black text-white">
-              £1,999
+              {brandScoreOffer.essentials}
               <span className="text-[13px] font-bold text-white/45">
                 /mo +VAT
               </span>
             </p>
             <p className="mt-2 text-[12.5px] leading-relaxed text-white/60">
-              Unlimited design requests, one at a time. Vetted designers matched
-              to each request, quality-checked by a creative director. Work back
-              in around 48 hours. Pause or cancel anytime.
+              One design request at a time, with a creative director checking every piece.
+              Around 48 hours for standard requests. One review round per request.
+              Pause or cancel any month.
             </p>
           </div>
           <div className="rounded-2xl border border-brand/50 bg-brand/[0.07] p-6">
             <p className="text-[15px] font-black text-white">
-              Design Lead{" "}
+              Brand Build{" "}
               <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand">
-                Most popular
+                Fixed scope
               </span>
             </p>
             <p className="mt-1 text-[24px] font-black text-white">
-              £3,999
+              {brandScoreOffer.brandBuild}
               <span className="text-[13px] font-bold text-white/45">
-                /mo +VAT
+                +VAT, fixed
               </span>
             </p>
             <p className="mt-2 text-[12.5px] leading-relaxed text-white/60">
-              Two requests at a time, plus your own dedicated senior designer as
-              a permanent design lead, direct on Slack. Full brand builds in 4
-              to 6 weeks.
+              A complete brand identity, from positioning to the things your customers see.
+              Fixed scope and price. 50% to start and 50% on delivery.
             </p>
           </div>
         </div>

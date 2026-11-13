@@ -309,7 +309,7 @@ async function sendReportAndTag(
 ) {
   const supabase = getSupabase();
   const resend = getResend();
-  if (!supabase) return;
+  if (!supabase || !resend) return;
 
   const { data: session } = await supabase
     .from("quiz_sessions")
@@ -337,7 +337,7 @@ async function sendReportAndTag(
       // the report lands 45 minutes after they finish the quiz, not the
       // second they close the tab. With a zero delay, send immediately.
       const deliverAt = new Date(Date.now() + REPORT_DELAY_MS).toISOString();
-      const { data: sent } = await resend.emails.send({
+      const { data: sent, error: sendError } = await resend.emails.send({
         from: FROM,
         replyTo: REPLY_TO,
         to: session.email,
@@ -346,14 +346,19 @@ async function sendReportAndTag(
         text: email.text,
         ...(REPORT_DELAY_MS > 0 ? { scheduledAt: deliverAt } : {}),
       });
+      if (sendError || !sent?.id) {
+        console.error("[quiz] report email was not accepted");
+        return;
+      }
       // Keep the Resend id: publishing the document cancels this scheduled
       // send and delivers it early rather than emailing the lead twice.
       await supabase
         .from("quiz_sessions")
-        .update({ report_sent_at: deliverAt, report_email_id: sent?.id ?? null })
+        .update({ report_sent_at: deliverAt, report_email_id: sent.id })
         .eq("id", sessionId);
     } catch (e) {
       console.error("[quiz] report email failed:", e);
+      return;
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { brandScoreOffer } from "@/lib/offer";
 import { useSearchParams } from "next/navigation";
 import { readFunnelHandoff } from "@/lib/analytics/funnel-handoff";
 import { trackGA } from "@/lib/analytics/ga";
@@ -125,7 +126,7 @@ export function BrandReportQuiz() {
     if (!intake.company.trim()) return setError("Add your company name.");
     if (!intake.sector) return setError("Pick the sector closest to what you do.");
     if (!EMAIL_RE.test(intake.email.trim()))
-      return setError("A valid email is needed. It's where your report goes.");
+      return setError("Add a valid email address.");
 
     setBusy(true);
     try {
@@ -252,7 +253,7 @@ export function BrandReportQuiz() {
       return;
     }
     if (!EMAIL_RE.test(intake.email.trim())) {
-      setError("A valid email is needed. It's where your Brand Score goes.");
+      setError("Add a valid email address.");
       return;
     }
     setError(null);
@@ -506,6 +507,7 @@ function ResultsScreen({
   company: string;
   email: string;
 }) {
+  const selfAssessmentOnly = results.sessionId === "local";
   const [benchmark, setBenchmark] = useState<BenchmarkResult | null>(results.benchmark);
   const polled = useRef(0);
 
@@ -552,7 +554,9 @@ function ResultsScreen({
         <p className="text-body mx-auto mt-2 max-w-md text-[0.95rem]">
           {benchmark?.benchmarkScore != null
             ? "Weighted 50% self-assessment, 50% live market benchmark."
-            : "Based on your self-assessment. Live market data is still being checked, and your emailed report will include it if available."}
+            : selfAssessmentOnly
+              ? "Based on your answers only. Live market checks and email delivery are unavailable for this session."
+              : "Based on your answers. Live market checks may add more detail when available."}
         </p>
       </div>
 
@@ -617,8 +621,11 @@ function ResultsScreen({
         <div className="mt-6 flex items-center gap-3 rounded-2xl border border-brand/30 bg-brand/[0.06] p-5">
           <Check className="size-5 shrink-0 text-brand" />
           <p className="text-sm text-foreground">
-            <strong>7 more fixes</strong> plus your full score breakdown are on
-            their way to <strong>{email}</strong>.
+            {selfAssessmentOnly ? (
+              <>Save this page to keep your score and fixes. We could not save this session, so no report email has been scheduled.</>
+            ) : (
+              <>Your report will be prepared for <strong>{email}</strong>. Email delivery is not yet confirmed. Keep this page as a copy of your score.</>
+            )}
           </p>
         </div>
       </div>
@@ -629,11 +636,11 @@ function ResultsScreen({
           Want a team to do all of this for you?
         </h3>
         <p className="text-body mx-auto mt-3 max-w-md text-[0.95rem]">
-          Milktree starts at £1,999/mo. Unlimited requests, senior work back
-          in ~48 hours, cancel any month.
+          Start with a Brand Reset Sprint at {brandScoreOffer.sprint} +VAT, fixed.
+          Two weeks to bring your logo, colour and type into line.
         </p>
         <Link
-          href="/#plans"
+          href={brandScoreOffer.sprintUrl}
           data-cursor="hover"
           className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-[44px] bg-brand px-7 text-[0.95rem] font-bold text-brand-ink transition-all hover:brightness-105"
         >

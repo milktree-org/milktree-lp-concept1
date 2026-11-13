@@ -1,4 +1,5 @@
 import "server-only";
+import { brandScoreOffer } from "@/lib/offer";
 
 /**
  * On-brand transactional email templates (black canvas, yellow accent,
@@ -575,9 +576,9 @@ export function quizReportEmail(input: {
     <p style="margin:20px 0 10px;font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);">Your 10 fixes</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">${actionsHtml}</table>
     ${p(
-      `When you're ready for a team to do this for you, Milktree starts at <strong style="color:#ffffff;">£1,999/mo</strong> — unlimited requests, senior work back in ~48 hours, cancel any month.`,
+      `Start with a Brand Reset Sprint at <strong style="color:#ffffff;">${brandScoreOffer.sprint} +VAT, fixed</strong>. Two weeks to bring your logo, colour and type into line.`,
     )}
-    ${button("See how Milktree works", `${SITE_URL}/#plans`)}
+    ${button("See how Milktree works", brandScoreOffer.sprintUrl)}
   `);
 
   const text = [
@@ -599,8 +600,8 @@ export function quizReportEmail(input: {
     "Your 10 fixes:",
     ...input.actions.map((a, i) => `  ${i + 1}. ${a}`),
     "",
-    "When you're ready for a team to do this for you, Milktree starts at £1,999/mo.",
-    `${SITE_URL}/#plans`,
+    `Start with a Brand Reset Sprint at ${brandScoreOffer.sprint} +VAT, fixed. Two weeks to bring your logo, colour and type into line.`,
+    brandScoreOffer.sprintUrl,
   ].join("\n");
 
   return { subject, html, text };
