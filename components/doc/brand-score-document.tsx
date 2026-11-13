@@ -92,8 +92,8 @@ export function BrandScoreDocument({ data }: { data: BrandScoreDocData }) {
             {data.company}
           </h1>
           <p className="mt-4 text-[15px] font-medium text-white/60">
-            How your brand really performs in {playbook.noun}, measured against
-            the businesses winning your market.
+            Your brand self-assessment in {playbook.noun}, with live market
+            checks where available.
           </p>
         </div>
 
@@ -157,7 +157,7 @@ export function BrandScoreDocument({ data }: { data: BrandScoreDocData }) {
           {CATEGORY_ORDER.map((category) => {
             const value = data.categoryScores[category];
             return (
-              <div key={category} className="flex items-center gap-5">
+              <div key={category} className="doc-category-row flex items-center gap-5">
                 <p className="w-[150px] text-[13.5px] font-bold text-white">
                   {CATEGORY_LABELS[category]}
                 </p>
@@ -410,13 +410,13 @@ export function BrandScoreDocument({ data }: { data: BrandScoreDocData }) {
 
   /* ------------------------ 6 · You vs the leaders ------------------------- */
   pages.push({
-    section: "You vs the leaders",
+    section: "Your priorities",
     content: (
       <>
         <PageTitle
           kicker="The gap analysis"
           title="Where you're losing ground, and why it matters."
-          sub="Your three weakest areas, measured against the standard the leading brands in your market hold. This is where the fastest commercial gains live."
+          sub="Your three lowest self-assessment scores, shown against a suggested target of 9/10."
         />
 
         <div className="mt-9 grid gap-5">
@@ -433,7 +433,7 @@ export function BrandScoreDocument({ data }: { data: BrandScoreDocData }) {
                     {CATEGORY_LABELS[category]}
                   </p>
                   <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/45">
-                    You: {value}/10 · Leaders: 9/10
+                    You: {value}/10 · Target: 9/10
                   </p>
                 </div>
                 <div className="mt-3 grid gap-1.5">
